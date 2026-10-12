@@ -102,6 +102,41 @@ export async function createChat({ kind, ownerId, ownerName, persona, speaker, s
 
 const summaryCache = new Map();
 
+function normalizeImported(m, ownerName) {
+  const mes = String(m.mes ?? '');
+  const swipes = Array.isArray(m.swipes) && m.swipes.length ? m.swipes.map((s) => String(s ?? '')) : [mes];
+  const swipeId = Number.isInteger(m.swipe_id) && m.swipe_id >= 0 && m.swipe_id < swipes.length ? m.swipe_id : 0;
+  const isUser = Boolean(m.is_user);
+  return {
+    ...m,
+    name: String(m.name || (isUser ? 'Usuario' : ownerName)),
+    is_user: isUser,
+    is_system: Boolean(m.is_system),
+    send_date: m.send_date ?? nowIso(),
+    mes,
+    swipes,
+    swipe_id: swipeId,
+    swipe_info: Array.isArray(m.swipe_info) ? m.swipe_info : [],
+    extra: m.extra && typeof m.extra === 'object' ? m.extra : {},
+  };
+}
+
+export async function importChat({ kind, ownerId, ownerName, raw, filename }) {
+  const { meta, messages } = parseChat(raw);
+  if (!messages.length) throw new HttpError(422, 'El archivo no contiene mensajes de chat (¿es un .jsonl válido?)');
+  meta.character_name = meta.character_name || ownerName;
+  meta.user_name = meta.user_name || messages.find((m) => m.is_user)?.name || 'Usuario';
+  // La persona de otra instalación no existe aquí; se usará la predeterminada.
+  delete meta.chat_metadata.persona;
+
+  const dir = chatDir(kind, ownerId);
+  await fs.mkdir(dir, { recursive: true });
+  const base = safeName(String(filename).replace(/\.jsonl?$/i, ''), `${ownerName} - importado`);
+  const file = await uniqueName(dir, base, '.jsonl');
+  await writeFileAtomic(path.join(dir, `${file}.jsonl`), serializeChat({ meta, messages: messages.map((m) => normalizeImported(m, ownerName)) }));
+  return file;
+}
+
 function summarize(kind, ownerId, file, st, raw) {
   const { meta, messages } = parseChat(raw);
   const last = [...messages].reverse().find((m) => !m.is_system);

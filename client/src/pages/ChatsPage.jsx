@@ -6,6 +6,7 @@ import { formatListDate } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, SearchBox } from '../components/ui.jsx';
 import GroupEditor from '../components/GroupEditor.jsx';
+import PasswordBanner from '../components/PasswordBanner.jsx';
 import ChatView from './ChatView.jsx';
 
 export default function ChatsPage() {
@@ -36,6 +37,7 @@ function ChatList({ active }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -72,9 +74,13 @@ function ChatList({ active }) {
 
   return (
     <aside className="chat-list">
-      <header className="topbar">
+      <header className="topbar head-row">
         <h1>Chats</h1>
+        <button className="icon-btn" onClick={() => setImporting(true)} aria-label="Importar chat" title="Importar chat (.jsonl)">
+          <Icon name="upload" />
+        </button>
       </header>
+      <PasswordBanner />
       <div className="pad-x">
         <SearchBox value={query} onChange={setQuery} placeholder="Buscar chats" />
       </div>
@@ -125,7 +131,117 @@ function ChatList({ active }) {
           }}
         />
       )}
+      {importing && (
+        <ImportChatSheet
+          onClose={() => setImporting(false)}
+          onDone={(refs) => {
+            setImporting(false);
+            refresh('chats');
+            if (refs.length === 1) navigate(chatRoute(refs[0]));
+          }}
+        />
+      )}
     </aside>
+  );
+}
+
+function ImportChatSheet({ onClose, onDone }) {
+  const { characters, groups, toast } = useData();
+  const [kind, setKind] = useState('c');
+  const [ownerId, setOwnerId] = useState('');
+  const [files, setFiles] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const owners = kind === 'c' ? characters : groups;
+
+  // Los chats de SillyTavern traen el nombre del personaje en la primera línea.
+  async function onFiles(e) {
+    const list = [...e.target.files];
+    e.target.value = '';
+    setFiles(list);
+    if (!list[0]) return;
+    try {
+      const first = (await list[0].slice(0, 300000).text()).split(/\r?\n/)[0];
+      const name = String(JSON.parse(first).character_name || '').trim().toLowerCase();
+      const char = characters.find((c) => c.name.toLowerCase() === name || c.id.toLowerCase() === name);
+      const group = groups.find((g) => g.name.toLowerCase() === name);
+      if (char) {
+        setKind('c');
+        setOwnerId(char.id);
+      } else if (group) {
+        setKind('g');
+        setOwnerId(group.id);
+      }
+    } catch {
+      /* sin cabecera reconocible: el usuario elige destino */
+    }
+  }
+
+  async function run() {
+    setBusy(true);
+    const refs = [];
+    for (const f of files) {
+      try {
+        refs.push(await api.importChat(kind, ownerId, f));
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }
+    if (refs.length) toast(`${refs.length} chat(s) importado(s)`);
+    setBusy(false);
+    if (refs.length) onDone(refs);
+  }
+
+  return (
+    <Modal
+      title="Importar chat"
+      onClose={onClose}
+      footer={
+        <>
+          <span className="spacer" />
+          <button className="btn primary" disabled={busy || !ownerId || !files.length} onClick={run}>
+            Importar{files.length > 1 ? ` (${files.length})` : ''}
+          </button>
+        </>
+      }
+    >
+      <p className="muted">Archivos .jsonl de SillyTavern (o exportados desde aquí). Se añaden como chats nuevos; no se mezclan con los existentes.</p>
+      <label className="field">
+        <span className="field-label">Archivo(s)</span>
+        <input type="file" accept=".jsonl,.json,application/json,text/plain" multiple onChange={onFiles} />
+      </label>
+      {files.length > 0 && <p className="muted">{files.map((f) => f.name).join(', ')}</p>}
+      <div className="tabs">
+        <button
+          className={kind === 'c' ? 'active' : ''}
+          onClick={() => {
+            setKind('c');
+            setOwnerId('');
+          }}
+        >
+          Personaje
+        </button>
+        <button
+          className={kind === 'g' ? 'active' : ''}
+          onClick={() => {
+            setKind('g');
+            setOwnerId('');
+          }}
+        >
+          Grupo
+        </button>
+      </div>
+      <label className="field">
+        <span className="field-label">{kind === 'c' ? 'Importar al personaje' : 'Importar al grupo'}</span>
+        <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+          <option value="">Elegir…</option>
+          {owners.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    </Modal>
   );
 }
 

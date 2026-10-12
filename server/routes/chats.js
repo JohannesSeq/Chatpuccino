@@ -4,14 +4,15 @@ import {
   chatPath,
   createChat,
   deleteChat,
+  importChat,
   listAllChats,
   makeMessage,
   mutateChat,
   readChat,
 } from '../chats.js';
-import { streamChat } from '../openrouter.js';
+import { streamChat } from '../providers.js';
 import { buildPrompt, stripSpeakerPrefix } from '../prompt.js';
-import { getSettings } from '../settings.js';
+import { activeConnection, getSettings, isReady } from '../settings.js';
 import { getGroup, getPersona } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
 
@@ -42,6 +43,21 @@ async function loadOwner(kind, ownerId) {
 }
 
 r.get('/', wrap(async (_req, res) => res.json(await listAllChats())));
+
+// Importa un .jsonl (formato SillyTavern) como chat nuevo de un personaje o grupo.
+r.post('/import', wrap(async (req, res) => {
+  const { kind, ownerId } = req.query;
+  if (!Buffer.isBuffer(req.body)) throw new HttpError(400, 'Envía el archivo como application/octet-stream');
+  const owner = await loadOwner(kind, ownerId);
+  let filename = String(req.headers['x-filename'] || '');
+  try {
+    filename = decodeURIComponent(filename);
+  } catch {
+    /* se usa tal cual */
+  }
+  const file = await importChat({ kind, ownerId, ownerName: owner.name, raw: req.body.toString('utf8'), filename });
+  res.status(201).json({ kind, ownerId, file });
+}));
 
 r.post('/', wrap(async (req, res) => {
   const { kind, ownerId, personaId } = req.body || {};
@@ -160,8 +176,11 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
   const { kind, owner, file } = req.params;
   const { speakerId, swipe } = req.body || {};
   const settings = await getSettings();
-  if (!settings.apiKey) throw new HttpError(400, 'Falta la API key de OpenRouter (Ajustes → Conexión).');
-  if (!settings.model) throw new HttpError(400, 'Selecciona un modelo (Ajustes → Conexión).');
+  const conn = activeConnection(settings);
+  if (!conn) throw new HttpError(400, 'Configura una conexión (Ajustes → Conexión y modelo).');
+  if (!isReady(conn)) {
+    throw new HttpError(400, conn.model ? 'La conexión activa está incompleta (Ajustes → Conexión y modelo).' : 'Selecciona un modelo (Ajustes → Conexión y modelo).');
+  }
 
   const chat = await readChat(kind, owner, file);
   const ownerInfo = await loadOwner(kind, owner);
@@ -210,7 +229,7 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
     const text = (isGroup ? stripSpeakerPrefix(raw, speaker.name) : raw).trim();
     if (!text) return null;
     return mutateChat(kind, owner, file, (c) => {
-      const info = { send_date: nowIso(), gen_started: startedAt, gen_finished: nowIso(), extra: { model: settings.model } };
+      const info = { send_date: nowIso(), gen_started: startedAt, gen_finished: nowIso(), extra: { model: conn.model } };
       if (swipe) {
         const m = c.messages[targetIndex];
         if (!m) throw new HttpError(409, 'El mensaje ya no existe');
@@ -223,7 +242,7 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
         m.mes = text;
         return { index: targetIndex, message: m };
       }
-      const m = makeMessage({ name: speaker.name, isUser: false, mes: text, characterId: speaker.id, model: settings.model });
+      const m = makeMessage({ name: speaker.name, isUser: false, mes: text, characterId: speaker.id, model: conn.model });
       c.messages.push(m);
       return { index: c.messages.length - 1, message: m };
     });
@@ -231,9 +250,9 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
 
   try {
     const text = await streamChat({
-      apiKey: settings.apiKey,
+      conn,
       signal: ac.signal,
-      body: { model: settings.model, messages: prompt, ...samplingParams(settings, persona.name) },
+      body: { model: conn.model, messages: prompt, ...samplingParams(settings, persona.name) },
       onDelta: (delta) => send({ delta }),
     });
     const saved = await persist(text);

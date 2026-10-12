@@ -4,12 +4,15 @@ import ConnectionTab from './settings/ConnectionTab.jsx';
 import CharactersTab from './settings/CharactersTab.jsx';
 import PersonasTab from './settings/PersonasTab.jsx';
 import LorebooksTab from './settings/LorebooksTab.jsx';
+import SecurityTab from './settings/SecurityTab.jsx';
+import PasswordBanner from '../components/PasswordBanner.jsx';
 
 const TABS = [
   { id: 'conexion', label: 'Conexión y modelo', C: ConnectionTab },
   { id: 'personajes', label: 'Personajes', C: CharactersTab },
   { id: 'personas', label: 'Personas', C: PersonasTab },
   { id: 'lorebooks', label: 'Lorebooks', C: LorebooksTab },
+  { id: 'seguridad', label: 'Seguridad', C: SecurityTab },
 ];
 
 export default function SettingsPage() {
@@ -22,6 +25,7 @@ export default function SettingsPage() {
       <header className="topbar">
         <h1>Ajustes</h1>
       </header>
+      <PasswordBanner />
       <div className="tabs scroll">
         {TABS.map((t) => (
           <NavLink key={t.id} to={`/settings/${t.id}`} className={({ isActive }) => (isActive ? 'active' : '')}>

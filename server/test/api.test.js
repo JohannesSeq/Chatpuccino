@@ -1,18 +1,20 @@
-import test from 'node:test';
+﻿import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aberracion-'));
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'chatpuccino-'));
 process.env.DATA_DIR = tmp;
 
 const requests = [];
+let lastAuth;
 const fake = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));
   req.on('end', () => {
+    lastAuth = req.headers.authorization;
     if (req.url === '/models') {
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify({ data: [{ id: 'a/free', name: 'Free One', context_length: 8000, pricing: { prompt: '0', completion: '0' } }] }));
@@ -32,6 +34,7 @@ await new Promise((r) => fake.listen(0, r));
 process.env.OPENROUTER_BASE = `http://127.0.0.1:${fake.address().port}`;
 
 const { createApp } = await import('../index.js');
+const { resetThrottle } = await import('../auth.js');
 const { embedCard, extractCardText, placeholderPng, isPng } = await import('../png.js');
 const { activateEntries, normalizeBook } = await import('../lore.js');
 
@@ -39,14 +42,25 @@ const app = createApp().listen(0);
 await new Promise((r) => app.once('listening', r));
 const base = `http://127.0.0.1:${app.address().port}/api`;
 
-const call = async (method, url, body) => {
-  const res = await fetch(base + url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+let cookie = '';
+const takeCookie = (res) => {
+  const set = res.headers.getSetCookie?.().find((c) => c.startsWith('chatpuccino_session='));
+  if (set) cookie = set.split(';')[0];
+};
+
+const call = async (method, url, body, headers = {}) => {
+  const res = await fetch(base + url, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}), ...headers },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  takeCookie(res);
   const text = await res.text();
-  return { status: res.status, json: text && res.headers.get('content-type')?.includes('json') ? JSON.parse(text) : text };
+  return { status: res.status, headers: res.headers, json: text && res.headers.get('content-type')?.includes('json') ? JSON.parse(text) : text };
 };
 
 const sse = async (url, body) => {
-  const res = await fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const res = await fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie }, body: JSON.stringify(body) });
   const events = (await res.text()).split('\n\n').filter((l) => l.startsWith('data:')).map((l) => JSON.parse(l.slice(5)));
   return { status: res.status, events };
 };
@@ -55,6 +69,59 @@ test.after(() => {
   app.close();
   fake.close();
   fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test('auth: protege la API, admin/Admin por defecto, cambio de contraseña y bloqueo', async () => {
+  assert.equal((await call('GET', '/characters')).status, 401);
+  const me = await call('GET', '/auth/me');
+  assert.equal(me.json.authenticated, false);
+  assert.equal(me.json.defaultPassword, false);
+
+  assert.equal((await call('POST', '/auth/login', { username: 'admin', password: 'wrong' })).status, 401);
+  const ok = await call('POST', '/auth/login', { username: 'ADMIN', password: 'Admin' });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.defaultPassword, true);
+  assert.equal((await call('GET', '/characters')).status, 200);
+
+  const oldCookie = cookie;
+  assert.equal((await call('POST', '/auth/account', { current: 'nope', password: 'Secreto1' })).status, 403);
+  assert.equal((await call('POST', '/auth/account', { current: 'Admin', password: 'Admin' })).status, 400);
+  assert.equal((await call('POST', '/auth/account', { current: 'Admin', password: 'abc' })).status, 400);
+  const changed = await call('POST', '/auth/account', { current: 'Admin', username: 'jefe', password: 'Secreto1' });
+  assert.equal(changed.json.username, 'jefe');
+  assert.equal(changed.json.defaultPassword, false);
+  assert.equal((await call('GET', '/characters')).status, 200);
+
+  // la sesión anterior deja de ser válida
+  const fresh = cookie;
+  cookie = oldCookie;
+  assert.equal((await call('GET', '/characters')).status, 401);
+  cookie = '';
+  assert.equal((await call('POST', '/auth/login', { username: 'admin', password: 'Admin' })).status, 401);
+  assert.equal((await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' })).status, 200);
+  assert.notEqual(cookie, fresh);
+
+  // tras varios fallos seguidos se bloquea la IP, incluso con credenciales correctas
+  cookie = '';
+  for (let i = 0; i < 5; i++) await call('POST', '/auth/login', { username: 'jefe', password: 'mal' });
+  const locked = await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  assert.equal(locked.status, 429);
+  assert.ok(Number(locked.headers.get('retry-after')) > 0);
+  resetThrottle();
+  assert.equal((await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' })).status, 200);
+
+  // desactivar requiere la contraseña; con auth apagado la API es abierta
+  assert.equal((await call('POST', '/auth/enabled', { enabled: false, current: 'x' })).status, 403);
+  await call('POST', '/auth/enabled', { enabled: false, current: 'Secreto1' });
+  const saved = cookie;
+  cookie = '';
+  assert.equal((await call('GET', '/characters')).status, 200);
+  cookie = saved;
+  await call('POST', '/auth/enabled', { enabled: true, current: 'Secreto1' });
+  cookie = '';
+  assert.equal((await call('GET', '/characters')).status, 401);
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  assert.equal((await call('POST', '/auth/logout')).status, 200);
 });
 
 test('PNG: embebe y lee tarjeta (ccv3 y chara)', () => {
@@ -86,19 +153,40 @@ test('lorebooks: formato ST y character_book, claves, lógica secundaria y recur
   assert.equal(v2.entries[0].position, 1);
 });
 
-test('flujo completo: ajustes, personaje, persona, chat, streaming, swipe, edición', async () => {
-  assert.equal((await call('POST', '/openrouter/test', { apiKey: 'sk-or-v1-abcdefghij' })).json.label, 'test-key');
-  assert.equal((await call('GET', '/models')).json[0].id, 'a/free');
-  const s = await call('PUT', '/settings', { apiKey: 'sk-or-v1-abcdefghij', model: 'a/free' });
-  assert.equal(s.json.hasKey, true);
-  assert.equal(s.json.apiKey, undefined);
+test('ajustes antiguos (apiKey/model) migran a una conexión de OpenRouter', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const file = path.join(tmp, 'settings.json');
+  fs.writeFileSync(file, JSON.stringify({ apiKey: 'sk-or-legacy-123456', model: 'old/model', temperature: 0.5 }));
+  const s = (await call('GET', '/settings')).json;
+  assert.equal(s.ready, true);
+  assert.equal(s.model, 'old/model');
+  assert.equal(s.temperature, 0.5);
+  assert.equal(s.connections[0].id, 'openrouter');
+  assert.equal(s.connections[0].keyPreview, 'sk-or-l…3456');
+  await call('PUT', '/settings', { temperature: 0.8 });
+  const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+  assert.equal(stored.apiKey, undefined);
+  assert.equal(stored.connections[0].apiKey, 'sk-or-legacy-123456');
+  fs.rmSync(file);
+});
 
+test('flujo completo: conexión, personaje, persona, chat, streaming, swipe, edición', async () => {
+  assert.equal((await call('GET', '/settings')).json.ready, false);
+  const test1 = await call('POST', '/connections/test', { id: 'openrouter', apiKey: 'sk-or-v1-abcdefghij' });
+  assert.match(test1.json.message, /test-key/);
+  assert.equal((await call('POST', '/connections/test', { id: 'openrouter' })).status, 400);
+  await call('PUT', '/connections/openrouter', { apiKey: 'sk-or-v1-abcdefghij', model: 'a/free' });
+  assert.equal((await call('GET', '/connections/openrouter/models')).json[0].id, 'a/free');
+  const s = await call('GET', '/settings');
+  assert.equal(s.json.ready, true);
+  assert.equal(s.json.model, 'a/free');
+  assert.equal(JSON.stringify(s.json).includes('abcdefghij'), false);
   const img = `data:image/png;base64,${placeholderPng('t', 16, 16).toString('base64')}`;
   const created = await call('POST', '/characters', { data: { name: 'Luna', description: '{{char}} es una maga.', first_mes: 'Hola {{user}}', alternate_greetings: ['Buenas'], extensions: { world: 'Mundo' } }, image: img });
   assert.equal(created.status, 201);
   assert.equal(created.json.id, 'Luna');
 
-  const imported = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: fs.readFileSync(path.join(tmp, 'characters', 'Luna.png')) });
+  const imported = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: fs.readFileSync(path.join(tmp, 'characters', 'Luna.png')) });
   assert.equal(imported.status, 201);
   assert.equal((await imported.json()).id, 'Luna (2)');
 
@@ -163,4 +251,77 @@ test('grupos: turno por personaje con prefijos de nombre', async () => {
   assert.match(prompt[0].content, /Participants: Luna, Kai/);
   assert.match(prompt.at(-1).content, /Armando: Hola a todos/);
   assert.equal((await sse(`${ref}/generate`, { speakerId: 'nadie' })).status, 400);
+});
+
+test('conexiones locales, favoritos y cambio de conexión activa', async () => {
+  const url = process.env.OPENROUTER_BASE;
+  assert.equal((await call('POST', '/connections', { type: 'local', baseUrl: '' })).status, 400);
+  const created = await call('POST', '/connections', { type: 'local', name: 'Mi LLM', baseUrl: `${url}/`, model: 'a/free' });
+  assert.equal(created.status, 201);
+  assert.equal(created.json.baseUrl, url);
+  const id = created.json.id;
+
+  assert.match((await call('POST', '/connections/test', { type: 'local', baseUrl: url })).json.message, /1 modelo/);
+  assert.equal((await call('POST', '/connections/test', { type: 'local', baseUrl: 'http://127.0.0.1:1' })).status, 502);
+  assert.equal((await call('GET', `/connections/${id}/models`)).json[0].id, 'a/free');
+
+  assert.deepEqual((await call('POST', `/connections/${id}/favorites`, { model: 'a/free' })).json.favorites, ['a/free']);
+  assert.equal((await call('GET', '/settings')).json.connections.find((c) => c.id === id).favorites[0], 'a/free');
+  assert.deepEqual((await call('POST', `/connections/${id}/favorites`, { model: 'a/free' })).json.favorites, []);
+
+  await call('POST', `/connections/${id}/activate`);
+  assert.equal((await call('GET', '/settings')).json.activeConnection, id);
+  const chat = await call('POST', '/chats', { kind: 'c', ownerId: 'Luna' });
+  const ref = `/chats/c/Luna/${encodeURIComponent(chat.json.file)}`;
+  await call('POST', `${ref}/messages`, { mes: 'Hola desde local' });
+  const gen = await sse(`${ref}/generate`, {});
+  assert.equal(gen.events.at(-1).done, true);
+  assert.equal(lastAuth, undefined);
+  assert.equal(requests.at(-1).model, 'a/free');
+
+  await call('POST', '/connections/openrouter/activate');
+  await call('DELETE', `/connections/${id}`);
+  const s = (await call('GET', '/settings')).json;
+  assert.equal(s.connections.length, 1);
+  assert.equal(s.activeConnection, 'openrouter');
+  assert.equal((await call('DELETE', '/connections/nope')).status, 404);
+});
+
+test('importar chats .jsonl de SillyTavern', async () => {
+  const raw = (url, body, headers = {}) =>
+    fetch(base + url, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', Cookie: cookie, ...headers }, body });
+  const st = [
+    JSON.stringify({ user_name: 'Ana', character_name: 'Luna', create_date: '2024-1-1', chat_metadata: { persona: 'otra/cosa', note: 1 } }),
+    JSON.stringify({ name: 'Luna', is_user: false, is_system: false, send_date: 'June 3, 2024 10:22am', mes: 'Hola *Ana*', swipes: ['Hola *Ana*', 'Buenas'], swipe_id: 1 }),
+    JSON.stringify({ name: 'Ana', is_user: true, mes: 'Hola Luna' }),
+    'linea corrupta',
+  ].join('\n');
+
+  const res = await raw('/chats/import?kind=c&ownerId=Luna', st, { 'X-Filename': encodeURIComponent('Luna - 2024 viejo.jsonl') });
+  assert.equal(res.status, 201);
+  const { file } = await res.json();
+  assert.equal(file, 'Luna - 2024 viejo');
+  const imported = (await call('GET', `/chats/c/Luna/${encodeURIComponent(file)}`)).json;
+  assert.equal(imported.messages.length, 2);
+  assert.equal(imported.messages[0].swipe_id, 1);
+  assert.equal(imported.messages[1].swipes[0], 'Hola Luna');
+  assert.equal(imported.meta.chat_metadata.persona, undefined);
+  assert.equal(imported.meta.chat_metadata.note, 1);
+  assert.ok((await call('GET', '/chats')).json.some((c) => c.file === file));
+
+  const again = await raw('/chats/import?kind=c&ownerId=Luna', st, { 'X-Filename': encodeURIComponent('Luna - 2024 viejo.jsonl') });
+  assert.equal((await again.json()).file, 'Luna - 2024 viejo (2)');
+
+  // sin cabecera, hacia un grupo
+  const noHeader = JSON.stringify({ name: 'Kai', is_user: false, mes: 'Yo' });
+  const g = await raw('/chats/import?kind=g&ownerId=Equipo', noHeader, { 'X-Filename': 'g.jsonl' });
+  assert.equal(g.status, 201);
+  const gj = (await call('GET', `/chats/g/Equipo/g`)).json;
+  assert.equal(gj.meta.character_name, 'Equipo');
+  assert.equal(gj.messages[0].name, 'Kai');
+
+  assert.equal((await raw('/chats/import?kind=c&ownerId=Luna', 'esto no es un chat')).status, 422);
+  assert.equal((await raw('/chats/import?kind=c&ownerId=NoExiste', st)).status, 404);
+  assert.equal((await call('POST', '/chats/import?kind=c&ownerId=Luna', { a: 1 })).status, 400);
+  assert.equal((await raw('/chats/import?kind=c&ownerId=..', st)).status >= 400, true);
 });

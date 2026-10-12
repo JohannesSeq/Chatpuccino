@@ -25,6 +25,7 @@ export default function ChatView() {
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(null);
   const [personaSheet, setPersonaSheet] = useState(false);
+  const [modelSheet, setModelSheet] = useState(false);
   const [groupSheet, setGroupSheet] = useState(false);
 
   const abortRef = useRef(null);
@@ -227,7 +228,7 @@ export default function ChatView() {
 
   const messages = chat.messages;
   const lastIdx = messages.length - 1;
-  const needsSetup = settings && (!settings.hasKey || !settings.model);
+  const needsSetup = settings && !settings.ready;
   const lastIsUser = messages.at(-1)?.is_user;
 
   return (
@@ -245,6 +246,7 @@ export default function ChatView() {
           items={[
             { label: 'Renombrar chat', onClick: renameChat },
             { label: `Persona: ${chat.persona.name}`, onClick: () => setPersonaSheet(true) },
+            { label: `Modelo: ${settings.model || 'sin elegir'}`, onClick: () => setModelSheet(true) },
             isGroup && group && { label: 'Editar grupo', onClick: () => setGroupSheet(true) },
             { label: 'Exportar chat (.jsonl)', href: `/api${chatUrl(ref)}/export`, download: `${ref.file}.jsonl` },
             { label: 'Eliminar chat', danger: true, onClick: deleteChat },
@@ -254,7 +256,7 @@ export default function ChatView() {
 
       {needsSetup && (
         <div className="banner">
-          Falta configurar {!settings.hasKey ? 'la API key' : 'el modelo'} de OpenRouter. <Link to="/settings/conexion">Ir a Ajustes</Link>
+          Falta configurar {settings.setupHint} de la conexión activa. <Link to="/settings/conexion">Ir a Ajustes</Link>
         </div>
       )}
 
@@ -380,6 +382,7 @@ export default function ChatView() {
         </div>
       </div>
 
+      {modelSheet && <ModelSheet onClose={() => setModelSheet(false)} />}
       {personaSheet && (
         <Modal title="Persona de este chat" onClose={() => setPersonaSheet(false)}>
           <ul className="rows">
@@ -410,5 +413,67 @@ export default function ChatView() {
         />
       )}
     </div>
+  );
+}
+
+function ModelSheet({ onClose }) {
+  const { settings, refresh, toast } = useData();
+  const active = settings.connections.find((c) => c.id === settings.activeConnection);
+
+  async function run(fn) {
+    try {
+      await fn();
+      await refresh('settings');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  return (
+    <Modal title="Modelo" onClose={onClose}>
+      {settings.connections.length > 1 && (
+        <label className="field">
+          <span className="field-label">Conexión</span>
+          <select value={active?.id || ''} onChange={(e) => run(() => api.activateConnection(e.target.value))}>
+            {settings.connections.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.type === 'local' ? 'local' : 'OpenRouter'})
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {active ? (
+        <>
+          <div className="field-label">Favoritos de {active.name}</div>
+          <ul className="rows">
+            {[...new Set([active.model, ...active.favorites].filter(Boolean))].map((id) => (
+              <li key={id} className={`row ${active.model === id ? 'active' : ''}`}>
+                <button
+                  className="row-main"
+                  onClick={() =>
+                    run(async () => {
+                      await api.updateConnection(active.id, { model: id });
+                      onClose();
+                    })
+                  }
+                >
+                  <div className="row-text">
+                    <strong>{id}</strong>
+                    <div className="row-sub">{active.model === id ? 'En uso' : active.favorites.includes(id) ? '★ Favorito' : ''}</div>
+                  </div>
+                </button>
+              </li>
+            ))}
+            {!active.favorites.length && <li className="empty small">Marca modelos con la estrella en Ajustes → Conexión y modelo para verlos aquí.</li>}
+          </ul>
+        </>
+      ) : (
+        <p className="muted">No hay conexiones configuradas.</p>
+      )}
+      <Link className="btn" to="/settings/conexion" onClick={onClose}>
+        Ver todos los modelos
+      </Link>
+    </Modal>
   );
 }

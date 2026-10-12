@@ -1,4 +1,71 @@
-node_modules
-dist
-data
+# ==========================================================
+# Datos del usuario: NUNCA subir (API keys, chats, seguridad)
+# ==========================================================
+# Carpeta de datos por defecto (settings.json con API keys, auth.json con
+# hash de contraseña y secreto de sesión, chats .jsonl, personajes, personas,
+# lorebooks, grupos).
+/data/
+/data-*/
+# Por si se usa DATA_DIR apuntando dentro del repo
+/.data/
+/storage/
+
+# Salvaguardas por si esos archivos aparecen fuera de /data
+auth.json
+sessions.json
+/settings.json
+*.jsonl
+chats/
+group-chats/
+characters/
+personas/
+lorebooks/
+groups/
+
+# Secretos y credenciales
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.*
+credentials*.json
+
+# ==========================================================
+# Dependencias y compilación
+# ==========================================================
+node_modules/
+dist/
+build/
+.vite/
+.cache/
+*.tsbuildinfo
+
+# ==========================================================
+# Registros, temporales y cobertura
+# ==========================================================
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.temp
+*.bak
+coverage/
+.nyc_output/
+
+# ==========================================================
+# Sistema operativo y editores
+# ==========================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~

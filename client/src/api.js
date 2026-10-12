@@ -1,16 +1,23 @@
 const enc = encodeURIComponent;
 
-async function req(method, url, body) {
+// Cualquier 401 (salvo en el login) avisa a la app para volver a la pantalla de acceso.
+async function apiFetch(url, init) {
   let res;
   try {
-    res = await fetch(`/api${url}`, {
-      method,
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    res = await fetch(url, init);
   } catch {
     throw new Error('No se pudo conectar con el servidor');
   }
+  if (res.status === 401 && !url.startsWith('/api/auth/login')) window.dispatchEvent(new Event('auth:expired'));
+  return res;
+}
+
+async function req(method, url, body) {
+  const res = await apiFetch(`/api${url}`, {
+    method,
+    headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
@@ -18,18 +25,38 @@ async function req(method, url, body) {
 }
 
 export const chatUrl = ({ kind, ownerId, file }) => `/chats/${kind}/${enc(ownerId)}/${enc(file)}`;
-export const chatRoute = ({ kind, ownerId, file }) => `/chats/${kind}/${enc(ownerId)}/${enc(file)}`;
+export const chatRoute = chatUrl;
 
 export const avatarUrl = {
   character: (c) => `/api/characters/${enc(c.id)}/avatar?v=${c.mtime || 0}`,
   persona: (p) => (p.hasAvatar ? `/api/personas/${enc(p.id)}/avatar?v=${p.mtime || 0}` : null),
 };
 
+async function upload(url, headers, body, label) {
+  const res = await apiFetch(url, { method: 'POST', headers, body });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`${label}: ${data?.error || res.status}`);
+  return data;
+}
+
 export const api = {
+  me: () => req('GET', '/auth/me'),
+  login: (username, password) => req('POST', '/auth/login', { username, password }),
+  logout: () => req('POST', '/auth/logout'),
+  updateAccount: (body) => req('POST', '/auth/account', body),
+  revokeSessions: () => req('POST', '/auth/revoke'),
+  setAuthEnabled: (enabled, current) => req('POST', '/auth/enabled', { enabled, current }),
+
   settings: () => req('GET', '/settings'),
   saveSettings: (patch) => req('PUT', '/settings', patch),
-  models: () => req('GET', '/models'),
-  testKey: (apiKey) => req('POST', '/openrouter/test', { apiKey }),
+
+  createConnection: (body) => req('POST', '/connections', body),
+  updateConnection: (id, body) => req('PUT', `/connections/${enc(id)}`, body),
+  deleteConnection: (id) => req('DELETE', `/connections/${enc(id)}`),
+  activateConnection: (id) => req('POST', `/connections/${enc(id)}/activate`),
+  toggleFavorite: (id, model) => req('POST', `/connections/${enc(id)}/favorites`, { model }),
+  connectionModels: (id) => req('GET', `/connections/${enc(id)}/models`),
+  testConnection: (body) => req('POST', '/connections/test', body),
 
   characters: () => req('GET', '/characters'),
   character: (id) => req('GET', `/characters/${enc(id)}`),
@@ -37,22 +64,16 @@ export const api = {
   updateCharacter: (id, data, image) => req('PUT', `/characters/${enc(id)}`, { data, image }),
   deleteCharacter: (id) => req('DELETE', `/characters/${enc(id)}`),
   async importCharacter(file) {
-    const isPng = /\.png$/i.test(file.name) || file.type === 'image/png';
-    let res;
-    if (isPng) {
-      res = await fetch('/api/characters/import', { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: await file.arrayBuffer() });
-    } else {
-      let json;
-      try {
-        json = JSON.parse(await file.text());
-      } catch {
-        throw new Error(`${file.name}: no es un JSON válido`);
-      }
-      res = await fetch('/api/characters/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(json) });
+    if (/\.png$/i.test(file.name) || file.type === 'image/png') {
+      return upload('/api/characters/import', { 'Content-Type': 'image/png' }, await file.arrayBuffer(), file.name);
     }
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error(`${file.name}: ${data?.error || res.status}`);
-    return data;
+    let json;
+    try {
+      json = JSON.parse(await file.text());
+    } catch {
+      throw new Error(`${file.name}: no es un JSON válido`);
+    }
+    return upload('/api/characters/import', { 'Content-Type': 'application/json' }, JSON.stringify(json), file.name);
   },
 
   personas: () => req('GET', '/personas'),
@@ -74,6 +95,14 @@ export const api = {
 
   chats: () => req('GET', '/chats'),
   createChat: (kind, ownerId, personaId) => req('POST', '/chats', { kind, ownerId, personaId }),
+  async importChat(kind, ownerId, file) {
+    return upload(
+      `/api/chats/import?kind=${kind}&ownerId=${enc(ownerId)}`,
+      { 'Content-Type': 'application/octet-stream', 'X-Filename': enc(file.name) },
+      await file.arrayBuffer(),
+      file.name,
+    );
+  },
   chat: (ref) => req('GET', chatUrl(ref)),
   patchChat: (ref, body) => req('PATCH', chatUrl(ref), body),
   deleteChat: (ref) => req('DELETE', chatUrl(ref)),
@@ -85,7 +114,7 @@ export const api = {
 
 /** Genera una respuesta por streaming (SSE sobre fetch). Resuelve con { index, message }. */
 export async function generate(ref, body, signal, onDelta) {
-  const res = await fetch(`/api${chatUrl(ref)}/generate`, {
+  const res = await apiFetch(`/api${chatUrl(ref)}/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
