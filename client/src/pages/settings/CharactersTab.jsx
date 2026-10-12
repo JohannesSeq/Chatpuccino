@@ -5,6 +5,7 @@ import { useDialog } from '../../dialogs.jsx';
 import { useFileDrop } from '../../useFileDrop.js';
 import { fileToPngDataUrl, placeholderPngDataUrl } from '../../util.js';
 import { Icon } from '../../components/Icon.jsx';
+import TagPicker from '../../components/TagPicker.jsx';
 import { CharAvatar, DropOverlay, Field, SearchBox } from '../../components/ui.jsx';
 
 const isPngFile = (f) => /\.png$/i.test(f.name) || f.type === 'image/png';
@@ -129,14 +130,14 @@ const EMPTY = {
 };
 
 export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
-  const { lorebooks, toast } = useData();
+  const { characters, lorebooks, toast } = useData();
   const { confirm } = useDialog();
   const [data, setData] = useState(id ? null : { ...EMPTY, name: initialFile ? guessName(initialFile.name) : '' });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [tagsText, setTagsText] = useState('');
   const [busy, setBusy] = useState(false);
   const fileRef = useRef(null);
+  const knownTags = useMemo(() => characters.flatMap((c) => c.tags || []), [characters]);
 
   async function applyFile(file) {
     if (!file?.type?.startsWith('image/')) {
@@ -164,7 +165,6 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     if (!id) return;
     api.character(id).then(({ data: d, mtime }) => {
       setData(d);
-      setTagsText(d.tags.join(', '));
       setPreview(`/api/characters/${encodeURIComponent(id)}/avatar?v=${mtime}`);
     }).catch((e) => {
       toast(e.message, 'error');
@@ -187,7 +187,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   async function save() {
     if (!data.name.trim()) return toast('El nombre es obligatorio', 'error');
     setBusy(true);
-    const payload = { ...data, name: data.name.trim(), tags: tagsText.split(',').map((t) => t.trim()).filter(Boolean) };
+    const payload = { ...data, name: data.name.trim() };
     try {
       if (id) await api.updateCharacter(id, payload, image);
       else await api.createCharacter(payload, image || placeholderPngDataUrl(payload.name));
@@ -256,9 +256,10 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
             <Field label="Nombre">
               <input value={data.name} onChange={(e) => set('name', e.target.value)} />
             </Field>
-            <Field label="Etiquetas (separadas por coma)">
-              <input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
-            </Field>
+            <div className="field">
+              <span className="field-label">Etiquetas</span>
+              <TagPicker value={data.tags || []} onChange={(t) => set('tags', t)} options={knownTags} />
+            </div>
             {id && (
               <div className="btn-row">
                 <a className="btn small" href={`/api/characters/${encodeURIComponent(id)}/export`}>

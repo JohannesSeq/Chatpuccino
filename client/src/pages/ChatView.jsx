@@ -76,6 +76,22 @@ export default function ChatView() {
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [chat?.messages.length, streaming?.text, streaming?.replaceIndex]);
 
+  // El cuadro de texto crece con su contenido (incluidas las líneas envueltas) hasta su max-height y luego hace scroll.
+  const fitInput = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+    const list = listRef.current;
+    if (list && stick.current) list.scrollTop = list.scrollHeight;
+  }, []);
+  const chatReady = chat !== null;
+  useLayoutEffect(fitInput, [input, chatReady, fitInput]);
+  useEffect(() => {
+    window.addEventListener('resize', fitInput);
+    return () => window.removeEventListener('resize', fitInput);
+  }, [fitInput]);
+
   const onScroll = () => {
     const el = listRef.current;
     stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
@@ -520,7 +536,6 @@ export default function ChatView() {
             readOnly={impersonating}
             placeholder={impersonating ? 'Escribiendo por ti…' : 'Escribe un mensaje'}
             rows={1}
-            style={{ height: Math.min(140, 24 + Math.max(0, input.split('\n').length - 1) * 22) }}
           />
           {impersonating ? (
             <button className="icon-btn impersonate on" onClick={() => impersonateAbort.current?.abort()} aria-label="Detener" title="Detener">
