@@ -1,8 +1,75 @@
-# Chatpuccino
+<div align="center">
 
-Chat de roleplay con estilo de mensajería (WhatsApp), inspirado en [SillyTavern](https://github.com/SillyTavern/SillyTavern) y conectado a OpenRouter. Aplicación web React + servidor Node/Express, usable desde móvil y escritorio.
+# ☕ Chatpuccino
 
-## Uso
+**Roleplay con IA que se siente como chatear por WhatsApp.**
+
+Tus personajes, tus historias y tus modelos, en una app web que corre en tu propio equipo.
+
+![Código abierto](https://img.shields.io/badge/c%C3%B3digo-abierto-2ea44f)
+![Contribuciones bienvenidas](https://img.shields.io/badge/PRs-bienvenidos-brightgreen)
+![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
+![Node](https://img.shields.io/badge/Node-%E2%89%A5%2018-339933?logo=node.js&logoColor=white)
+![Compatible con SillyTavern](https://img.shields.io/badge/compatible-SillyTavern-8a63d2)
+
+<img src="docs/screenshots/desktop-chat.png" alt="Chatpuccino en escritorio: lista de chats a la izquierda y conversación con Luna a la derecha" width="900">
+
+</div>
+
+## ¿Qué es Chatpuccino?
+
+Chatpuccino es una aplicación de chatbots para roleplay inspirada en [SillyTavern](https://github.com/SillyTavern/SillyTavern), pero pensada para sentirse como una app de mensajería: lista de chats, burbujas, fijados, grupos y una interfaz que funciona igual de bien en el móvil que en el escritorio.
+
+- **Tus datos son tuyos.** Todo vive en archivos en tu equipo (`.jsonl`, `.png`, `.json`). Lo único que sale de tu máquina son las peticiones al proveedor de IA que tú configures.
+- **Compatible con SillyTavern.** Tarjetas de personaje PNG (V2/V3), lorebooks (World Info), presets de Chat Completion y chats `.jsonl`: los traes y los llevas sin conversión.
+- **Cualquier modelo.** OpenRouter (con favoritos y lista de modelos) o servidores locales compatibles con OpenAI como LM Studio u Ollama.
+- **Se instala en un minuto.** Node + React, sin base de datos ni servicios externos. Funciona en Windows y Linux.
+
+## 💜 Proyecto de código abierto
+
+Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunidad del roleplay. El código es público, lo puedes leer, modificar y adaptar a tu manera, y **las contribuciones son bienvenidas**: desde reportar un fallo o proponer una idea hasta enviar un *pull request*. Mira [Contribuir](#contribuir) para empezar.
+
+> Chatpuccino es un proyecto independiente: se inspira en SillyTavern y es compatible con sus formatos, pero no está afiliado a él.
+
+## ✨ Características
+
+| | |
+| --- | --- |
+| 💬 **Estilo mensajería** | Chats con burbujas, marcas de hora, chats **fijados**, búsqueda y chats ilimitados por personaje; cada uno con su propia historia. |
+| 👥 **Grupos** | Varios personajes en la misma conversación, con respuesta inteligente (el mencionado o el siguiente por turnos), todos a la vez o manual; y puedes convertir un chat individual en grupo. |
+| 🎭 **Personajes** | Crea, edita e importa tarjetas PNG/JSON de SillyTavern. Arrastra una imagen para crear uno nuevo y abre la tarjeta desde el chat con solo tocar su nombre. |
+| 🙋 **Personas** | Tu representación en la historia, intercambiable al vuelo desde la esquina de la lista de chats. |
+| 📚 **Lorebooks** | Editor de World Info compatible con SillyTavern para dar contexto adicional al modelo. |
+| 🎛️ **Presets y prompts** | Lista ordenada de prompts, parámetros de muestreo y formatos guardados en JSON, con inspector del prompt final. |
+| 🔀 **Control de la conversación** | Variantes (*swipes*) que puedes borrar una a una, ramas desde cualquier mensaje, copiar chats e **impersonar** (el modelo escribe por ti). |
+| 🎨 **Personalización** | Modo claro/oscuro/automático, colores, fuentes, tamaños, transparencia de burbujas y fondo de pantalla. |
+| 🔐 **Seguridad** | Inicio de sesión con contraseña cifrada (scrypt), bloqueo ante intentos fallidos y cierre de sesiones. |
+| 📱 **Móvil y escritorio** | Diseño responsivo pensado primero para el pulgar. |
+
+## 📸 Capturas
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/mobile-list.png" alt="Lista de chats en el móvil con un chat fijado" width="260"><br><sub>Lista de chats con fijados</sub></td>
+    <td align="center"><img src="docs/screenshots/mobile-chat-dark.png" alt="Conversación en modo oscuro en el móvil" width="260"><br><sub>Modo oscuro</sub></td>
+    <td align="center"><img src="docs/screenshots/mobile-chat-light.png" alt="Conversación en modo claro con fondo de pantalla y burbujas translúcidas" width="260"><br><sub>Modo claro, fondo y burbujas translúcidas</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/character-card.png" alt="Tarjeta de personaje abierta desde el chat"><br><sub><b>Tarjeta de personaje</b> editable desde el propio chat.</sub></td>
+    <td width="50%"><img src="docs/screenshots/presets.png" alt="Presets con la lista ordenada de prompts"><br><sub><b>Presets</b> con varios prompts, orden y activación individual.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/appearance.png" alt="Pestaña de apariencia con vista previa en vivo"><br><sub><b>Apariencia</b>: colores, fuentes, fondo y transparencia con vista previa.</sub></td>
+    <td width="50%"><img src="docs/screenshots/lorebooks-list.png" alt="Editor de lorebook con tres entradas"><br><sub><b>Lorebooks</b> en formato World Info de SillyTavern.</sub></td>
+  </tr>
+</table>
+
+## 🚀 Inicio rápido
+
+Necesitas [Node.js](https://nodejs.org) 18 o superior.
 
 ```bash
 npm install
@@ -12,7 +79,11 @@ npm start          # http://localhost:3001 (también accesible desde tu red loca
 
 Desarrollo con recarga en caliente: `npm run dev` (cliente en http://localhost:5173, API en 3001).
 
-Primer arranque: entra con **`admin` / `Admin`** y cambia la contraseña en **Ajustes → Seguridad**. Luego, en **Ajustes → Conexión y modelo**, añade una conexión (OpenRouter con tu API key, o un servidor local compatible con OpenAI como LM Studio u Ollama) y elige un modelo.
+Primer arranque: entra con **`admin` / `Admin`** y cambia la contraseña en **Ajustes → Seguridad**. Luego, en **Ajustes → Conexión y modelo**, añade una conexión (OpenRouter con tu API key, o un servidor local compatible con OpenAI como LM Studio u Ollama) y elige un modelo. Después importa o crea un personaje en **Ajustes → Personajes** y empieza a chatear desde **Chats**.
+
+---
+
+# Guía detallada
 
 ## Conexiones y modelos
 
@@ -80,3 +151,32 @@ Puedes copiar tarjetas PNG, chats `.jsonl` y lorebooks desde una instalación de
 ## Pruebas
 
 `npm test` levanta el servidor contra un OpenRouter simulado y valida PNG, lorebooks, chats, streaming, swipes y grupos.
+
+## Contribuir
+
+Chatpuccino es de código abierto y toda ayuda suma: corregir un error, mejorar una traducción o la documentación, proponer una función o probarlo en tu dispositivo y contar cómo te fue.
+
+1. Haz un *fork* del repositorio y crea una rama para tu cambio.
+2. Instala las dependencias con `npm install` y arranca el entorno de desarrollo con `npm run dev`.
+3. Si tocas el servidor, añade o ajusta pruebas en `server/test/` y comprueba que `npm test` pasa; si tocas la interfaz, verifica que `npm run build` compila.
+4. Abre un *pull request* describiendo qué cambia y por qué (las capturas ayudan mucho en cambios visuales).
+
+Para reportar un fallo o proponer una idea, abre un *issue* con los pasos para reproducirlo, qué esperabas que pasara y, si puedes, tu sistema y navegador.
+
+### Estructura del proyecto
+
+| Carpeta | Contenido |
+| --- | --- |
+| `client/` | Interfaz React (Vite): páginas de chats y ajustes, componentes y tema |
+| `server/` | API Express: tarjetas PNG, chats JSONL, lorebooks, presets, conexiones y autenticación |
+| `server/test/` | Pruebas de integración (`node --test`) |
+| `docs/screenshots/` | Capturas usadas en este README |
+| `data/` | Tus datos locales (ignorados por git: llaves, chats y credenciales nunca se suben) |
+
+### Datos sensibles
+
+El archivo `.gitignore` excluye `data/`, llaves, chats y credenciales. Antes de abrir un *pull request*, revisa que no incluyes API keys, chats personales ni capturas con información privada.
+
+## Agradecimientos
+
+Gracias al proyecto [SillyTavern](https://github.com/SillyTavern/SillyTavern) por definir los formatos de tarjetas, lorebooks y chats que Chatpuccino reutiliza para que tus personajes viajen contigo.

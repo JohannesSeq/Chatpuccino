@@ -323,7 +323,7 @@ details > summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
 
 /* ---------- chat ---------- */
 .chat-view { position: relative; overflow: hidden; display: flex; flex-direction: column; height: 100%; min-height: 0; background: radial-gradient(circle at 20% 0%, var(--chat-bg-2), var(--chat-bg) 60%); }
-.chat-view > :not(.overlay) { position: relative; z-index: 1; }
+.chat-view > :where(:not(.overlay)) { position: relative; z-index: 1; }
 
 /* Fondo de pantalla: capa propia para poder desenfocarla y atenuarla. */
 html.has-wallpaper .chat-view::before,
