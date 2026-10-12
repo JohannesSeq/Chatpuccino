@@ -1,22 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal, SearchBox } from '../../components/ui.jsx';
 
-const PARAMS = [
-  ['temperature', 'Temperatura', 0, 2, 0.05],
-  ['top_p', 'Top P', 0, 1, 0.01],
-  ['top_k', 'Top K (0 = desactivado)', 0, 200, 1],
-  ['min_p', 'Min P (0 = desactivado)', 0, 1, 0.01],
-  ['frequency_penalty', 'Penalización de frecuencia', -2, 2, 0.05],
-  ['presence_penalty', 'Penalización de presencia', -2, 2, 0.05],
-  ['repetition_penalty', 'Penalización de repetición (1 = ninguna)', 0, 2, 0.05],
-  ['max_tokens', 'Máx. tokens de respuesta', 16, 8192, 16],
-  ['maxContext', 'Contexto máximo (tokens)', 1024, 2000000, 512],
-];
-
-const PRESETS = [
+const LOCAL_SERVERS = [
   ['LM Studio', 'http://localhost:1234/v1'],
   ['Ollama', 'http://localhost:11434/v1'],
   ['KoboldCpp', 'http://localhost:5001/v1'],
@@ -78,7 +67,9 @@ export default function ConnectionTab() {
       </section>
 
       {active && <ModelPicker key={active.id} conn={active} />}
-      <ParamsCard settings={settings} onSaved={() => refresh('settings')} toast={toast} />
+      <p className="muted">
+        Los parámetros de generación y los prompts de sistema se configuran en la pestaña <Link to="/settings/presets">Presets</Link>.
+      </p>
 
       {editing && (
         <ConnectionEditor
@@ -194,7 +185,7 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
             <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="http://localhost:1234/v1" autoCapitalize="none" />
           </Field>
           <div className="chips wrap">
-            {PRESETS.map(([label, url]) => (
+            {LOCAL_SERVERS.map(([label, url]) => (
               <button key={label} className="chip plain" onClick={() => setBaseUrl(url)}>
                 {label}
               </button>
@@ -351,45 +342,6 @@ function ModelPicker({ conn }) {
           </button>
         </div>
       </Field>
-    </section>
-  );
-}
-
-function ParamsCard({ settings, onSaved, toast }) {
-  const [draft, setDraft] = useState(() => ({ ...Object.fromEntries(PARAMS.map(([k]) => [k, settings[k]])), systemPrompt: settings.systemPrompt }));
-  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
-
-  async function save() {
-    try {
-      await api.saveSettings(draft);
-      toast('Parámetros guardados');
-      onSaved();
-    } catch (e) {
-      toast(e.message, 'error');
-    }
-  }
-
-  return (
-    <section className="card">
-      <h3>Generación</h3>
-      <div className="grid-2">
-        {PARAMS.map(([key, label, min, max, step]) => (
-          <Field key={key} label={label}>
-            <input type="number" inputMode="decimal" min={min} max={max} step={step} value={draft[key]} onChange={(e) => set(key, e.target.value)} />
-          </Field>
-        ))}
-      </div>
-      <Field label="Prompt de sistema" hint="Admite {{char}} y {{user}}. Un prompt propio en la tarjeta del personaje lo reemplaza (usa {{original}} para incluirlo).">
-        <textarea rows={6} value={draft.systemPrompt} onChange={(e) => set('systemPrompt', e.target.value)} />
-      </Field>
-      <div className="btn-row">
-        <button className="btn primary" onClick={save}>
-          Guardar
-        </button>
-        <button className="btn" onClick={() => set('systemPrompt', settings.defaultSystemPrompt)}>
-          Restaurar prompt
-        </button>
-      </div>
     </section>
   );
 }

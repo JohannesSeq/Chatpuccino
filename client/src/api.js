@@ -58,6 +58,15 @@ export const api = {
   connectionModels: (id) => req('GET', `/connections/${enc(id)}/models`),
   testConnection: (body) => req('POST', '/connections/test', body),
 
+  presets: () => req('GET', '/presets'),
+  preset: (name) => req('GET', `/presets/${enc(name)}`),
+  createPreset: (name, preset) => req('POST', '/presets', { name, preset }),
+  importPreset: (name, preset) => req('POST', '/presets/import', { name, preset }),
+  savePreset: (name, preset) => req('PUT', `/presets/${enc(name)}`, preset),
+  renamePreset: (name, newName) => req('POST', `/presets/${enc(name)}/rename`, { newName }),
+  deletePreset: (name) => req('DELETE', `/presets/${enc(name)}`),
+  inspectPrompt: (ref, body) => req('POST', `${chatUrl(ref)}/prompt`, body),
+
   characters: () => req('GET', '/characters'),
   character: (id) => req('GET', `/characters/${enc(id)}`),
   createCharacter: (data, image) => req('POST', '/characters', { data, image }),

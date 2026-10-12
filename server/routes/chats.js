@@ -12,6 +12,8 @@ import {
 } from '../chats.js';
 import { streamChat } from '../providers.js';
 import { buildPrompt, stripSpeakerPrefix } from '../prompt.js';
+import { estimateTokens } from '../lore.js';
+import { getActivePreset } from '../presets.js';
 import { activeConnection, getSettings, isReady } from '../settings.js';
 import { getGroup, getPersona } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
@@ -162,26 +164,20 @@ r.post('/:kind/:owner/:file/messages/:i/swipe', wrap(async (req, res) => {
   res.json(out);
 }));
 
-function samplingParams(s, userName) {
-  const body = { temperature: s.temperature, top_p: s.top_p, max_tokens: s.max_tokens, stop: [`\n${userName}:`] };
-  if (s.top_k > 0) body.top_k = s.top_k;
-  if (s.min_p > 0) body.min_p = s.min_p;
-  if (s.frequency_penalty) body.frequency_penalty = s.frequency_penalty;
-  if (s.presence_penalty) body.presence_penalty = s.presence_penalty;
-  if (s.repetition_penalty && s.repetition_penalty !== 1) body.repetition_penalty = s.repetition_penalty;
+function samplingParams(p, userName) {
+  const body = { temperature: p.temperature, top_p: p.top_p, max_tokens: p.openai_max_tokens, stop: [`\n${userName}:`] };
+  if (p.top_k > 0) body.top_k = p.top_k;
+  if (p.top_a > 0) body.top_a = p.top_a;
+  if (p.min_p > 0) body.min_p = p.min_p;
+  if (p.frequency_penalty) body.frequency_penalty = p.frequency_penalty;
+  if (p.presence_penalty) body.presence_penalty = p.presence_penalty;
+  if (p.repetition_penalty && p.repetition_penalty !== 1) body.repetition_penalty = p.repetition_penalty;
   return body;
 }
 
-r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
-  const { kind, owner, file } = req.params;
-  const { speakerId, swipe } = req.body || {};
+// Reúne todo lo necesario para la siguiente respuesta: quién habla, el historial y el prompt final del preset activo.
+async function prepareGeneration({ kind, owner, file }, { speakerId, swipe }) {
   const settings = await getSettings();
-  const conn = activeConnection(settings);
-  if (!conn) throw new HttpError(400, 'Configura una conexión (Ajustes → Conexión y modelo).');
-  if (!isReady(conn)) {
-    throw new HttpError(400, conn.model ? 'La conexión activa está incompleta (Ajustes → Conexión y modelo).' : 'Selecciona un modelo (Ajustes → Conexión y modelo).');
-  }
-
   const chat = await readChat(kind, owner, file);
   const ownerInfo = await loadOwner(kind, owner);
   const isGroup = kind === 'g';
@@ -203,14 +199,38 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
   if (!speaker) throw new HttpError(400, 'Personaje que responde no válido');
 
   const persona = await resolvePersona(chat.meta, settings);
+  const { name: presetName, preset } = await getActivePreset(settings);
   const prompt = await buildPrompt({
     settings,
+    preset,
     speaker,
     members: isGroup ? ownerInfo.members : null,
     persona,
     userName: persona.name,
     history,
+    trigger: swipe ? 'swipe' : 'normal',
   });
+  return { settings, isGroup, speaker, targetIndex, persona, preset, presetName, prompt };
+}
+
+// Inspector de prompt: lo que se enviaría ahora mismo al modelo.
+r.post('/:kind/:owner/:file/prompt', wrap(async (req, res) => {
+  const { prompt, preset, presetName, speaker } = await prepareGeneration(req.params, req.body || {});
+  const messages = prompt.map((m) => ({ ...m, tokens: estimateTokens(m.content) }));
+  res.json({ preset: presetName, speaker: speaker.name, maxTokens: preset.openai_max_tokens, messages, totalTokens: messages.reduce((n, m) => n + m.tokens, 0) });
+}));
+
+r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const { swipe } = req.body || {};
+  const settings0 = await getSettings();
+  const conn = activeConnection(settings0);
+  if (!conn) throw new HttpError(400, 'Configura una conexión (Ajustes → Conexión y modelo).');
+  if (!isReady(conn)) {
+    throw new HttpError(400, conn.model ? 'La conexión activa está incompleta (Ajustes → Conexión y modelo).' : 'Selecciona un modelo (Ajustes → Conexión y modelo).');
+  }
+
+  const { isGroup, speaker, targetIndex, persona, preset, prompt } = await prepareGeneration(req.params, req.body || {});
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
@@ -252,7 +272,7 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
     const text = await streamChat({
       conn,
       signal: ac.signal,
-      body: { model: conn.model, messages: prompt, ...samplingParams(settings, persona.name) },
+      body: { model: conn.model, messages: prompt, ...samplingParams(preset, persona.name) },
       onDelta: (delta) => send({ delta }),
     });
     const saved = await persist(text);

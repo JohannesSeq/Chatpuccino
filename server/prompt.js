@@ -1,12 +1,15 @@
 import { activateEntries, estimateTokens, getBookOrNull, normalizeBook } from './lore.js';
+import { getOrder } from './presets.js';
+import { HttpError } from './util.js';
 
 export function applyMacros(text, ctx) {
   if (!text) return '';
   const now = new Date();
   return String(text)
     .replace(/\{\{\s*\/\/[\s\S]*?\}\}/g, '')
-    .replace(/\{\{\s*char\s*\}\}|<BOT>/gi, ctx.char)
-    .replace(/\{\{\s*user\s*\}\}|<USER>/gi, ctx.user)
+    .replace(/\{\{\s*char\s*\}\}|<BOT>/gi, () => ctx.char)
+    .replace(/\{\{\s*user\s*\}\}|<USER>/gi, () => ctx.user)
+    .replace(/\{\{\s*group\s*\}\}/gi, () => ctx.group ?? ctx.char)
     .replace(/\{\{\s*date\s*\}\}/gi, now.toLocaleDateString())
     .replace(/\{\{\s*time\s*\}\}/gi, now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     .replace(/\{\{\s*random\s*:\s*([^}]*)\}\}/gi, (_, list) => {
@@ -15,9 +18,8 @@ export function applyMacros(text, ctx) {
     });
 }
 
-async function collectLoreEntries({ settings, speaker, members }) {
+async function collectLoreEntries({ settings, cards }) {
   const names = new Set(settings.activeLorebooks || []);
-  const cards = members?.length ? members : [speaker];
   for (const c of cards) if (c.extensions?.world) names.add(c.extensions.world);
   const entries = [];
   for (const name of names) {
@@ -36,58 +38,106 @@ async function collectLoreEntries({ settings, speaker, members }) {
   return entries;
 }
 
+const cost = (content) => estimateTokens(content) + 4;
+
+function squash(messages) {
+  const out = [];
+  for (const m of messages) {
+    const last = out[out.length - 1];
+    if (last && last.role === 'system' && m.role === 'system') last.content += `\n\n${m.content}`;
+    else out.push({ ...m });
+  }
+  return out;
+}
+
 /**
- * Construye los mensajes para el modelo.
- * @param speaker datos de la tarjeta del personaje que va a responder
+ * Construye los mensajes para el modelo siguiendo el preset activo.
+ * @param settings ajustes (profundidad y presupuesto de lorebooks, lorebooks globales)
+ * @param preset preset normalizado: parámetros, lista de prompts y su orden
+ * @param speaker tarjeta del personaje que va a responder
  * @param members tarjetas de todos los miembros del grupo (null en chat individual)
  * @param history mensajes del chat (sin el que se está generando)
+ * @param trigger 'normal' | 'swipe' — filtra prompts con `injection_trigger`
  */
-export async function buildPrompt({ settings, speaker, members, persona, userName, history }) {
-  const ctx = { char: speaker.name, user: userName };
-  const sub = (t) => applyMacros(t, ctx);
-  const isGroup = Boolean(members && members.length > 1);
+export async function buildPrompt({ settings, preset, speaker, members, persona, userName, history, trigger = 'normal' }) {
+  const cards = members?.length ? members : [speaker];
+  const isGroup = cards.length > 1;
+  const groupNames = cards.map((c) => c.name).join(', ');
+  const ctxFor = (c) => ({ char: c.name, user: userName, group: groupNames });
+  const sub = (t) => applyMacros(t, ctxFor(speaker));
+  const active = trigger === 'swipe' ? ['swipe', 'regenerate'] : ['normal'];
+  const triggered = (p) => !p.injection_trigger.length || p.injection_trigger.some((t) => active.includes(t));
 
   const visible = history.filter((m) => !m.is_system);
-  const loreEntries = await collectLoreEntries({ settings, speaker, members });
   const lore = activateEntries(
-    loreEntries,
+    await collectLoreEntries({ settings, cards }),
     visible.map((m) => String(m.mes)),
     { scanDepth: settings.scanDepth, budgetTokens: settings.loreBudget },
   );
-  const bucket = (pred) => lore.filter(pred).map((e) => sub(e.content)).join('\n');
-  const loreBefore = bucket((e) => [0, 2, 5].includes(e.position));
-  const loreAfter = bucket((e) => [1, 3, 6].includes(e.position));
-  const loreDepth = lore.filter((e) => e.position === 4);
+  const loreText = (positions) => {
+    const t = lore.filter((e) => positions.includes(e.position)).map((e) => sub(e.content)).join('\n');
+    return t && preset.wi_format ? preset.wi_format.replace('{0}', () => t) : t;
+  };
+  const formatted = (format, placeholder, field) =>
+    cards
+      .filter((c) => c[field].trim())
+      .map((c) => applyMacros(format.replace(placeholder, () => c[field]), ctxFor(c)))
+      .join('\n');
 
-  const defaultPrompt = sub(settings.systemPrompt);
-  const mainPrompt = speaker.system_prompt?.trim() ? sub(speaker.system_prompt).replace(/\{\{\s*original\s*\}\}/gi, defaultPrompt) : defaultPrompt;
-
-  const sections = [mainPrompt];
-  if (isGroup) {
-    sections.push(
-      `This is a group roleplay chat. Participants: ${members.map((m) => m.name).join(', ')}, and ${userName}. You are writing only as ${speaker.name}. Do not write replies for any other participant. Do not start your message with your own name.`,
-    );
-  }
-  if (loreBefore) sections.push(loreBefore);
-  for (const c of isGroup ? members : [speaker]) {
-    const cs = (t) => applyMacros(t, { char: c.name, user: userName });
-    const parts = [];
-    if (c.description.trim()) parts.push(cs(c.description));
-    if (c.personality.trim()) parts.push(`${c.name}'s personality: ${cs(c.personality)}`);
-    if (c.scenario.trim()) parts.push(`Scenario: ${cs(c.scenario)}`);
-    if (parts.length) sections.push(isGroup ? `[${c.name}]\n${parts.join('\n')}` : parts.join('\n'));
-  }
-  if (persona?.description?.trim()) sections.push(`${userName}'s description:\n${sub(persona.description)}`);
-  if (loreAfter) sections.push(loreAfter);
-  const examples = (isGroup ? members : [speaker]).filter((c) => c.mes_example.trim());
-  if (examples.length) {
-    sections.push(
-      examples
-        .map((c) => applyMacros(c.mes_example, { char: c.name, user: userName }).replace(/<START>/gi, '[Example chat]').trim())
+  const markerText = {
+    worldInfoBefore: () => loreText([0, 2, 5]),
+    worldInfoAfter: () => loreText([1, 3, 6]),
+    charDescription: () =>
+      cards
+        .map((c) => {
+          const d = applyMacros(c.description, ctxFor(c)).trim();
+          return d && (isGroup ? `[${c.name}]\n${d}` : d);
+        })
+        .filter(Boolean)
         .join('\n\n'),
-    );
+    charPersonality: () => formatted(preset.personality_format, /\{\{personality\}\}/gi, 'personality'),
+    scenario: () => formatted(preset.scenario_format, /\{\{scenario\}\}/gi, 'scenario'),
+    personaDescription: () => (persona?.description?.trim() ? sub(persona.description) : ''),
+    dialogueExamples: () =>
+      cards
+        .flatMap((c) => applyMacros(c.mes_example, ctxFor(c)).split(/<START>/i))
+        .map((b) => b.trim())
+        .filter(Boolean)
+        .map((b) => (preset.new_example_chat_prompt ? `${preset.new_example_chat_prompt}\n${b}` : b))
+        .join('\n'),
+  };
+
+  // Una pieza es un mensaje fijo o el hueco donde va el historial.
+  const pieces = [];
+  const injections = [];
+  const byId = new Map(preset.prompts.map((p) => [p.identifier, p]));
+  for (const entry of getOrder(preset)) {
+    const p = byId.get(entry.identifier);
+    if (!entry.enabled || !p || !triggered(p)) continue;
+    if (p.identifier === 'chatHistory') {
+      pieces.push({ history: true });
+      continue;
+    }
+    if (p.marker) {
+      const content = (markerText[p.identifier]?.() ?? '').trim();
+      if (content) pieces.push({ role: 'system', content });
+      continue;
+    }
+    // La tarjeta puede reemplazar el prompt principal y las instrucciones posteriores al historial.
+    let raw = p.content;
+    const override = p.identifier === 'main' ? speaker.system_prompt : p.identifier === 'jailbreak' ? speaker.post_history_instructions : '';
+    if (override?.trim() && !p.forbid_overrides) raw = override.replace(/\{\{\s*original\s*\}\}/gi, () => p.content);
+    const content = sub(raw).trim();
+    if (!content) continue;
+    if (p.injection_position === 1) injections.push({ depth: p.injection_depth, order: p.injection_order, role: p.role, content });
+    else pieces.push({ role: p.role, content });
   }
-  const system = sections.filter(Boolean).join('\n\n');
+
+  for (const e of lore.filter((x) => x.position === 4)) {
+    injections.push({ depth: e.depth ?? 4, order: e.order, role: ['system', 'user', 'assistant'][e.role] || 'system', content: sub(e.content) });
+  }
+  const dp = speaker.extensions?.depth_prompt;
+  if (dp?.prompt?.trim()) injections.push({ depth: dp.depth ?? 4, order: 100, role: dp.role || 'system', content: sub(dp.prompt) });
 
   const toMessage = (m) => {
     if (m.is_user) return { role: 'user', content: isGroup ? `${m.name}: ${m.mes}` : String(m.mes) };
@@ -96,34 +146,43 @@ export async function buildPrompt({ settings, speaker, members, persona, userNam
   };
   let msgs = visible.map(toMessage);
 
-  const tail = [];
+  const intro = msgs.length ? sub(isGroup ? preset.new_group_chat_prompt : preset.new_chat_prompt).trim() : '';
+  const afterHistory = [];
   if (!msgs.length || msgs[msgs.length - 1].role !== 'user') {
-    tail.push({ role: 'user', content: `[Continue the roleplay. Write ${speaker.name}'s next reply.]` });
+    afterHistory.push({ role: 'user', content: `[Continue the roleplay. Write ${speaker.name}'s next reply.]` });
   }
-  const post = speaker.post_history_instructions?.trim() ? sub(speaker.post_history_instructions) : '';
-  if (post) tail.push({ role: 'system', content: post });
+  const nudge = isGroup ? sub(preset.group_nudge_prompt).trim() : '';
+  if (nudge) afterHistory.push({ role: 'system', content: nudge });
 
-  const depthPrompt = speaker.extensions?.depth_prompt;
-  const depthMsgs = loreDepth.map((e) => ({ depth: e.depth ?? 4, role: ['system', 'user', 'assistant'][e.role] || 'system', content: sub(e.content) }));
-  if (depthPrompt?.prompt?.trim()) {
-    depthMsgs.push({ depth: depthPrompt.depth ?? 4, role: depthPrompt.role || 'system', content: sub(depthPrompt.prompt) });
-  }
-
-  const reserved = estimateTokens(system) + tail.reduce((n, m) => n + estimateTokens(m.content), 0) + depthMsgs.reduce((n, m) => n + estimateTokens(m.content), 0);
-  const budget = Math.max(512, (settings.maxContext || 16000) - (settings.max_tokens || 400)) - reserved;
+  const fixed = [...pieces.filter((p) => !p.history), ...injections, ...afterHistory, ...(intro ? [{ content: intro }] : [])].reduce((n, m) => n + cost(m.content), 0);
+  const budget = Math.max(512, preset.openai_max_context - preset.openai_max_tokens) - fixed;
   let used = 0;
   let start = msgs.length;
   while (start > 0) {
-    const cost = estimateTokens(msgs[start - 1].content) + 4;
-    if (used + cost > budget && start < msgs.length) break;
-    used += cost;
+    const c = cost(msgs[start - 1].content);
+    if (used + c > budget && start < msgs.length) break;
+    used += c;
     start--;
   }
   msgs = msgs.slice(start);
 
-  for (const d of depthMsgs) msgs.splice(Math.max(0, msgs.length - d.depth), 0, { role: d.role, content: d.content });
+  // Los prompts "en el chat" se insertan contando mensajes desde el final del historial.
+  const buckets = new Map();
+  for (const inj of injections) {
+    const at = Math.min(msgs.length, Math.max(0, msgs.length - inj.depth));
+    buckets.set(at, [...(buckets.get(at) || []), inj]);
+  }
+  const withInjections = [];
+  for (let i = 0; i <= msgs.length; i++) {
+    const here = (buckets.get(i) || []).sort((a, b) => a.order - b.order);
+    withInjections.push(...here.map(({ role, content }) => ({ role, content })));
+    if (i < msgs.length) withInjections.push(msgs[i]);
+  }
 
-  return [{ role: 'system', content: system }, ...msgs, ...tail];
+  const historyBlock = [...(intro ? [{ role: 'system', content: intro }] : []), ...withInjections, ...afterHistory];
+  const messages = pieces.flatMap((p) => (p.history ? historyBlock : [{ role: p.role, content: p.content }]));
+  if (!messages.length) throw new HttpError(400, 'El preset activo no genera ningún prompt: activa al menos uno en Ajustes → Presets.');
+  return preset.squash_system_messages ? squash(messages) : messages;
 }
 
 // Si el modelo antepone "Nombre: " en un chat de grupo, se elimina.

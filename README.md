@@ -20,6 +20,15 @@ Primer arranque: entra con **`admin` / `Admin`** y cambia la contraseña en **Aj
 - Servidor local: URL de la API compatible con OpenAI, p. ej. `http://localhost:1234/v1` (LM Studio) o `http://localhost:11434/v1` (Ollama). La URL se abre desde la máquina que ejecuta Chatpuccino.
 - Cada conexión tiene sus **modelos favoritos** (estrella); también aparecen en el menú del chat → *Modelo* para cambiar rápido.
 
+## Presets y prompts de sistema
+
+Estilo «Chat Completion» de SillyTavern (**Ajustes → Presets**). Cada preset es un JSON en `data/presets/` que guarda:
+- **Muestreo:** temperatura, top P/K/A, min P, penalizaciones, tokens máximos y contexto.
+- **Lista de prompts:** varios a la vez, cada uno con rol (sistema/usuario/asistente), contenido, activo/inactivo y orden. Los hay automáticos (descripción, personalidad, escenario, persona, lorebook antes/después, ejemplos y historial) y personalizados (los que tú añades). Un prompt personalizado puede ir en su posición de la lista o «en el chat» a cierta profundidad del historial.
+- **Mensajes auxiliares y formatos:** inicio de chat, aviso de grupo, formato del lorebook/escenario/personalidad y unión de mensajes de sistema.
+
+Puedes crear, duplicar, renombrar, eliminar, importar y exportar presets (se leen los JSON de SillyTavern; solo se usa el orden global de prompts, no el de cada personaje). El preset activo se cambia también desde el menú del chat, donde **«Ver prompt que se enviará»** muestra el prompt final con tokens estimados. La tarjeta del personaje puede reemplazar el prompt principal y las instrucciones posteriores al historial (`{{original}}` conserva el del preset).
+
 ## Importar chats
 
 Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y elige el personaje o grupo destino (se detecta por el nombre del personaje en el archivo). Cada archivo se añade como un chat nuevo.
@@ -42,6 +51,7 @@ Variables opcionales: `PORT`, `HOST` (por defecto `0.0.0.0`), `DATA_DIR` (por de
 | `groups/<id>.json`, `group-chats/<id>/*.jsonl` | Grupos y sus chats |
 | `personas/<id>.json` + `.png` | Personas (tu representación) |
 | `lorebooks/<nombre>.json` | Lorebooks en formato World Info de SillyTavern |
+| `presets/<nombre>.json` | Presets de generación y prompts (formato Chat Completion de SillyTavern) |
 | `settings.json` | Conexiones (API keys, modelos, favoritos) y parámetros |
 | `auth.json` | Usuario, hash de la contraseña y secreto de sesión |
 

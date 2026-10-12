@@ -1,28 +1,20 @@
 import { SETTINGS_FILE } from './config.js';
+import { listPresets } from './presets.js';
 import { HttpError, readJson, withLock, writeJson } from './util.js';
 
-export const DEFAULT_SYSTEM_PROMPT =
-  "Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}. Stay in character and write in a natural, immersive instant-messaging style. Never write dialogue, actions or thoughts for {{user}}. Reply in the same language {{user}} writes in.";
-
 export const DEFAULTS = {
-  temperature: 0.9,
-  top_p: 1,
-  top_k: 0,
-  min_p: 0,
-  frequency_penalty: 0,
-  presence_penalty: 0,
-  repetition_penalty: 1,
-  max_tokens: 400,
-  maxContext: 16000,
-  systemPrompt: DEFAULT_SYSTEM_PROMPT,
   scanDepth: 4,
   loreBudget: 2048,
   activeLorebooks: [],
   defaultPersona: '',
   activeConnection: '',
+  activePreset: '',
 };
 
-const NUMERIC = ['temperature', 'top_p', 'top_k', 'min_p', 'frequency_penalty', 'presence_penalty', 'repetition_penalty', 'max_tokens', 'maxContext', 'scanDepth', 'loreBudget'];
+const NUMERIC = ['scanDepth', 'loreBudget'];
+
+// Ajustes de generación de versiones anteriores: ahora viven en los presets.
+const LEGACY_GENERATION_KEYS = ['temperature', 'top_p', 'top_k', 'min_p', 'frequency_penalty', 'presence_penalty', 'repetition_penalty', 'max_tokens', 'maxContext', 'systemPrompt'];
 
 function normalizeConnection(c) {
   return {
@@ -47,6 +39,7 @@ function migrate(stored) {
   }
   delete s.apiKey;
   delete s.model;
+  for (const k of LEGACY_GENERATION_KEYS) delete s[k];
   s.connections = s.connections.map(normalizeConnection);
   return s;
 }
@@ -90,12 +83,11 @@ export function publicSettings(s) {
     model: active?.model || '',
     ready: isReady(active),
     setupHint: !active ? 'una conexión' : active.type === 'local' ? (active.baseUrl ? 'el modelo' : 'la URL del servidor local') : active.apiKey ? 'el modelo' : 'la API key',
-    defaultSystemPrompt: DEFAULT_SYSTEM_PROMPT,
   };
 }
 
 export function updateSettings(patch) {
-  return mutateSettings((s) => {
+  return mutateSettings(async (s) => {
     for (const key of Object.keys(DEFAULTS)) {
       if (!(key in patch)) continue;
       if (NUMERIC.includes(key)) {
@@ -105,6 +97,9 @@ export function updateSettings(patch) {
         s[key] = Array.isArray(patch[key]) ? patch[key].map(String) : [];
       } else if (key === 'activeConnection') {
         if (!s.connections.some((c) => c.id === patch[key])) throw new HttpError(404, 'Conexión no encontrada');
+        s[key] = patch[key];
+      } else if (key === 'activePreset') {
+        if (!(await listPresets()).includes(patch[key])) throw new HttpError(404, 'Preset no encontrado');
         s[key] = patch[key];
       } else {
         s[key] = typeof patch[key] === 'string' ? patch[key] : DEFAULTS[key];

@@ -12,6 +12,7 @@ export const DIRS = {
   groupChats: path.join(DATA, 'group-chats'),
   personas: path.join(DATA, 'personas'),
   lorebooks: path.join(DATA, 'lorebooks'),
+  presets: path.join(DATA, 'presets'),
 };
 
 export const SETTINGS_FILE = path.join(DATA, 'settings.json');

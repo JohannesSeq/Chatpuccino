@@ -26,6 +26,8 @@ export default function ChatView() {
   const [editing, setEditing] = useState(null);
   const [personaSheet, setPersonaSheet] = useState(false);
   const [modelSheet, setModelSheet] = useState(false);
+  const [presetSheet, setPresetSheet] = useState(false);
+  const [inspector, setInspector] = useState(false);
   const [groupSheet, setGroupSheet] = useState(false);
 
   const abortRef = useRef(null);
@@ -247,6 +249,8 @@ export default function ChatView() {
             { label: 'Renombrar chat', onClick: renameChat },
             { label: `Persona: ${chat.persona.name}`, onClick: () => setPersonaSheet(true) },
             { label: `Modelo: ${settings.model || 'sin elegir'}`, onClick: () => setModelSheet(true) },
+            { label: `Preset: ${settings.activePreset || '—'}`, onClick: () => setPresetSheet(true) },
+            { label: 'Ver prompt que se enviará', onClick: () => setInspector(true) },
             isGroup && group && { label: 'Editar grupo', onClick: () => setGroupSheet(true) },
             { label: 'Exportar chat (.jsonl)', href: `/api${chatUrl(ref)}/export`, download: `${ref.file}.jsonl` },
             { label: 'Eliminar chat', danger: true, onClick: deleteChat },
@@ -383,6 +387,8 @@ export default function ChatView() {
       </div>
 
       {modelSheet && <ModelSheet onClose={() => setModelSheet(false)} />}
+      {presetSheet && <PresetSheet onClose={() => setPresetSheet(false)} />}
+      {inspector && <PromptInspector chatRef={ref} members={members} isGroup={isGroup} onClose={() => setInspector(false)} />}
       {personaSheet && (
         <Modal title="Persona de este chat" onClose={() => setPersonaSheet(false)}>
           <ul className="rows">
@@ -474,6 +480,98 @@ function ModelSheet({ onClose }) {
       <Link className="btn" to="/settings/conexion" onClick={onClose}>
         Ver todos los modelos
       </Link>
+    </Modal>
+  );
+}
+
+function PresetSheet({ onClose }) {
+  const { settings, refresh, toast } = useData();
+  const [list, setList] = useState(null);
+
+  useEffect(() => {
+    api.presets().then(setList).catch((e) => toast(e.message, 'error'));
+  }, [toast]);
+
+  async function pick(name) {
+    try {
+      await api.saveSettings({ activePreset: name });
+      await refresh('settings');
+      onClose();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  return (
+    <Modal title="Preset de generación" onClose={onClose}>
+      <ul className="rows">
+        {(list?.presets || []).map((n) => (
+          <li key={n} className={`row ${settings.activePreset === n ? 'active' : ''}`}>
+            <button className="row-main" onClick={() => pick(n)}>
+              <div className="row-text">
+                <strong>{n}</strong>
+                <div className="row-sub">{settings.activePreset === n ? 'En uso' : ''}</div>
+              </div>
+            </button>
+          </li>
+        ))}
+        {!list && <li className="empty small">Cargando…</li>}
+      </ul>
+      <Link className="btn" to="/settings/presets" onClick={onClose}>
+        Editar presets
+      </Link>
+    </Modal>
+  );
+}
+
+function PromptInspector({ chatRef, members, isGroup, onClose }) {
+  const { toast } = useData();
+  const [speakerId, setSpeakerId] = useState(members[0]?.id || '');
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setData(null);
+    api.inspectPrompt(chatRef, { speakerId }).then(setData).catch((e) => {
+      toast(e.message, 'error');
+      onClose();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatRef, speakerId]);
+
+  return (
+    <Modal title="Prompt que se enviará" onClose={onClose} wide>
+      {isGroup && (
+        <label className="field">
+          <span className="field-label">Si responde…</span>
+          <select value={speakerId} onChange={(e) => setSpeakerId(e.target.value)}>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {!data ? (
+        <p className="muted">Cargando…</p>
+      ) : (
+        <>
+          <p className="muted">
+            Preset «{data.preset}» · ~{data.totalTokens} tokens + hasta {data.maxTokens} de respuesta
+          </p>
+          <ol className="inspector">
+            {data.messages.map((m, i) => (
+              <li key={i} className={`insp-${m.role}`}>
+                <div className="insp-head">
+                  <span className="tag">{m.role}</span>
+                  <span className="muted">~{m.tokens} tokens</span>
+                </div>
+                <pre>{m.content}</pre>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
     </Modal>
   );
 }

@@ -5,10 +5,12 @@ import CharactersTab from './settings/CharactersTab.jsx';
 import PersonasTab from './settings/PersonasTab.jsx';
 import LorebooksTab from './settings/LorebooksTab.jsx';
 import SecurityTab from './settings/SecurityTab.jsx';
+import PresetsTab from './settings/PresetsTab.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 
 const TABS = [
   { id: 'conexion', label: 'Conexión y modelo', C: ConnectionTab },
+  { id: 'presets', label: 'Presets', C: PresetsTab },
   { id: 'personajes', label: 'Personajes', C: CharactersTab },
   { id: 'personas', label: 'Personas', C: PersonasTab },
   { id: 'lorebooks', label: 'Lorebooks', C: LorebooksTab },

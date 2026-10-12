@@ -7,6 +7,8 @@ import { DATA, ROOT, ensureDirs } from './config.js';
 import authRoutes, { loadAuth, requireAuth } from './auth.js';
 import settingsRoutes from './routes/settings.js';
 import connectionRoutes from './routes/connections.js';
+import presetRoutes from './routes/presets.js';
+import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
 import { groups, lorebooks, personas } from './routes/library.js';
@@ -14,6 +16,7 @@ import { groups, lorebooks, personas } from './routes/library.js';
 export function createApp() {
   ensureDirs();
   loadAuth().catch((e) => console.error('No se pudo inicializar la autenticación', e));
+  listPresets().catch((e) => console.error('No se pudo inicializar los presets', e));
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '50mb' }));
@@ -23,6 +26,7 @@ export function createApp() {
   app.use('/api', requireAuth);
   app.use('/api', settingsRoutes);
   app.use('/api/connections', connectionRoutes);
+  app.use('/api/presets', presetRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);
