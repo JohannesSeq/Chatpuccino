@@ -375,6 +375,8 @@ html.has-wallpaper .preview-chat::before {
 .input-row textarea { border-radius: 22px; padding: 10px 16px; resize: none; min-height: 44px; max-height: 140px; line-height: 22px; background: var(--panel-2); border-color: transparent; font-family: var(--font-msg); font-size: max(16px, var(--msg-size)); }
 .send { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; }
 .send.stop { background: var(--danger); color: #fff; }
+.icon-btn.impersonate { width: 44px; height: 44px; color: var(--accent); }
+.icon-btn.impersonate.on { color: var(--danger); }
 
 /* ---------- apariencia ---------- */
 .swatches { display: flex; flex-wrap: wrap; gap: 10px; }

@@ -236,8 +236,8 @@ r.post('/:kind/:owner/:file/to-group', wrap(async (req, res) => {
   res.status(201).json({ kind: 'g', ownerId: group.id, file: newFile });
 }));
 
-function samplingParams(p, userName) {
-  const body = { temperature: p.temperature, top_p: p.top_p, max_tokens: p.openai_max_tokens, stop: [`\n${userName}:`] };
+function samplingParams(p, userName, stop = [`\n${userName}:`]) {
+  const body = { temperature: p.temperature, top_p: p.top_p, max_tokens: p.openai_max_tokens, stop };
   if (p.top_k > 0) body.top_k = p.top_k;
   if (p.top_a > 0) body.top_a = p.top_a;
   if (p.min_p > 0) body.min_p = p.min_p;
@@ -248,7 +248,7 @@ function samplingParams(p, userName) {
 }
 
 // Reúne todo lo necesario para la siguiente respuesta: quién habla, el historial y el prompt final del preset activo.
-async function prepareGeneration({ kind, owner, file }, { speakerId, swipe }) {
+async function prepareGeneration({ kind, owner, file }, { speakerId, swipe, impersonate = false, draft = '' }) {
   const settings = await getSettings();
   const chat = await readChat(kind, owner, file);
   const ownerInfo = await loadOwner(kind, owner);
@@ -257,7 +257,9 @@ async function prepareGeneration({ kind, owner, file }, { speakerId, swipe }) {
   let history = chat.messages;
   let targetIndex = -1;
   let speaker;
-  if (swipe) {
+  if (impersonate) {
+    speaker = ownerInfo.members[0];
+  } else if (swipe) {
     targetIndex = chat.messages.length - 1;
     const last = chat.messages[targetIndex];
     if (!last || last.is_user) throw new HttpError(400, 'No hay una respuesta que regenerar');
@@ -281,6 +283,8 @@ async function prepareGeneration({ kind, owner, file }, { speakerId, swipe }) {
     userName: persona.name,
     history,
     trigger: swipe ? 'swipe' : 'normal',
+    impersonate,
+    draft,
   });
   return { settings, isGroup, speaker, targetIndex, persona, preset, presetName, prompt };
 }
@@ -292,29 +296,75 @@ r.post('/:kind/:owner/:file/prompt', wrap(async (req, res) => {
   res.json({ preset: presetName, speaker: speaker.name, maxTokens: preset.openai_max_tokens, messages, totalTokens: messages.reduce((n, m) => n + m.tokens, 0) });
 }));
 
-r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
-  const { kind, owner, file } = req.params;
-  const { swipe } = req.body || {};
-  const settings0 = await getSettings();
-  const conn = activeConnection(settings0);
+function requireReady(settings) {
+  const conn = activeConnection(settings);
   if (!conn) throw new HttpError(400, 'Configura una conexión (Ajustes → Conexión y modelo).');
   if (!isReady(conn)) {
     throw new HttpError(400, conn.model ? 'La conexión activa está incompleta (Ajustes → Conexión y modelo).' : 'Selecciona un modelo (Ajustes → Conexión y modelo).');
   }
+  return conn;
+}
 
-  const { isGroup, speaker, targetIndex, persona, preset, prompt } = await prepareGeneration(req.params, req.body || {});
-
+function startSse(res) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
   });
-  const send = (obj) => !res.writableEnded && res.write(`data: ${JSON.stringify(obj)}\n\n`);
   const ac = new AbortController();
   res.on('close', () => {
     if (!res.writableEnded) ac.abort();
   });
+  return { ac, send: (obj) => !res.writableEnded && res.write(`data: ${JSON.stringify(obj)}\n\n`) };
+}
+
+// Impersonar: el modelo escribe un mensaje como el usuario. Solo se devuelve el texto; no se guarda nada en el chat.
+r.post('/:kind/:owner/:file/impersonate', wrap(async (req, res) => {
+  const conn = requireReady(await getSettings());
+  const draft = String(req.body?.draft ?? '').slice(0, 4000);
+  const { speaker, persona, preset, prompt, isGroup } = await prepareGeneration(req.params, { impersonate: true, draft });
+  const owner = await loadOwner(req.params.kind, req.params.owner);
+  // Que el modelo no continúe escribiendo por los personajes.
+  const stop = (isGroup ? owner.members : [speaker]).slice(0, 4).map((m) => `\n${m.name}:`);
+  const { ac, send } = startSse(res);
+
+  let streamed = '';
+  const finish = (text, extra = {}) => {
+    const clean = stripSpeakerPrefix(text, persona.name).trim();
+    if (clean) send({ done: true, text: clean, ...extra });
+    else send({ error: 'El modelo devolvió una respuesta vacía.' });
+  };
+  try {
+    streamed = await streamChat({
+      conn,
+      signal: ac.signal,
+      body: { model: conn.model, messages: prompt, ...samplingParams(preset, persona.name, stop) },
+      onDelta: (delta) => send({ delta }),
+    });
+    finish(streamed);
+  } catch (e) {
+    const partial = e.partial || '';
+    if (e.name === 'AbortError') {
+      if (partial.trim()) finish(partial, { aborted: true });
+    } else if (partial.trim()) {
+      finish(partial, { warning: e.message });
+    } else {
+      send({ error: e.message || 'Error al generar el mensaje' });
+    }
+  } finally {
+    res.end();
+  }
+}));
+
+r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const { swipe } = req.body || {};
+  const conn = requireReady(await getSettings());
+
+  const { isGroup, speaker, targetIndex, persona, preset, prompt } = await prepareGeneration(req.params, req.body || {});
+
+  const { ac, send } = startSse(res);
 
   const startedAt = nowIso();
   const persist = async (raw) => {

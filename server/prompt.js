@@ -59,7 +59,7 @@ function squash(messages) {
  * @param history mensajes del chat (sin el que se está generando)
  * @param trigger 'normal' | 'swipe' — filtra prompts con `injection_trigger`
  */
-export async function buildPrompt({ settings, preset, speaker, members, persona, userName, history, trigger = 'normal' }) {
+export async function buildPrompt({ settings, preset, speaker, members, persona, userName, history, trigger = 'normal', impersonate = false, draft = '' }) {
   const cards = members?.length ? members : [speaker];
   const isGroup = cards.length > 1;
   const groupNames = cards.map((c) => c.name).join(', ');
@@ -148,11 +148,18 @@ export async function buildPrompt({ settings, preset, speaker, members, persona,
 
   const intro = msgs.length ? sub(isGroup ? preset.new_group_chat_prompt : preset.new_chat_prompt).trim() : '';
   const afterHistory = [];
-  if (!msgs.length || msgs[msgs.length - 1].role !== 'user') {
-    afterHistory.push({ role: 'user', content: `[Continue the roleplay. Write ${speaker.name}'s next reply.]` });
+  if (impersonate) {
+    // El modelo escribe por el usuario: la última instrucción va como mensaje de usuario para que el historial termine en un turno válido.
+    const instruction = sub(preset.impersonation_prompt).trim() || `[Write your next reply from the point of view of ${userName}.]`;
+    const start = draft.trim() ? `Begin your reply with the following text and continue naturally from it:\n${draft.trim()}` : '';
+    afterHistory.push({ role: 'user', content: [instruction, start].filter(Boolean).join('\n\n') });
+  } else {
+    if (!msgs.length || msgs[msgs.length - 1].role !== 'user') {
+      afterHistory.push({ role: 'user', content: `[Continue the roleplay. Write ${speaker.name}'s next reply.]` });
+    }
+    const nudge = isGroup ? sub(preset.group_nudge_prompt).trim() : '';
+    if (nudge) afterHistory.push({ role: 'system', content: nudge });
   }
-  const nudge = isGroup ? sub(preset.group_nudge_prompt).trim() : '';
-  if (nudge) afterHistory.push({ role: 'system', content: nudge });
 
   const fixed = [...pieces.filter((p) => !p.history), ...injections, ...afterHistory, ...(intro ? [{ content: intro }] : [])].reduce((n, m) => n + cost(m.content), 0);
   const budget = Math.max(512, preset.openai_max_context - preset.openai_max_tokens) - fixed;

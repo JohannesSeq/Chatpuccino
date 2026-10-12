@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useMatch, useNavigate } from 'react-router-dom';
-import { api, chatUrl, generate } from '../api.js';
+import { api, chatUrl, generate, impersonate } from '../api.js';
 import { useData } from '../data.jsx';
 import { useDialog } from '../dialogs.jsx';
 import { formatRP, formatTime, isTouch } from '../util.js';
@@ -34,6 +34,9 @@ export default function ChatView() {
   const [convertSheet, setConvertSheet] = useState(false);
 
   const abortRef = useRef(null);
+  const impersonateAbort = useRef(null);
+  const inputRef = useRef(null);
+  const [impersonating, setImpersonating] = useState(false);
   const stopRef = useRef(false);
   const listRef = useRef(null);
   const stick = useRef(true);
@@ -152,6 +155,31 @@ export default function ChatView() {
     stopRef.current = true;
     abortRef.current?.abort();
   };
+
+  // Impersonar: el modelo escribe tu mensaje en la caja de texto; lo que ya hubieras escrito sirve de punto de partida.
+  async function impersonateMe() {
+    if (generating || impersonating) return;
+    const draft = input.trim();
+    const ac = new AbortController();
+    impersonateAbort.current = ac;
+    setImpersonating(true);
+    setInput('');
+    let text = '';
+    try {
+      const out = await impersonate(ref, { draft }, ac.signal, (d) => {
+        text += d;
+        setInput(text);
+      });
+      if (out?.text) setInput(out.text);
+    } catch (e) {
+      if (e.name !== 'AbortError') toast(e.message, 'error');
+      if (!text.trim()) setInput(draft);
+    } finally {
+      impersonateAbort.current = null;
+      setImpersonating(false);
+      inputRef.current?.focus();
+    }
+  }
 
   async function swipeTo(i, delta) {
     const m = chat.messages[i];
@@ -451,19 +479,30 @@ export default function ChatView() {
         )}
         <div className="input-row">
           <textarea
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Escribe un mensaje"
+            readOnly={impersonating}
+            placeholder={impersonating ? 'Escribiendo por ti…' : 'Escribe un mensaje'}
             rows={1}
             style={{ height: Math.min(140, 24 + Math.max(0, input.split('\n').length - 1) * 22) }}
           />
+          {impersonating ? (
+            <button className="icon-btn impersonate on" onClick={() => impersonateAbort.current?.abort()} aria-label="Detener" title="Detener">
+              <Icon name="stop" />
+            </button>
+          ) : (
+            <button className="icon-btn impersonate" onClick={impersonateMe} disabled={generating} aria-label="Impersonar" title="Impersonar: la IA escribe un mensaje por ti (lo que ya hayas escrito sirve de inicio)">
+              <Icon name="wand" />
+            </button>
+          )}
           {generating ? (
             <button className="send stop" onClick={stop} aria-label="Detener">
               <Icon name="stop" />
             </button>
           ) : (
-            <button className="send" onClick={send} disabled={!input.trim() && !lastIsUser} aria-label="Enviar">
+            <button className="send" onClick={send} disabled={impersonating || (!input.trim() && !lastIsUser)} aria-label="Enviar">
               <Icon name="send" />
             </button>
           )}

@@ -134,9 +134,9 @@ export const api = {
   chatToGroup: (ref, body) => req('POST', `${chatUrl(ref)}/to-group`, body),
 };
 
-/** Genera una respuesta por streaming (SSE sobre fetch). Resuelve con { index, message }. */
-export async function generate(ref, body, signal, onDelta) {
-  const res = await apiFetch(`/api${chatUrl(ref)}/generate`, {
+/** Lee un stream SSE de eventos {delta}/{done}/{error}. Resuelve con el evento final `done`. */
+async function stream(path, body, signal, onDelta) {
+  const res = await apiFetch(`/api${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -169,3 +169,9 @@ export async function generate(ref, body, signal, onDelta) {
   if (buffer.trim()) handle(buffer);
   return result;
 }
+
+/** Genera la respuesta de un personaje. Resuelve con { index, message }. */
+export const generate = (ref, body, signal, onDelta) => stream(`${chatUrl(ref)}/generate`, body, signal, onDelta);
+
+/** Pide al modelo un mensaje escrito como el usuario. Resuelve con { text }; no guarda nada en el chat. */
+export const impersonate = (ref, body, signal, onDelta) => stream(`${chatUrl(ref)}/impersonate`, body, signal, onDelta);

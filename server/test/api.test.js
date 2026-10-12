@@ -577,6 +577,39 @@ test('chats fijados: se marcan en la lista, no alteran la fecha y se limpian al 
   assert.equal(pins.some((k) => k.includes(a.file) || k.includes(conv.file)), false);
 });
 
+test('impersonar: genera un mensaje como el usuario sin tocar el chat', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const chat = (await call('POST', '/chats', { kind: 'c', ownerId: 'Luna' })).json;
+  const ref = `/chats/c/Luna/${encodeURIComponent(chat.file)}`;
+  await call('POST', `${ref}/messages`, { mes: 'Voy a entrar a la torre' });
+  const count = (await call('GET', ref)).json.messages.length;
+
+  const res = await sse(`${ref}/impersonate`, { draft: 'Empujo la puerta' });
+  assert.equal(res.status, 200);
+  assert.equal(res.events.filter((e) => e.delta).map((e) => e.delta).join(''), 'Hola mundo!');
+  assert.deepEqual(res.events.at(-1), { done: true, text: 'Hola mundo!' });
+
+  const sent = requests.at(-1);
+  const last = sent.messages.at(-1);
+  assert.equal(last.role, 'user');
+  assert.match(last.content, /point of view of Armando/);
+  assert.match(last.content, /Empujo la puerta/);
+  assert.deepEqual(sent.stop, ['\nLuna:']);
+  assert.ok(sent.messages.some((m) => m.content.includes('Voy a entrar a la torre')));
+  assert.equal((await call('GET', ref)).json.messages.length, count, 'no se guarda nada en el chat');
+
+  // sin borrador no se pide continuar nada
+  await sse(`${ref}/impersonate`, {});
+  assert.doesNotMatch(requests.at(-1).messages.at(-1).content, /Begin your reply/);
+
+  // en grupos se detiene ante cualquier miembro
+  const g = (await call('POST', '/chats', { kind: 'g', ownerId: 'Equipo' })).json;
+  await sse(`/chats/g/Equipo/${encodeURIComponent(g.file)}/impersonate`, {});
+  assert.deepEqual(requests.at(-1).stop, ['\nLuna:', '\nKai:']);
+
+  assert.equal((await sse('/chats/c/Luna/noexiste/impersonate', {})).status, 404);
+});
+
 test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo desde la imagen)', async () => {
   await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
   const plain = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: placeholderPng('x', 8, 8) });

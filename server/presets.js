@@ -36,6 +36,8 @@ const ST_TEXT_DEFAULTS = {
   new_group_chat_prompt: '[Start a new group chat. Group members: {{group}}]',
   new_example_chat_prompt: '[Example Chat]',
   group_nudge_prompt: '[Write the next reply only as {{char}}.]',
+  impersonation_prompt:
+    "[Write your next reply from the point of view of {{user}}, using the preceding context so far as references. Write only {{user}}'s reply; do not write anything as {{char}}.]",
   wi_format: '{0}',
   scenario_format: '{{scenario}}',
   personality_format: '{{personality}}',

@@ -34,6 +34,7 @@ const FORMAT_FIELDS = [
   ['new_group_chat_prompt', 'Inicio de chat de grupo', '{{group}} = nombres de los miembros.'],
   ['new_example_chat_prompt', 'Antes de cada ejemplo de diálogo', ''],
   ['group_nudge_prompt', 'Aviso final en grupos', 'Se añade tras el historial. {{char}} = quien responde.'],
+  ['impersonation_prompt', 'Impersonar (escribir por ti)', 'Instrucción que se envía al pedir un mensaje en tu nombre con el botón ✨ del chat. {{user}} = tu persona.'],
   ['wi_format', 'Formato de lorebook', '{0} = contenido de las entradas activadas.'],
   ['scenario_format', 'Formato del escenario', '{{scenario}} = texto del escenario.'],
   ['personality_format', 'Formato de la personalidad', '{{personality}} = texto de la personalidad.'],
