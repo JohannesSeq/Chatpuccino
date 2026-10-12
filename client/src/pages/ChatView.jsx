@@ -62,6 +62,13 @@ export default function ChatView() {
     load();
   }, [load]);
 
+  // Otras partes de la app (p. ej. el selector de persona) piden recargar el chat abierto.
+  useEffect(() => {
+    const reload = () => load();
+    window.addEventListener('chat:reload', reload);
+    return () => window.removeEventListener('chat:reload', reload);
+  }, [load]);
+
   useLayoutEffect(() => {
     const el = listRef.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;

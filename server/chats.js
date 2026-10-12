@@ -147,6 +147,7 @@ function summarize(kind, ownerId, file, st, raw) {
     title: meta.chat_metadata.title || '',
     createdAt: meta.create_date || '',
     lastMessage: last ? { name: last.name, isUser: Boolean(last.is_user), text: String(last.mes).slice(0, 200) } : null,
+    personaId: meta.chat_metadata.persona || '',
     count: messages.length,
     mtime: st.mtimeMs,
   };

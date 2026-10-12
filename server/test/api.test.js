@@ -238,6 +238,7 @@ test('flujo completo: conexión, personaje, persona, chat, streaming, swipe, edi
 
   const list = await call('GET', '/chats');
   assert.equal(list.json.length, 1);
+  assert.equal(list.json[0].personaId, persona.json.id, 'el resumen indica la persona del chat');
 
   const second = await call('POST', '/chats', { kind: 'c', ownerId: 'Luna' });
   assert.notEqual(second.json.file, file);

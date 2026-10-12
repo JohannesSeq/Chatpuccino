@@ -206,7 +206,18 @@ details > summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
   position: absolute; right: 0; top: 100%; z-index: 30; min-width: 210px; background: var(--panel-3);
   border-radius: 10px; box-shadow: 0 8px 24px var(--shadow); padding: 6px; display: flex; flex-direction: column;
 }
-.menu-list button, .menu-list a { text-align: left; padding: 10px 12px; border-radius: 8px; color: var(--text); text-decoration: none; }
+.menu-list button, .menu-list a { display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px 12px; border-radius: 8px; color: var(--text); text-decoration: none; }
+.menu-list { max-height: 60dvh; overflow-y: auto; }
+.menu-list.up { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; min-width: 250px; max-width: calc(100vw - 32px); }
+.menu-header { padding: 8px 12px 4px; color: var(--muted); font-size: calc(12px * var(--ui-scale)); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.menu-sep { border: 0; border-top: 1px solid var(--panel-2); margin: 4px 0; width: 100%; }
+.menu-list .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.persona-corner { position: absolute; left: 16px; bottom: 16px; z-index: 6; max-width: calc(100% - 104px); }
+.persona-corner .menu { display: block; }
+.persona-corner .menu-trigger { display: flex; align-items: center; height: 56px; max-width: 100%; padding: 0 16px 0 8px; border-radius: 16px; background: var(--panel-3); color: var(--text); box-shadow: 0 4px 14px var(--shadow); font-weight: 600; }
+.persona-trigger-inner { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.persona-trigger-inner > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-list button:hover, .menu-list a:hover { background: var(--panel-2); }
 .menu-list .danger { color: var(--danger); }
 

@@ -7,6 +7,7 @@ import { formatListDate } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, SearchBox } from '../components/ui.jsx';
 import GroupEditor from '../components/GroupEditor.jsx';
+import PersonaEditor from '../components/PersonaEditor.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 import ChatView from './ChatView.jsx';
 
@@ -158,6 +159,7 @@ function ChatList({ active }) {
           </li>
         )}
       </ul>
+      <PersonaCorner active={active} />
       <button className="fab" onClick={() => setCreating(true)} aria-label="Nuevo chat">
         <Icon name="plus" size={28} />
       </button>
@@ -182,6 +184,69 @@ function ChatList({ active }) {
         />
       )}
     </aside>
+  );
+}
+
+// Persona activa: la del chat abierto (o la predeterminada si no hay ninguno). Elegirla también la fija para los chats nuevos.
+function PersonaCorner({ active }) {
+  const { personas, settings, chats, refresh, toast } = useData();
+  const [editing, setEditing] = useState(null);
+  const openChat = active ? chats.find((c) => c.kind === active.kind && c.ownerId === active.owner && c.file === active.file) : null;
+  const activeId = openChat?.personaId || settings.defaultPersona || '';
+  const current = personas.find((p) => p.id === activeId) || null;
+
+  const reloadChat = () => window.dispatchEvent(new Event('chat:reload'));
+
+  async function choose(p) {
+    try {
+      await api.saveSettings({ defaultPersona: p.id });
+      if (openChat) await api.patchChat({ kind: openChat.kind, ownerId: openChat.ownerId, file: openChat.file }, { personaId: p.id });
+      await refresh('settings', 'chats');
+      reloadChat();
+      toast(`Ahora eres ${p.name}`);
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  const items = [
+    { header: openChat ? 'Persona activa (este chat y los nuevos)' : 'Persona para los chats nuevos' },
+    ...personas.map((p) => ({ label: p.name, icon: <PersonaAvatar persona={p} size={28} />, checked: p.id === activeId, onClick: () => choose(p) })),
+    ...(personas.length ? [] : [{ header: 'Aún no tienes personas' }]),
+    { separator: true },
+    current && { label: `Editar «${current.name}»`, icon: <Icon name="edit" size={20} />, onClick: () => setEditing(current) },
+    { label: 'Nueva persona…', icon: <Icon name="plus" size={20} />, onClick: () => setEditing('new') },
+  ];
+
+  return (
+    <>
+      <div className="persona-corner">
+        <Menu
+          up
+          items={items}
+          label="Persona activa"
+          trigger={
+            <span className="persona-trigger-inner">
+              <PersonaAvatar persona={current} size={40} />
+              <span>{current?.name || 'Usuario'}</span>
+            </span>
+          }
+          className="persona-menu"
+        />
+      </div>
+      {editing && (
+        <PersonaEditor
+          persona={editing === 'new' ? null : editing}
+          onClose={async (changed) => {
+            setEditing(null);
+            if (changed) {
+              await refresh('personas', 'settings', 'chats');
+              reloadChat();
+            }
+          }}
+        />
+      )}
+    </>
   );
 }
 

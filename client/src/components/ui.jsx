@@ -93,7 +93,7 @@ export function Modal({ title, onClose, children, footer, wide }) {
   );
 }
 
-export function Menu({ items }) {
+export function Menu({ items, trigger, label = 'Más opciones', className = '', up = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -106,33 +106,43 @@ export function Menu({ items }) {
       document.removeEventListener('touchstart', close);
     };
   }, [open]);
+  const content = (it) => (
+    <>
+      {it.icon}
+      <span className="grow">{it.label}</span>
+      {it.checked && <Icon name="check" size={18} />}
+    </>
+  );
   return (
-    <div className="menu" ref={ref}>
-      <button className="icon-btn" onClick={() => setOpen((o) => !o)} aria-label="Más opciones">
-        <Icon name="dots" />
+    <div className={`menu ${className}`} ref={ref}>
+      <button className={trigger ? 'menu-trigger' : 'icon-btn'} onClick={() => setOpen((o) => !o)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+        {trigger || <Icon name="dots" />}
       </button>
       {open && (
-        <div className="menu-list">
+        <div className={`menu-list ${up ? 'up' : ''}`} role="menu">
           {items
             .filter(Boolean)
-            .map((it) =>
-              it.href ? (
-                <a key={it.label} href={it.href} download={it.download} onClick={() => setOpen(false)}>
-                  {it.label}
+            .map((it, i) => {
+              if (it.header) return <div key={`h${i}`} className="menu-header">{it.header}</div>;
+              if (it.separator) return <hr key={`s${i}`} className="menu-sep" />;
+              return it.href ? (
+                <a key={`${i}${it.label}`} href={it.href} download={it.download} onClick={() => setOpen(false)}>
+                  {content(it)}
                 </a>
               ) : (
                 <button
-                  key={it.label}
+                  key={`${i}${it.label}`}
+                  role="menuitem"
                   className={it.danger ? 'danger' : ''}
                   onClick={() => {
                     setOpen(false);
                     it.onClick();
                   }}
                 >
-                  {it.label}
+                  {content(it)}
                 </button>
-              ),
-            )}
+              );
+            })}
         </div>
       )}
     </div>
