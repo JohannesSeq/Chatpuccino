@@ -1,0 +1,264 @@
+import { Router } from 'express';
+import { getCharacter } from '../cards.js';
+import {
+  chatPath,
+  createChat,
+  deleteChat,
+  listAllChats,
+  makeMessage,
+  mutateChat,
+  readChat,
+} from '../chats.js';
+import { streamChat } from '../openrouter.js';
+import { buildPrompt, stripSpeakerPrefix } from '../prompt.js';
+import { getSettings } from '../settings.js';
+import { getGroup, getPersona } from '../store.js';
+import { HttpError, wrap, nowIso } from '../util.js';
+
+const r = Router();
+
+async function resolvePersona(meta, settings) {
+  const id = meta.chat_metadata?.persona || settings.defaultPersona;
+  const persona = id ? await getPersona(id) : null;
+  return persona || { id: '', name: meta.user_name || 'Usuario', description: '' };
+}
+
+async function loadOwner(kind, ownerId) {
+  if (kind === 'c') {
+    const c = await getCharacter(ownerId);
+    return { name: c.data.name, members: [{ id: ownerId, ...c.data }], group: null };
+  }
+  const group = await getGroup(ownerId);
+  const members = [];
+  for (const id of group.members) {
+    try {
+      members.push({ id, ...(await getCharacter(id)).data });
+    } catch {
+      /* miembro eliminado */
+    }
+  }
+  if (!members.length) throw new HttpError(409, 'Ningún miembro del grupo existe ya');
+  return { name: group.name, members, group };
+}
+
+r.get('/', wrap(async (_req, res) => res.json(await listAllChats())));
+
+r.post('/', wrap(async (req, res) => {
+  const { kind, ownerId, personaId } = req.body || {};
+  const settings = await getSettings();
+  const persona = (personaId && (await getPersona(personaId))) || (settings.defaultPersona && (await getPersona(settings.defaultPersona))) || null;
+  const owner = await loadOwner(kind, ownerId);
+  const first = owner.members[0];
+  const file = await createChat({ kind, ownerId, ownerName: owner.name, persona, speaker: first, speakerId: first.id });
+  res.status(201).json({ kind, ownerId, file });
+}));
+
+r.get('/:kind/:owner/:file', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const chat = await readChat(kind, owner, file);
+  const persona = await resolvePersona(chat.meta, await getSettings());
+  res.json({ meta: chat.meta, messages: chat.messages, persona, title: chat.meta.chat_metadata.title || '' });
+}));
+
+r.patch('/:kind/:owner/:file', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const { title, personaId } = req.body || {};
+  await mutateChat(kind, owner, file, async (chat) => {
+    if (typeof title === 'string') {
+      if (title.trim()) chat.meta.chat_metadata.title = title.trim();
+      else delete chat.meta.chat_metadata.title;
+    }
+    if (typeof personaId === 'string') {
+      const persona = personaId ? await getPersona(personaId) : null;
+      if (personaId && !persona) throw new HttpError(404, 'Persona no encontrada');
+      if (persona) {
+        chat.meta.chat_metadata.persona = persona.id;
+        chat.meta.user_name = persona.name;
+      } else {
+        delete chat.meta.chat_metadata.persona;
+      }
+    }
+  });
+  res.json({ ok: true });
+}));
+
+r.delete('/:kind/:owner/:file', wrap(async (req, res) => {
+  await deleteChat(req.params.kind, req.params.owner, req.params.file);
+  res.status(204).end();
+}));
+
+r.get('/:kind/:owner/:file/export', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  await readChat(kind, owner, file);
+  res.download(chatPath(kind, owner, file), `${file}.jsonl`);
+}));
+
+r.post('/:kind/:owner/:file/messages', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const mes = String(req.body?.mes ?? '').trim();
+  if (!mes) throw new HttpError(400, 'El mensaje está vacío');
+  const settings = await getSettings();
+  const out = await mutateChat(kind, owner, file, async (chat) => {
+    const persona = await resolvePersona(chat.meta, settings);
+    const msg = makeMessage({ name: persona.name, isUser: true, mes });
+    chat.messages.push(msg);
+    return { index: chat.messages.length - 1, message: msg };
+  });
+  res.status(201).json(out);
+}));
+
+function messageAt(chat, req) {
+  const i = Number(req.params.i);
+  const msg = chat.messages[i];
+  if (!Number.isInteger(i) || !msg) throw new HttpError(404, 'Mensaje no encontrado');
+  return { i, msg };
+}
+
+r.patch('/:kind/:owner/:file/messages/:i', wrap(async (req, res) => {
+  const mes = String(req.body?.mes ?? '');
+  if (!mes.trim()) throw new HttpError(400, 'El mensaje está vacío');
+  const out = await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
+    const { msg } = messageAt(chat, req);
+    msg.mes = mes;
+    if (Array.isArray(msg.swipes)) msg.swipes[msg.swipe_id ?? 0] = mes;
+    return msg;
+  });
+  res.json(out);
+}));
+
+r.delete('/:kind/:owner/:file/messages/:i', wrap(async (req, res) => {
+  await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
+    const { i } = messageAt(chat, req);
+    chat.messages.splice(i, 1);
+  });
+  res.status(204).end();
+}));
+
+r.post('/:kind/:owner/:file/messages/:i/swipe', wrap(async (req, res) => {
+  const out = await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
+    const { msg } = messageAt(chat, req);
+    const id = Number(req.body?.swipe_id);
+    if (!Array.isArray(msg.swipes) || !Number.isInteger(id) || id < 0 || id >= msg.swipes.length) throw new HttpError(400, 'Swipe inválido');
+    msg.swipe_id = id;
+    msg.mes = msg.swipes[id];
+    return msg;
+  });
+  res.json(out);
+}));
+
+function samplingParams(s, userName) {
+  const body = { temperature: s.temperature, top_p: s.top_p, max_tokens: s.max_tokens, stop: [`\n${userName}:`] };
+  if (s.top_k > 0) body.top_k = s.top_k;
+  if (s.min_p > 0) body.min_p = s.min_p;
+  if (s.frequency_penalty) body.frequency_penalty = s.frequency_penalty;
+  if (s.presence_penalty) body.presence_penalty = s.presence_penalty;
+  if (s.repetition_penalty && s.repetition_penalty !== 1) body.repetition_penalty = s.repetition_penalty;
+  return body;
+}
+
+r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const { speakerId, swipe } = req.body || {};
+  const settings = await getSettings();
+  if (!settings.apiKey) throw new HttpError(400, 'Falta la API key de OpenRouter (Ajustes → Conexión).');
+  if (!settings.model) throw new HttpError(400, 'Selecciona un modelo (Ajustes → Conexión).');
+
+  const chat = await readChat(kind, owner, file);
+  const ownerInfo = await loadOwner(kind, owner);
+  const isGroup = kind === 'g';
+
+  let history = chat.messages;
+  let targetIndex = -1;
+  let speaker;
+  if (swipe) {
+    targetIndex = chat.messages.length - 1;
+    const last = chat.messages[targetIndex];
+    if (!last || last.is_user) throw new HttpError(400, 'No hay una respuesta que regenerar');
+    history = chat.messages.slice(0, -1);
+    speaker = isGroup
+      ? ownerInfo.members.find((m) => `${m.id}.png` === last.original_avatar) || ownerInfo.members.find((m) => m.name === last.name)
+      : ownerInfo.members[0];
+  } else {
+    speaker = isGroup ? ownerInfo.members.find((m) => m.id === speakerId) : ownerInfo.members[0];
+  }
+  if (!speaker) throw new HttpError(400, 'Personaje que responde no válido');
+
+  const persona = await resolvePersona(chat.meta, settings);
+  const prompt = await buildPrompt({
+    settings,
+    speaker,
+    members: isGroup ? ownerInfo.members : null,
+    persona,
+    userName: persona.name,
+    history,
+  });
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  const send = (obj) => !res.writableEnded && res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  const ac = new AbortController();
+  res.on('close', () => {
+    if (!res.writableEnded) ac.abort();
+  });
+
+  const startedAt = nowIso();
+  const persist = async (raw) => {
+    const text = (isGroup ? stripSpeakerPrefix(raw, speaker.name) : raw).trim();
+    if (!text) return null;
+    return mutateChat(kind, owner, file, (c) => {
+      const info = { send_date: nowIso(), gen_started: startedAt, gen_finished: nowIso(), extra: { model: settings.model } };
+      if (swipe) {
+        const m = c.messages[targetIndex];
+        if (!m) throw new HttpError(409, 'El mensaje ya no existe');
+        m.swipes = Array.isArray(m.swipes) && m.swipes.length ? m.swipes : [m.mes];
+        m.swipe_info = Array.isArray(m.swipe_info) ? m.swipe_info : [];
+        while (m.swipe_info.length < m.swipes.length) m.swipe_info.push({});
+        m.swipes.push(text);
+        m.swipe_info.push(info);
+        m.swipe_id = m.swipes.length - 1;
+        m.mes = text;
+        return { index: targetIndex, message: m };
+      }
+      const m = makeMessage({ name: speaker.name, isUser: false, mes: text, characterId: speaker.id, model: settings.model });
+      c.messages.push(m);
+      return { index: c.messages.length - 1, message: m };
+    });
+  };
+
+  try {
+    const text = await streamChat({
+      apiKey: settings.apiKey,
+      signal: ac.signal,
+      body: { model: settings.model, messages: prompt, ...samplingParams(settings, persona.name) },
+      onDelta: (delta) => send({ delta }),
+    });
+    const saved = await persist(text);
+    if (!saved) send({ error: 'El modelo devolvió una respuesta vacía.' });
+    else send({ done: true, ...saved });
+  } catch (e) {
+    const partial = e.partial || '';
+    let saved = null;
+    if (partial.trim()) {
+      try {
+        saved = await persist(partial);
+      } catch {
+        /* el chat pudo cambiar mientras tanto */
+      }
+    }
+    if (e.name === 'AbortError') {
+      if (saved) send({ done: true, aborted: true, ...saved });
+    } else if (saved) {
+      send({ done: true, warning: e.message, ...saved });
+    } else {
+      send({ error: e.message || 'Error al generar la respuesta' });
+    }
+  } finally {
+    res.end();
+  }
+}));
+
+export default r;
