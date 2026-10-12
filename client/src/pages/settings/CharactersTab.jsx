@@ -128,7 +128,7 @@ const EMPTY = {
   extensions: {},
 };
 
-function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
+export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   const { lorebooks, toast } = useData();
   const { confirm } = useDialog();
   const [data, setData] = useState(id ? null : { ...EMPTY, name: initialFile ? guessName(initialFile.name) : '' });
@@ -203,7 +203,7 @@ function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     if (!(await confirm({ title: 'Eliminar personaje', message: `Se eliminará a ${data.name} y todos sus chats. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deleteCharacter(id);
-      onClose(true);
+      onClose(true, { deleted: true });
     } catch (e) {
       toast(e.message, 'error');
     }

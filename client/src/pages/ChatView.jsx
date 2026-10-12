@@ -7,6 +7,7 @@ import { formatRP, formatTime, isTouch } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, ViewableAvatar } from '../components/ui.jsx';
 import GroupEditor from '../components/GroupEditor.jsx';
+import { CharacterEditor } from './settings/CharactersTab.jsx';
 
 const nameHue = (name) => {
   let h = 0;
@@ -32,6 +33,7 @@ export default function ChatView() {
   const [inspector, setInspector] = useState(false);
   const [groupSheet, setGroupSheet] = useState(false);
   const [convertSheet, setConvertSheet] = useState(false);
+  const [cardId, setCardId] = useState(null);
 
   const abortRef = useRef(null);
   const impersonateAbort = useRef(null);
@@ -349,7 +351,13 @@ export default function ChatView() {
         </button>
         {isGroup ? <GroupAvatar members={members} size={40} /> : <ViewableAvatar character={character} name={title} size={40} />}
         <div className="chat-head-text">
-          <strong>{title}</strong>
+          {!isGroup && character ? (
+            <button className="name-link head-name" onClick={() => setCardId(character.id)} title="Ver tarjeta del personaje">
+              <strong>{title}</strong>
+            </button>
+          ) : (
+            <strong>{title}</strong>
+          )}
           <small>{generating ? `${streaming.name} está escribiendo…` : isGroup ? members.map((m) => m.name).join(', ') : chat.title || `Tú: ${chat.persona.name}`}</small>
         </div>
         <Menu
@@ -389,7 +397,20 @@ export default function ChatView() {
                 <div className="bubble" onClick={() => setSelected(selected === i ? null : i)}>
                   {!m.is_user && isGroup && (
                     <div className="sender" style={{ color: `hsl(${nameHue(m.name)} 65% var(--sender-l))` }}>
-                      {m.name}
+                      {speaker ? (
+                        <button
+                          className="name-link"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCardId(speaker.id);
+                          }}
+                          title="Ver tarjeta del personaje"
+                        >
+                          {m.name}
+                        </button>
+                      ) : (
+                        m.name
+                      )}
                     </div>
                   )}
                   {editing?.index === i ? (
@@ -457,7 +478,13 @@ export default function ChatView() {
               <div className="bubble">
                 {isGroup && (
                   <div className="sender" style={{ color: `hsl(${nameHue(streaming.name)} 65% var(--sender-l))` }}>
-                    {streaming.name}
+                    {charById[streaming.characterId] ? (
+                      <button className="name-link" onClick={() => setCardId(streaming.characterId)} title="Ver tarjeta del personaje">
+                        {streaming.name}
+                      </button>
+                    ) : (
+                      streaming.name
+                    )}
                   </div>
                 )}
                 {streaming.text ? <div className="text" dangerouslySetInnerHTML={{ __html: formatRP(streaming.text) }} /> : <div className="typing"><i /><i /><i /></div>}
@@ -538,6 +565,20 @@ export default function ChatView() {
         </Modal>
       )}
       {convertSheet && character && <ConvertToGroupSheet chatRef={ref} character={character} onClose={() => setConvertSheet(false)} />}
+      {cardId && (
+        <Modal title="Tarjeta de personaje" wide onClose={() => setCardId(null)}>
+          <CharacterEditor
+            key={cardId}
+            id={cardId}
+            onClose={async (changed, info) => {
+              setCardId(null);
+              if (!changed) return;
+              await refresh('characters', 'lorebooks', 'groups', 'chats');
+              if (info?.deleted && cardId === ref.ownerId) navigate('/chats');
+            }}
+          />
+        </Modal>
+      )}
       {groupSheet && group && (
         <GroupEditor
           group={group}

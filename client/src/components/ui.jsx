@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { avatarUrl } from '../api.js';
 import { Icon } from './Icon.jsx';
 
@@ -34,14 +35,15 @@ export function Lightbox({ src, name, onClose }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-  return (
+  return createPortal(
     <div className="lightbox" role="dialog" aria-label={name} onClick={onClose}>
       <button className="icon-btn lightbox-close" onClick={onClose} aria-label="Cerrar">
         <Icon name="close" size={26} />
       </button>
       <img src={src} alt={name} onClick={(e) => e.stopPropagation()} />
       {name && <div className="lightbox-caption">{name}</div>}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
