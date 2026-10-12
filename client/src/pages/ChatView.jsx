@@ -18,7 +18,7 @@ export default function ChatView() {
   const { params } = useMatch('/chats/:kind/:owner/:file');
   const ref = useMemo(() => ({ kind: params.kind, ownerId: params.owner, file: params.file }), [params.kind, params.owner, params.file]);
   const navigate = useNavigate();
-  const { charById, groupById, personas, settings, refresh, toast } = useData();
+  const { charById, groupById, personas, settings, chats, refresh, toast } = useData();
   const { confirm, prompt } = useDialog();
 
   const [chat, setChat] = useState(null);
@@ -240,6 +240,18 @@ export default function ChatView() {
     }
   }
 
+  const pinned = chats.some((c) => c.kind === ref.kind && c.ownerId === ref.ownerId && c.file === ref.file && c.pinned);
+
+  async function togglePin() {
+    try {
+      await api.pinChat(ref, !pinned);
+      await refresh('chats');
+      toast(pinned ? 'Chat desfijado' : 'Chat fijado');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
   async function copyChat() {
     const base = String(chat.title || chat.meta.create_date || ref.file).replace(/ \((rama|copia)\)$/, '');
     const title = await prompt({
@@ -307,6 +319,7 @@ export default function ChatView() {
         </div>
         <Menu
           items={[
+            { label: pinned ? 'Quitar de fijados' : 'Fijar chat', onClick: togglePin },
             { label: 'Renombrar chat', onClick: renameChat },
             { label: 'Copiar chat', onClick: copyChat },
             { label: `Persona: ${chat.persona.name}`, onClick: () => setPersonaSheet(true) },

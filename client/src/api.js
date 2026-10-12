@@ -129,6 +129,7 @@ export const api = {
   setSwipe: (ref, i, swipe_id) => req('POST', `${chatUrl(ref)}/messages/${i}/swipe`, { swipe_id }),
   deleteSwipe: (ref, i) => req('DELETE', `${chatUrl(ref)}/messages/${i}/swipe`),
   copyChat: (ref, title) => req('POST', `${chatUrl(ref)}/copy`, { title }),
+  pinChat: (ref, pinned) => req('POST', `${chatUrl(ref)}/pin`, { pinned }),
   branchChat: (ref, index, title) => req('POST', `${chatUrl(ref)}/branch`, { index, title }),
   chatToGroup: (ref, body) => req('POST', `${chatUrl(ref)}/to-group`, body),
 };

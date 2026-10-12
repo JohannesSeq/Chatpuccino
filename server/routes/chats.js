@@ -17,7 +17,7 @@ import { streamChat } from '../providers.js';
 import { buildPrompt, stripSpeakerPrefix } from '../prompt.js';
 import { estimateTokens } from '../lore.js';
 import { getActivePreset } from '../presets.js';
-import { activeConnection, getSettings, isReady } from '../settings.js';
+import { activeConnection, chatKey, getSettings, isReady, setPinned } from '../settings.js';
 import { getGroup, getPersona, saveGroup } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
 
@@ -47,7 +47,11 @@ async function loadOwner(kind, ownerId) {
   return { name: group.name, members, group };
 }
 
-r.get('/', wrap(async (_req, res) => res.json(await listAllChats())));
+r.get('/', wrap(async (_req, res) => {
+  const [chats, settings] = await Promise.all([listAllChats(), getSettings()]);
+  const pins = new Set(settings.pinnedChats);
+  res.json(chats.map((c) => ({ ...c, pinned: pins.has(chatKey(c.kind, c.ownerId, c.file)) })));
+}));
 
 // Importa un .jsonl (formato SillyTavern) como chat nuevo de un personaje o grupo.
 r.post('/import', wrap(async (req, res) => {
@@ -105,6 +109,7 @@ r.patch('/:kind/:owner/:file', wrap(async (req, res) => {
 
 r.delete('/:kind/:owner/:file', wrap(async (req, res) => {
   await deleteChat(req.params.kind, req.params.owner, req.params.file);
+  await setPinned(chatKey(req.params.kind, req.params.owner, req.params.file), false);
   res.status(204).end();
 }));
 
@@ -194,6 +199,15 @@ r.post('/:kind/:owner/:file/branch', wrap(async (req, res) => {
   res.status(201).json({ kind, ownerId: owner, file: newFile });
 }));
 
+// Fija o desfija un chat en la lista.
+r.post('/:kind/:owner/:file/pin', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  await readChat(kind, owner, file);
+  const pinned = Boolean(req.body?.pinned);
+  await setPinned(chatKey(kind, owner, file), pinned);
+  res.json({ pinned });
+}));
+
 // Duplica el chat completo (sin enlace con el original).
 r.post('/:kind/:owner/:file/copy', wrap(async (req, res) => {
   const { kind, owner, file } = req.params;
@@ -213,7 +227,12 @@ r.post('/:kind/:owner/:file/to-group', wrap(async (req, res) => {
   const chat = await readChat(kind, owner, file);
   const group = await saveGroup(null, { name, members: [owner, ...extra], replyMode });
   const newFile = await writeChatToGroup({ chat, file, group, characterId: owner, characterName: original.data.name });
-  if (!keepOriginal) await deleteChat(kind, owner, file);
+  const wasPinned = (await getSettings()).pinnedChats.includes(chatKey(kind, owner, file));
+  if (!keepOriginal) {
+    await deleteChat(kind, owner, file);
+    await setPinned(chatKey(kind, owner, file), false);
+  }
+  if (wasPinned) await setPinned(chatKey('g', group.id, newFile), true);
   res.status(201).json({ kind: 'g', ownerId: group.id, file: newFile });
 }));
 

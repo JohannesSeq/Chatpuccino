@@ -46,6 +46,7 @@ Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y eli
 
 - **Eliminar una variante:** en el último mensaje del personaje, el botón rojo 🗑 junto a «‹ 2/3 ›» borra solo la variante que estás viendo; el mensaje conserva las demás (la última no se puede quitar: borra el mensaje).
 - **Ramificar:** toca un mensaje → *Ramificar*. Se crea un chat nuevo con una copia de la conversación hasta ese mensaje (inclusive), enlazado al original (`main_chat` en el `.jsonl`) y titulado «… (rama)». El original no cambia.
+- **Fijar chats:** ⋮ de un chat (en la lista o dentro del chat) → *Fijar chat*. Los fijados aparecen arriba, en su propia sección «Fijados» y con un icono de pin; dentro de cada sección siguen el orden por actividad reciente. Fijar no modifica el archivo del chat (se guarda en los ajustes), y la copia de un chat fijado no queda fijada.
 - **Copiar chat:** menú ⋮ de un chat (en la lista o dentro del chat) → *Copiar chat*. Duplica la conversación completa como un chat independiente («… (copia)»); el original no cambia.
 - **Convertir en grupo:** menú del chat individual → *Convertir en grupo…*. Elige los demás personajes y el modo de respuesta; el chat pasa al grupo con todo su historial (o se copia, si marcas «Conservar también el chat original»).
 

@@ -9,6 +9,7 @@ export const DEFAULTS = {
   defaultPersona: '',
   activeConnection: '',
   activePreset: '',
+  pinnedChats: [],
 };
 
 const NUMERIC = ['scanDepth', 'loreBudget'];
@@ -46,7 +47,9 @@ function migrate(stored) {
 
 export async function loadSettings() {
   const stored = (await readJson(SETTINGS_FILE, {})) || {};
-  return { ...DEFAULTS, ...migrate(stored) };
+  const s = { ...DEFAULTS, ...migrate(stored) };
+  s.pinnedChats = Array.isArray(s.pinnedChats) ? s.pinnedChats.map(String) : [];
+  return s;
 }
 
 export function mutateSettings(fn) {
@@ -59,6 +62,16 @@ export function mutateSettings(fn) {
 }
 
 export const getSettings = loadSettings;
+
+export const chatKey = (kind, ownerId, file) => `${kind}/${ownerId}/${file}`;
+
+// Los chats fijados se guardan aquí (no dentro del .jsonl) para no alterar su fecha ni copiarse con él.
+export function setPinned(key, pinned) {
+  return mutateSettings((s) => {
+    const rest = s.pinnedChats.filter((k) => k !== key);
+    s.pinnedChats = pinned ? [...rest, key] : rest;
+  });
+}
 
 export function activeConnection(s) {
   return s.connections.find((c) => c.id === s.activeConnection) || s.connections[0] || null;
@@ -93,6 +106,8 @@ export function updateSettings(patch) {
       if (NUMERIC.includes(key)) {
         const n = Number(patch[key]);
         if (Number.isFinite(n)) s[key] = n;
+      } else if (key === 'pinnedChats') {
+        continue; // se gestiona solo con setPinned
       } else if (key === 'activeLorebooks') {
         s[key] = Array.isArray(patch[key]) ? patch[key].map(String) : [];
       } else if (key === 'activeConnection') {

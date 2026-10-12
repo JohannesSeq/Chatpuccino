@@ -49,8 +49,19 @@ function ChatList({ active }) {
         const group = c.kind === 'g' ? groupById[c.ownerId] : null;
         return { ...c, char, group, name: char?.name || group?.name || c.ownerId };
       })
-      .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.lastMessage?.text || '').toLowerCase().includes(q));
+      .filter((c) => !q || c.name.toLowerCase().includes(q) || (c.lastMessage?.text || '').toLowerCase().includes(q))
+      .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned))); // estable: dentro de cada grupo sigue el orden por actividad
   }, [chats, charById, groupById, query]);
+  const hasPinned = rows.some((c) => c.pinned);
+
+  async function togglePin(c) {
+    try {
+      await api.pinChat(c, !c.pinned);
+      await refresh('chats');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
 
   async function rename(c) {
     const title = await prompt({ title: 'Renombrar chat', label: `Chat con ${c.name}`, defaultValue: c.title, placeholder: 'Sin nombre', allowEmpty: true, confirmLabel: 'Guardar' });
@@ -106,17 +117,22 @@ function ChatList({ active }) {
         <SearchBox value={query} onChange={setQuery} placeholder="Buscar chats" />
       </div>
       <ul className="rows">
-        {rows.map((c) => {
+        {rows.map((c, i) => {
           const isActive = active && active.kind === c.kind && active.owner === c.ownerId && active.file === c.file;
           const members = c.group ? c.group.members.map((id) => charById[id]).filter(Boolean) : [];
+          const label = hasPinned && (i === 0 ? (c.pinned ? 'Fijados' : 'Chats') : !c.pinned && rows[i - 1].pinned ? 'Chats' : null);
           return (
-            <li key={`${c.kind}/${c.ownerId}/${c.file}`} className={`row ${isActive ? 'active' : ''}`}>
+            <React.Fragment key={`${c.kind}/${c.ownerId}/${c.file}`}>
+              {label && <li className="section-label">{label}</li>}
+            <li className={`row ${isActive ? 'active' : ''}`}>
               <button className="row-main" onClick={() => navigate(chatRoute(c))}>
                 {c.kind === 'g' ? <GroupAvatar members={members} /> : <CharAvatar character={c.char} name={c.name} />}
                 <div className="row-text">
                   <div className="row-top">
                     <strong>{c.name}</strong>
-                    <time>{formatListDate(c.mtime)}</time>
+                    <time>
+                      {c.pinned && <Icon name="pin" size={13} />} {formatListDate(c.mtime)}
+                    </time>
                   </div>
                   <div className="row-sub">
                     {c.title && <span className="tag">{c.title}</span>}
@@ -126,12 +142,14 @@ function ChatList({ active }) {
               </button>
               <Menu
                 items={[
+                  { label: c.pinned ? 'Quitar de fijados' : 'Fijar chat', onClick: () => togglePin(c) },
                   { label: 'Renombrar chat', onClick: () => rename(c) },
                   { label: 'Copiar chat', onClick: () => copy(c) },
                   { label: 'Eliminar chat', danger: true, onClick: () => remove(c) },
                 ]}
               />
             </li>
+            </React.Fragment>
           );
         })}
         {!rows.length && (

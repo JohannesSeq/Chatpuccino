@@ -544,6 +544,39 @@ test('apariencia: valores por defecto, saneado y fondo de pantalla', async () =>
   assert.equal((await fetch(`${base}/appearance/wallpaper`, { headers: { Cookie: cookie } })).status, 404);
 });
 
+test('chats fijados: se marcan en la lista, no alteran la fecha y se limpian al borrar o mover', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const a = (await call('POST', '/chats', { kind: 'c', ownerId: 'Luna' })).json;
+  const b = (await call('POST', '/chats', { kind: 'c', ownerId: 'Luna' })).json;
+  const ra = `/chats/c/Luna/${encodeURIComponent(a.file)}`;
+  const find = async (f) => (await call('GET', '/chats')).json.find((c) => c.kind === 'c' && c.file === f);
+
+  assert.equal((await find(a.file)).pinned, false);
+  const mtime = (await find(a.file)).mtime;
+  assert.equal((await call('POST', `${ra}/pin`, { pinned: true })).json.pinned, true);
+  assert.equal((await find(a.file)).pinned, true);
+  assert.equal((await find(b.file)).pinned, false);
+  assert.equal((await find(a.file)).mtime, mtime, 'fijar no modifica el archivo');
+  assert.ok((await call('GET', '/settings')).json.pinnedChats.length >= 1);
+
+  assert.equal((await call('POST', `${ra}/pin`, { pinned: false })).json.pinned, false);
+  assert.equal((await find(a.file)).pinned, false);
+  assert.equal((await call('POST', '/chats/c/Luna/noexiste/pin', { pinned: true })).status, 404);
+  assert.equal((await call('PUT', '/settings', { pinnedChats: ['x'] })).json.pinnedChats.includes('x'), false, 'solo se gestiona con /pin');
+
+  // al copiar no se hereda el pin; al convertir en grupo el pin pasa al chat nuevo; al borrar se limpia
+  await call('POST', `${ra}/pin`, { pinned: true });
+  const copy = (await call('POST', `${ra}/copy`, {})).json;
+  assert.equal((await find(copy.file)).pinned, false);
+  const conv = (await call('POST', `${ra}/to-group`, { name: 'Pines', members: ['Kai'] })).json;
+  const moved = (await call('GET', '/chats')).json.find((c) => c.kind === 'g' && c.ownerId === conv.ownerId && c.file === conv.file);
+  assert.equal(moved.pinned, true);
+  assert.equal(await find(a.file), undefined);
+  await call('DELETE', `/chats/g/${encodeURIComponent(conv.ownerId)}/${encodeURIComponent(conv.file)}`);
+  const pins = (await call('GET', '/settings')).json.pinnedChats;
+  assert.equal(pins.some((k) => k.includes(a.file) || k.includes(conv.file)), false);
+});
+
 test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo desde la imagen)', async () => {
   await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
   const plain = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: placeholderPng('x', 8, 8) });
