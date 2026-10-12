@@ -81,16 +81,36 @@ export default function ChatView() {
     const el = inputRef.current;
     if (!el) return;
     el.style.height = 'auto';
+    // Tope relativo al área realmente visible (con el teclado abierto en móvil es mucho menor que la pantalla).
+    const visible = window.visualViewport?.height || window.innerHeight;
+    el.style.maxHeight = `${Math.max(88, Math.min(240, Math.round(visible * 0.4)))}px`;
     el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
     const list = listRef.current;
     if (list && stick.current) list.scrollTop = list.scrollHeight;
   }, []);
   const chatReady = chat !== null;
   useLayoutEffect(fitInput, [input, chatReady, fitInput]);
+  // En móvil el ancho útil cambia con el teclado, al girar la pantalla o al cargar las fuentes: se reajusta en esos casos.
   useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return undefined;
+    let width = el.offsetWidth;
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+      if (el.offsetWidth !== width) {
+        width = el.offsetWidth;
+        fitInput();
+      }
+    }) : null;
+    ro?.observe(el);
     window.addEventListener('resize', fitInput);
-    return () => window.removeEventListener('resize', fitInput);
-  }, [fitInput]);
+    window.visualViewport?.addEventListener('resize', fitInput);
+    document.fonts?.ready.then(fitInput);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', fitInput);
+      window.visualViewport?.removeEventListener('resize', fitInput);
+    };
+  }, [chatReady, fitInput]);
 
   const onScroll = () => {
     const el = listRef.current;
@@ -532,6 +552,7 @@ export default function ChatView() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onInput={fitInput}
             onKeyDown={onKeyDown}
             readOnly={impersonating}
             placeholder={impersonating ? 'Escribiendo por ti…' : 'Escribe un mensaje'}
