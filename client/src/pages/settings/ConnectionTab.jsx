@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
+import { useDialog } from '../../dialogs.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal, SearchBox } from '../../components/ui.jsx';
 
@@ -87,6 +88,7 @@ export default function ConnectionTab() {
 
 function ConnectionEditor({ conn, isFirst, onClose }) {
   const { toast } = useData();
+  const { confirm } = useDialog();
   const [type, setType] = useState(conn?.type || 'openrouter');
   const [name, setName] = useState(conn?.name || '');
   const [baseUrl, setBaseUrl] = useState(conn?.baseUrl || '');
@@ -136,7 +138,7 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
   }
 
   async function remove() {
-    if (!window.confirm(`¿Eliminar la conexión "${conn.name}"?`)) return;
+    if (!(await confirm({ title: 'Eliminar conexión', message: `Se eliminará la conexión «${conn.name}», incluida su API key y sus favoritos.`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deleteConnection(conn.id);
       onClose(true);

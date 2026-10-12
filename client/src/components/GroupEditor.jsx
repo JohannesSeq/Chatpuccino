@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { api } from '../api.js';
 import { useData } from '../data.jsx';
+import { useDialog } from '../dialogs.jsx';
 import { CharAvatar, Modal } from './ui.jsx';
 
 export default function GroupEditor({ group, onClose, onSaved, onDeleted }) {
   const { characters, refresh, toast } = useData();
+  const { confirm } = useDialog();
   const [name, setName] = useState(group?.name || '');
   const [members, setMembers] = useState(group?.members || []);
   const [replyMode, setReplyMode] = useState(group?.replyMode || 'smart');
@@ -27,7 +29,7 @@ export default function GroupEditor({ group, onClose, onSaved, onDeleted }) {
   }
 
   async function remove() {
-    if (!window.confirm(`¿Eliminar el grupo "${group.name}" y todos sus chats?`)) return;
+    if (!(await confirm({ title: 'Eliminar grupo', message: `Se eliminará el grupo «${group.name}» y todos sus chats. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deleteGroup(group.id);
       await refresh('groups', 'chats');

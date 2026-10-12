@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { api } from '../../api.js';
 import { useAuth } from '../../auth.jsx';
 import { useData } from '../../data.jsx';
+import { useDialog } from '../../dialogs.jsx';
 import { Field } from '../../components/ui.jsx';
 
 export default function SecurityTab() {
   const { auth, setAuth, logout } = useAuth();
   const { toast } = useData();
+  const { confirm: askConfirm } = useDialog();
 
   const [current, setCurrent] = useState('');
   const [username, setUsername] = useState(auth.username || '');
@@ -36,7 +38,7 @@ export default function SecurityTab() {
   }
 
   async function revoke() {
-    if (!window.confirm('¿Cerrar la sesión en todos los dispositivos (excepto este)?')) return;
+    if (!(await askConfirm({ title: 'Cerrar sesiones', message: 'Se cerrará la sesión en todos los dispositivos, excepto este.', confirmLabel: 'Cerrar sesiones', danger: true }))) return;
     try {
       await api.revokeSessions();
       toast('Sesiones cerradas');

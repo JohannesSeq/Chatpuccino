@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { Link, useMatch, useNavigate } from 'react-router-dom';
 import { api, chatUrl, generate } from '../api.js';
 import { useData } from '../data.jsx';
+import { useDialog } from '../dialogs.jsx';
 import { formatRP, formatTime, isTouch } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar } from '../components/ui.jsx';
@@ -18,6 +19,7 @@ export default function ChatView() {
   const ref = useMemo(() => ({ kind: params.kind, ownerId: params.owner, file: params.file }), [params.kind, params.owner, params.file]);
   const navigate = useNavigate();
   const { charById, groupById, personas, settings, refresh, toast } = useData();
+  const { confirm, prompt } = useDialog();
 
   const [chat, setChat] = useState(null);
   const [input, setInput] = useState('');
@@ -175,7 +177,7 @@ export default function ChatView() {
   }
 
   async function removeMessage(i) {
-    if (!window.confirm('¿Borrar este mensaje?')) return;
+    if (!(await confirm({ title: 'Borrar mensaje', message: 'Este mensaje se eliminará del chat.', confirmLabel: 'Borrar', danger: true }))) return;
     try {
       await api.deleteMessage(ref, i);
       setSelected(null);
@@ -187,7 +189,7 @@ export default function ChatView() {
   }
 
   async function renameChat() {
-    const t = window.prompt('Nombre del chat', chat.title);
+    const t = await prompt({ title: 'Renombrar chat', label: 'Nombre del chat', defaultValue: chat.title, placeholder: 'Sin nombre', allowEmpty: true, confirmLabel: 'Guardar' });
     if (t === null) return;
     try {
       await api.patchChat(ref, { title: t });
@@ -199,7 +201,7 @@ export default function ChatView() {
   }
 
   async function deleteChat() {
-    if (!window.confirm('¿Eliminar este chat? No se puede deshacer.')) return;
+    if (!(await confirm({ title: 'Eliminar chat', message: 'Se borrará toda la conversación. No se puede deshacer.', confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deleteChat(ref);
       await refresh('chats');

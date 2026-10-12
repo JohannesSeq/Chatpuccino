@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
+import { useDialog } from '../../dialogs.jsx';
 import { fileToPngDataUrl } from '../../util.js';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal, PersonaAvatar } from '../../components/ui.jsx';
@@ -48,6 +49,7 @@ export default function PersonasTab() {
 
 function PersonaEditor({ persona, onClose }) {
   const { settings, toast } = useData();
+  const { confirm } = useDialog();
   const [name, setName] = useState(persona?.name || '');
   const [description, setDescription] = useState(persona?.description || '');
   const [image, setImage] = useState(null);
@@ -82,7 +84,7 @@ function PersonaEditor({ persona, onClose }) {
   }
 
   async function remove() {
-    if (!window.confirm(`¿Eliminar la persona "${persona.name}"?`)) return;
+    if (!(await confirm({ title: 'Eliminar persona', message: `Se eliminará la persona «${persona.name}».`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deletePersona(persona.id);
       onClose(true);

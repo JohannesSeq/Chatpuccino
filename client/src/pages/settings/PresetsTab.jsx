@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
+import { useDialog } from '../../dialogs.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal } from '../../components/ui.jsx';
 
@@ -50,6 +51,7 @@ function download(url) {
 
 export default function PresetsTab() {
   const { refresh, toast } = useData();
+  const { confirm, prompt } = useDialog();
   const [list, setList] = useState(null);
   const [name, setName] = useState('');
   const [draft, setDraft] = useState(null);
@@ -74,7 +76,10 @@ export default function PresetsTab() {
     }).catch(fail);
   }, [load, fail]);
 
-  const discardOk = () => !dirty || window.confirm('Tienes cambios sin guardar en este preset. ¿Descartarlos?');
+  const discardOk = () =>
+    !dirty ||
+    confirm({ title: 'Cambios sin guardar', message: 'Este preset tiene cambios sin guardar. Si continúas se perderán.', confirmLabel: 'Descartar cambios', danger: true });
+  const nameTaken = (v) => (list?.presets || []).some((n) => n.toLowerCase() === v.toLowerCase());
 
   async function activate(n) {
     await api.saveSettings({ activePreset: n });
@@ -92,7 +97,7 @@ export default function PresetsTab() {
   };
 
   const choose = run(async (n) => {
-    if (n !== name && discardOk()) await activate(n);
+    if (n !== name && (await discardOk())) await activate(n);
   });
 
   const save = run(async () => {
@@ -103,31 +108,51 @@ export default function PresetsTab() {
   });
 
   const saveAs = run(async () => {
-    const n = window.prompt('Nombre del nuevo preset', `${name} (copia)`);
-    if (!n?.trim()) return;
-    const created = await api.createPreset(n.trim(), draft);
+    const n = await prompt({
+      title: 'Guardar como…',
+      message: 'Se crea un preset nuevo con el contenido actual (incluidos los cambios sin guardar) y pasa a ser el activo.',
+      label: 'Nombre del preset',
+      defaultValue: `${name} (copia)`,
+      confirmLabel: 'Crear',
+      validate: (v) => (nameTaken(v) ? 'Ya existe un preset con ese nombre' : ''),
+    });
+    if (!n) return;
+    const created = await api.createPreset(n, draft);
     await activate(created.name);
     toast(`Preset «${created.name}» creado`);
   });
 
   const createBlank = run(async () => {
-    if (!discardOk()) return;
-    const n = window.prompt('Nombre del preset nuevo (parte de los valores por defecto)', 'Nuevo preset');
-    if (!n?.trim()) return;
-    await activate((await api.createPreset(n.trim())).name);
+    if (!(await discardOk())) return;
+    const n = await prompt({
+      title: 'Nuevo preset',
+      message: 'Parte de los valores por defecto.',
+      label: 'Nombre del preset',
+      placeholder: 'Mi preset',
+      confirmLabel: 'Crear',
+      validate: (v) => (nameTaken(v) ? 'Ya existe un preset con ese nombre' : ''),
+    });
+    if (!n) return;
+    await activate((await api.createPreset(n)).name);
   });
 
   const rename = run(async () => {
-    const n = window.prompt('Nuevo nombre', name);
-    if (!n?.trim() || n.trim() === name) return;
-    const r = await api.renamePreset(name, n.trim());
+    const n = await prompt({
+      title: 'Renombrar preset',
+      label: 'Nuevo nombre',
+      defaultValue: name,
+      confirmLabel: 'Renombrar',
+      validate: (v) => (v !== name && nameTaken(v) ? 'Ya existe un preset con ese nombre' : ''),
+    });
+    if (!n || n === name) return;
+    const r = await api.renamePreset(name, n);
     setList(await api.presets());
     setName(r.name);
     refresh('settings');
   });
 
   const remove = run(async () => {
-    if (!window.confirm(`¿Eliminar el preset «${name}»?`)) return;
+    if (!(await confirm({ title: 'Eliminar preset', message: `Se eliminará el preset «${name}». No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
     await api.deletePreset(name);
     const l = await api.presets();
     await activate(l.presets.includes('Default') ? 'Default' : l.presets[0]);
@@ -136,7 +161,7 @@ export default function PresetsTab() {
   const onImport = run(async (e) => {
     const files = [...e.target.files];
     e.target.value = '';
-    if (!files.length || !discardOk()) return;
+    if (!files.length || !(await discardOk())) return;
     let last = null;
     for (const f of files) {
       try {
@@ -151,8 +176,8 @@ export default function PresetsTab() {
     }
   });
 
-  const exportPreset = () => {
-    if (dirty && !window.confirm('Hay cambios sin guardar: se exportará la versión guardada. ¿Continuar?')) return;
+  const exportPreset = async () => {
+    if (dirty && !(await confirm({ title: 'Cambios sin guardar', message: 'Se exportará la versión guardada del preset, sin tus cambios actuales.', confirmLabel: 'Exportar igualmente' }))) return;
     download(`/api/presets/${encodeURIComponent(name)}/export`);
   };
 
@@ -316,6 +341,7 @@ export default function PresetsTab() {
 
 function PromptEditor({ prompt, onClose, onSave, onDelete }) {
   const isNew = !prompt;
+  const { confirm } = useDialog();
   const [p, setP] = useState(() => prompt || { identifier: newId(), name: '', role: 'system', content: '', marker: false, system_prompt: false, injection_position: 0, injection_depth: 4, injection_order: 100, injection_trigger: [], forbid_overrides: false });
   const set = (k, v) => setP((x) => ({ ...x, [k]: v }));
   const canOverride = p.identifier === 'main' || p.identifier === 'jailbreak';
@@ -328,7 +354,12 @@ function PromptEditor({ prompt, onClose, onSave, onDelete }) {
       footer={
         <>
           {deletable && (
-            <button className="btn danger" onClick={() => window.confirm(`¿Eliminar el prompt «${p.name}»?`) && onDelete(p.identifier)}>
+            <button
+              className="btn danger"
+              onClick={async () => {
+                if (await confirm({ title: 'Eliminar prompt', message: `Se quitará «${p.name}» de este preset (al guardar).`, confirmLabel: 'Eliminar', danger: true })) onDelete(p.identifier);
+              }}
+            >
               Eliminar
             </button>
           )}

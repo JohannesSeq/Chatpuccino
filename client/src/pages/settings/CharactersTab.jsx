@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
+import { useDialog } from '../../dialogs.jsx';
 import { fileToPngDataUrl, placeholderPngDataUrl } from '../../util.js';
 import { Icon } from '../../components/Icon.jsx';
 import { CharAvatar, Field, SearchBox } from '../../components/ui.jsx';
@@ -89,6 +90,7 @@ const EMPTY = {
 
 function CharacterEditor({ id, onClose }) {
   const { lorebooks, toast } = useData();
+  const { confirm } = useDialog();
   const [data, setData] = useState(id ? null : { ...EMPTY });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -143,7 +145,7 @@ function CharacterEditor({ id, onClose }) {
   }
 
   async function remove() {
-    if (!window.confirm(`¿Eliminar a ${data.name}? También se borrarán todos sus chats.`)) return;
+    if (!(await confirm({ title: 'Eliminar personaje', message: `Se eliminará a ${data.name} y todos sus chats. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deleteCharacter(id);
       onClose(true);

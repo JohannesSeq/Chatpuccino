@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router-dom';
 import { api, chatRoute } from '../api.js';
 import { useData } from '../data.jsx';
+import { useDialog } from '../dialogs.jsx';
 import { formatListDate } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, SearchBox } from '../components/ui.jsx';
@@ -34,6 +35,7 @@ export default function ChatsPage() {
 
 function ChatList({ active }) {
   const { chats, charById, groupById, refresh, toast } = useData();
+  const { confirm, prompt } = useDialog();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
@@ -51,7 +53,7 @@ function ChatList({ active }) {
   }, [chats, charById, groupById, query]);
 
   async function rename(c) {
-    const title = window.prompt('Nombre del chat', c.title);
+    const title = await prompt({ title: 'Renombrar chat', label: `Chat con ${c.name}`, defaultValue: c.title, placeholder: 'Sin nombre', allowEmpty: true, confirmLabel: 'Guardar' });
     if (title === null) return;
     try {
       await api.patchChat(c, { title });
@@ -62,7 +64,7 @@ function ChatList({ active }) {
   }
 
   async function remove(c) {
-    if (!window.confirm(`¿Eliminar este chat con ${c.name}? No se puede deshacer.`)) return;
+    if (!(await confirm({ title: 'Eliminar chat', message: `Se borrará esta conversación con ${c.name}. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
       await api.deleteChat(c);
       await refresh('chats');
