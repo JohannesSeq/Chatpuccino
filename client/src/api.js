@@ -35,7 +35,11 @@ export const avatarUrl = {
 async function upload(url, headers, body, label) {
   const res = await apiFetch(url, { method: 'POST', headers, body });
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(`${label}: ${data?.error || res.status}`);
+  if (!res.ok) {
+    const err = new Error(`${label}: ${data?.error || res.status}`);
+    err.code = data?.code;
+    throw err;
+  }
   return data;
 }
 
@@ -59,6 +63,10 @@ export const api = {
   testConnection: (body) => req('POST', '/connections/test', body),
 
   presets: () => req('GET', '/presets'),
+  appearance: () => req('GET', '/appearance'),
+  saveAppearance: (body) => req('PUT', '/appearance', body),
+  uploadWallpaper: async (blob) => upload('/api/appearance/wallpaper', { 'Content-Type': 'application/octet-stream' }, await blob.arrayBuffer(), 'Fondo'),
+  deleteWallpaper: () => req('DELETE', '/appearance/wallpaper'),
   preset: (name) => req('GET', `/presets/${enc(name)}`),
   createPreset: (name, preset) => req('POST', '/presets', { name, preset }),
   importPreset: (name, preset) => req('POST', '/presets/import', { name, preset }),
@@ -119,6 +127,10 @@ export const api = {
   editMessage: (ref, i, mes) => req('PATCH', `${chatUrl(ref)}/messages/${i}`, { mes }),
   deleteMessage: (ref, i) => req('DELETE', `${chatUrl(ref)}/messages/${i}`),
   setSwipe: (ref, i, swipe_id) => req('POST', `${chatUrl(ref)}/messages/${i}/swipe`, { swipe_id }),
+  deleteSwipe: (ref, i) => req('DELETE', `${chatUrl(ref)}/messages/${i}/swipe`),
+  copyChat: (ref, title) => req('POST', `${chatUrl(ref)}/copy`, { title }),
+  branchChat: (ref, index, title) => req('POST', `${chatUrl(ref)}/branch`, { index, title }),
+  chatToGroup: (ref, body) => req('POST', `${chatUrl(ref)}/to-group`, body),
 };
 
 /** Genera una respuesta por streaming (SSE sobre fetch). Resuelve con { index, message }. */

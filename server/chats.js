@@ -186,6 +186,44 @@ export async function listAllChats() {
   return out.sort((a, b) => b.mtime - a.mtime);
 }
 
+// Copia el chat hasta el mensaje `index` (inclusive) como un chat nuevo enlazado al original.
+async function cloneChat({ kind, owner, file, chat, count, title, suffix, link }) {
+  const dir = chatDir(kind, owner);
+  const meta = structuredClone(chat.meta);
+  const base = String(meta.chat_metadata.title || meta.create_date || file).replace(/ \((rama|copia)\)$/, '');
+  meta.create_date = stamp();
+  if (link) meta.chat_metadata.main_chat = file;
+  else delete meta.chat_metadata.main_chat;
+  meta.chat_metadata.title = String(title || '').trim() || `${base} (${suffix})`;
+  const name = await uniqueName(dir, safeName(`${meta.character_name || owner} - ${stamp()}`), '.jsonl');
+  await writeFileAtomic(path.join(dir, `${name}.jsonl`), serializeChat({ meta, messages: structuredClone(chat.messages.slice(0, count)) }));
+  return name;
+}
+
+// Copia el chat hasta el mensaje `index` (inclusive) como un chat nuevo enlazado al original.
+export function branchChat({ kind, owner, file, chat, index, title }) {
+  return cloneChat({ kind, owner, file, chat, count: index + 1, title, suffix: 'rama', link: true });
+}
+
+// Duplica el chat completo como un chat independiente.
+export function copyChat({ kind, owner, file, chat, title }) {
+  return cloneChat({ kind, owner, file, chat, count: chat.messages.length, title, suffix: 'copia', link: false });
+}
+
+// Escribe un chat individual dentro de la carpeta de un grupo, marcando quién dijo cada mensaje.
+export async function writeChatToGroup({ chat, file, group, characterId, characterName }) {
+  const dir = chatDir('g', group.id);
+  await fs.mkdir(dir, { recursive: true });
+  const meta = structuredClone(chat.meta);
+  meta.character_name = group.name;
+  const messages = chat.messages.map((m) =>
+    !m.is_user && !m.is_system && !m.original_avatar && m.name === characterName ? { ...m, original_avatar: `${characterId}.png` } : m,
+  );
+  const name = await uniqueName(dir, safeName(file), '.jsonl');
+  await writeFileAtomic(path.join(dir, `${name}.jsonl`), serializeChat({ meta, messages }));
+  return name;
+}
+
 export async function deleteChat(kind, owner, file) {
   try {
     await fs.unlink(chatPath(kind, owner, file));

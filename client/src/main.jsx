@@ -5,7 +5,11 @@ import App from './App.jsx';
 import { AuthProvider } from './auth.jsx';
 import { DialogProvider } from './dialogs.jsx';
 import { DataProvider } from './data.jsx';
+import { applyAppearance, loadCachedAppearance } from './theme.js';
 import './styles.css';
+
+// Antes de pintar: aplica la última apariencia conocida (también en la pantalla de login).
+applyAppearance(loadCachedAppearance());
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { getCharacter } from '../cards.js';
 import {
+  branchChat,
   chatPath,
+  copyChat,
   createChat,
   deleteChat,
   importChat,
@@ -9,13 +11,14 @@ import {
   makeMessage,
   mutateChat,
   readChat,
+  writeChatToGroup,
 } from '../chats.js';
 import { streamChat } from '../providers.js';
 import { buildPrompt, stripSpeakerPrefix } from '../prompt.js';
 import { estimateTokens } from '../lore.js';
 import { getActivePreset } from '../presets.js';
 import { activeConnection, getSettings, isReady } from '../settings.js';
-import { getGroup, getPersona } from '../store.js';
+import { getGroup, getPersona, saveGroup } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
 
 const r = Router();
@@ -162,6 +165,56 @@ r.post('/:kind/:owner/:file/messages/:i/swipe', wrap(async (req, res) => {
     return msg;
   });
   res.json(out);
+}));
+
+// Elimina una variante (swipe) sin borrar el mensaje; por defecto la que se está mostrando.
+r.delete('/:kind/:owner/:file/messages/:i/swipe', wrap(async (req, res) => {
+  const out = await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
+    const { msg } = messageAt(chat, req);
+    const swipes = Array.isArray(msg.swipes) && msg.swipes.length ? msg.swipes : [msg.mes];
+    if (swipes.length < 2) throw new HttpError(409, 'Es la única variante: elimina el mensaje completo.');
+    const id = req.query.id !== undefined ? Number(req.query.id) : msg.swipe_id ?? 0;
+    if (!Number.isInteger(id) || id < 0 || id >= swipes.length) throw new HttpError(400, 'Variante inválida');
+    msg.swipes = swipes.filter((_, k) => k !== id);
+    if (Array.isArray(msg.swipe_info)) msg.swipe_info = msg.swipe_info.filter((_, k) => k !== id);
+    msg.swipe_id = Math.max(0, id - 1);
+    msg.mes = msg.swipes[msg.swipe_id];
+    return msg;
+  });
+  res.json(out);
+}));
+
+// Ramifica: copia el chat hasta un mensaje (inclusive) en un chat nuevo.
+r.post('/:kind/:owner/:file/branch', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const index = Number(req.body?.index);
+  const chat = await readChat(kind, owner, file);
+  if (!Number.isInteger(index) || index < 0 || index >= chat.messages.length) throw new HttpError(400, 'Mensaje inválido');
+  const newFile = await branchChat({ kind, owner, file, chat, index, title: req.body?.title });
+  res.status(201).json({ kind, ownerId: owner, file: newFile });
+}));
+
+// Duplica el chat completo (sin enlace con el original).
+r.post('/:kind/:owner/:file/copy', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  const chat = await readChat(kind, owner, file);
+  const newFile = await copyChat({ kind, owner, file, chat, title: req.body?.title });
+  res.status(201).json({ kind, ownerId: owner, file: newFile });
+}));
+
+// Convierte un chat individual en un grupo nuevo (el personaje original + los elegidos).
+r.post('/:kind/:owner/:file/to-group', wrap(async (req, res) => {
+  const { kind, owner, file } = req.params;
+  if (kind !== 'c') throw new HttpError(400, 'Solo los chats individuales se pueden convertir en grupo');
+  const { name, members, replyMode, keepOriginal } = req.body || {};
+  const original = await getCharacter(owner);
+  const extra = [...new Set((Array.isArray(members) ? members : []).map(String))].filter((id) => id !== owner);
+  for (const id of extra) await getCharacter(id);
+  const chat = await readChat(kind, owner, file);
+  const group = await saveGroup(null, { name, members: [owner, ...extra], replyMode });
+  const newFile = await writeChatToGroup({ chat, file, group, characterId: owner, characterName: original.data.name });
+  if (!keepOriginal) await deleteChat(kind, owner, file);
+  res.status(201).json({ kind: 'g', ownerId: group.id, file: newFile });
 }));
 
 function samplingParams(p, userName) {

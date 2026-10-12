@@ -63,6 +63,25 @@ function ChatList({ active }) {
     }
   }
 
+  async function copy(c) {
+    const base = String(c.title || c.createdAt || c.file).replace(/ \((rama|copia)\)$/, '');
+    const title = await prompt({
+      title: 'Copiar chat',
+      message: `Se duplicará la conversación completa con ${c.name}. El original no cambia.`,
+      label: 'Nombre de la copia',
+      defaultValue: `${base} (copia)`,
+      confirmLabel: 'Crear copia',
+    });
+    if (title === null) return;
+    try {
+      await api.copyChat(c, title);
+      await refresh('chats');
+      toast('Copia creada');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
   async function remove(c) {
     if (!(await confirm({ title: 'Eliminar chat', message: `Se borrará esta conversación con ${c.name}. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
     try {
@@ -108,6 +127,7 @@ function ChatList({ active }) {
               <Menu
                 items={[
                   { label: 'Renombrar chat', onClick: () => rename(c) },
+                  { label: 'Copiar chat', onClick: () => copy(c) },
                   { label: 'Eliminar chat', danger: true, onClick: () => remove(c) },
                 ]}
               />

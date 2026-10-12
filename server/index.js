@@ -8,6 +8,7 @@ import authRoutes, { loadAuth, requireAuth } from './auth.js';
 import settingsRoutes from './routes/settings.js';
 import connectionRoutes from './routes/connections.js';
 import presetRoutes from './routes/presets.js';
+import appearanceRoutes from './routes/appearance.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api', settingsRoutes);
   app.use('/api/connections', connectionRoutes);
   app.use('/api/presets', presetRoutes);
+  app.use('/api/appearance', appearanceRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);
@@ -46,7 +48,7 @@ export function createApp() {
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
     if (status >= 500) console.error(err);
     if (err.retryAfter) res.setHeader('Retry-After', String(err.retryAfter));
-    res.status(status).json({ error: err.message || 'Error interno' });
+    res.status(status).json({ error: err.message || 'Error interno', ...(err.code ? { code: err.code } : {}) });
   });
   return app;
 }

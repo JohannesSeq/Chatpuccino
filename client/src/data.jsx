@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api.js';
+import { applyAppearance, cacheAppearance, loadCachedAppearance, withDefaults } from './theme.js';
 
 const Ctx = createContext(null);
 export const useData = () => useContext(Ctx);
@@ -11,13 +12,20 @@ const LOADERS = {
   groups: api.groups,
   lorebooks: api.lorebooks,
   chats: api.chats,
+  appearance: api.appearance,
 };
 
 export function DataProvider({ children }) {
-  const [state, setState] = useState({ settings: null, characters: [], personas: [], groups: [], lorebooks: [], chats: [] });
+  const [state, setState] = useState({ settings: null, characters: [], personas: [], groups: [], lorebooks: [], chats: [], appearance: loadCachedAppearance() });
   const [ready, setReady] = useState(false);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
+
+  // La apariencia guardada en el servidor manda; la copia local solo evita el parpadeo al abrir.
+  useEffect(() => {
+    applyAppearance(state.appearance);
+    cacheAppearance(state.appearance);
+  }, [state.appearance]);
 
   const toast = useCallback((message, kind = 'info') => {
     const id = ++toastId.current;
@@ -46,11 +54,16 @@ export function DataProvider({ children }) {
     refresh().then(() => setReady(true));
   }, [refresh]);
 
+  const setAppearance = useCallback(
+    (update) => setState((s) => ({ ...s, appearance: withDefaults(typeof update === 'function' ? update(s.appearance) : update) })),
+    [],
+  );
+
   const value = useMemo(() => {
     const charById = Object.fromEntries(state.characters.map((c) => [c.id, c]));
     const groupById = Object.fromEntries(state.groups.map((g) => [g.id, g]));
-    return { ...state, charById, groupById, ready, refresh, toast };
-  }, [state, ready, refresh, toast]);
+    return { ...state, charById, groupById, ready, refresh, toast, setAppearance };
+  }, [state, ready, refresh, toast, setAppearance]);
 
   return (
     <Ctx.Provider value={value}>

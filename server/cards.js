@@ -166,7 +166,7 @@ export async function importCharacter({ png, json }) {
   if (png) {
     if (!isPng(png)) throw new HttpError(400, 'El archivo no es un PNG válido');
     const text = extractCardText(png);
-    if (!text) throw new HttpError(422, 'El PNG no contiene datos de personaje (chara/ccv3)');
+    if (!text) throw new HttpError(422, 'El PNG no contiene datos de personaje (chara/ccv3)', 'NO_CARD');
     let parsed;
     try {
       parsed = JSON.parse(Buffer.from(text, 'base64').toString('utf8'));

@@ -28,6 +28,38 @@ export const CharAvatar = ({ character, name, size }) => (
 
 export const PersonaAvatar = ({ persona, size }) => <Avatar src={persona ? avatarUrl.persona(persona) : null} name={persona?.name} size={size} />;
 
+export function Lightbox({ src, name, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="lightbox" role="dialog" aria-label={name} onClick={onClose}>
+      <button className="icon-btn lightbox-close" onClick={onClose} aria-label="Cerrar">
+        <Icon name="close" size={26} />
+      </button>
+      <img src={src} alt={name} onClick={(e) => e.stopPropagation()} />
+      {name && <div className="lightbox-caption">{name}</div>}
+    </div>
+  );
+}
+
+// Avatar de personaje que al tocarlo muestra la imagen completa.
+export function ViewableAvatar({ character, name, size }) {
+  const [open, setOpen] = useState(false);
+  const avatar = <CharAvatar character={character} name={name} size={size} />;
+  if (!character) return avatar;
+  return (
+    <>
+      <button className="avatar-btn zoomable" onClick={() => setOpen(true)} aria-label={`Ver imagen de ${character.name}`} title="Ver imagen completa">
+        {avatar}
+      </button>
+      {open && <Lightbox src={avatarUrl.character(character)} name={character.name} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
 export function GroupAvatar({ members, size = 48 }) {
   const shown = members.slice(0, 4);
   return (
@@ -103,6 +135,18 @@ export function Menu({ items }) {
             )}
         </div>
       )}
+    </div>
+  );
+}
+
+export function DropOverlay({ title, hint }) {
+  return (
+    <div className="drop-overlay" aria-hidden="true">
+      <div className="drop-box">
+        <Icon name="upload" size={40} />
+        <strong>{title}</strong>
+        {hint && <span>{hint}</span>}
+      </div>
     </div>
   );
 }

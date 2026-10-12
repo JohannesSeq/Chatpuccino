@@ -2,14 +2,21 @@ import React, { useMemo, useRef, useState } from 'react';
 import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
+import { useFileDrop } from '../../useFileDrop.js';
 import { fileToPngDataUrl, placeholderPngDataUrl } from '../../util.js';
 import { Icon } from '../../components/Icon.jsx';
-import { CharAvatar, Field, SearchBox } from '../../components/ui.jsx';
+import { CharAvatar, DropOverlay, Field, SearchBox } from '../../components/ui.jsx';
+
+const isPngFile = (f) => /\.png$/i.test(f.name) || f.type === 'image/png';
+const isJsonFile = (f) => /\.json$/i.test(f.name) || f.type === 'application/json';
+const guessName = (filename) => filename.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
 export default function CharactersTab() {
   const { characters, refresh, toast } = useData();
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
+  // Imágenes sin datos de personaje: cada una abre el editor de «Nuevo personaje», una tras otra.
+  const [pending, setPending] = useState([]);
   const fileRef = useRef(null);
 
   const list = useMemo(() => {
@@ -17,29 +24,60 @@ export default function CharactersTab() {
     return characters.filter((c) => !q || c.name.toLowerCase().includes(q) || c.tags.some((t) => t.toLowerCase().includes(q)));
   }, [characters, query]);
 
+  // Tarjetas (PNG con metadatos o JSON) se importan; cualquier otra imagen sirve para crear un personaje nuevo.
+  async function handleFiles(files) {
+    let ok = 0;
+    const images = [];
+    for (const f of files) {
+      if (isJsonFile(f) || isPngFile(f)) {
+        try {
+          await api.importCharacter(f);
+          ok++;
+        } catch (err) {
+          if (err.code === 'NO_CARD') images.push(f);
+          else toast(err.message, 'error');
+        }
+      } else if (f.type.startsWith('image/')) {
+        images.push(f);
+      } else {
+        toast(`${f.name}: formato no admitido`, 'error');
+      }
+    }
+    if (ok) {
+      toast(`${ok} personaje(s) importado(s)`);
+      await refresh('characters');
+    }
+    if (images.length) {
+      setPending(images);
+      setEditing('new');
+    }
+  }
+
+  const dragging = useFileDrop(handleFiles, !editing);
+
   async function onImport(e) {
     const files = [...e.target.files];
     e.target.value = '';
-    let ok = 0;
-    for (const f of files) {
-      try {
-        await api.importCharacter(f);
-        ok++;
-      } catch (err) {
-        toast(err.message, 'error');
-      }
-    }
-    if (ok) toast(`${ok} personaje(s) importado(s)`);
-    await refresh('characters');
+    await handleFiles(files);
   }
 
   if (editing) {
+    const initialFile = editing === 'new' ? pending[0] : undefined;
+    const remaining = editing === 'new' ? pending.length - 1 : 0;
     return (
       <CharacterEditor
+        key={editing === 'new' ? `new-${pending.length}` : editing}
         id={editing === 'new' ? null : editing}
+        initialFile={initialFile}
+        remaining={remaining}
         onClose={async (changed) => {
-          setEditing(null);
           if (changed) await refresh('characters', 'lorebooks', 'chats');
+          if (changed && remaining > 0) {
+            setPending((p) => p.slice(1));
+            return;
+          }
+          setPending([]);
+          setEditing(null);
         }}
       />
     );
@@ -47,15 +85,17 @@ export default function CharactersTab() {
 
   return (
     <div className="stack">
+      {dragging && <DropOverlay title="Suelta para crear o importar personajes" hint="Tarjetas PNG o JSON de SillyTavern se importan; una imagen normal abre un personaje nuevo con esa imagen." />}
       <div className="btn-row">
         <button className="btn primary" onClick={() => setEditing('new')}>
           <Icon name="plus" size={18} /> Nuevo personaje
         </button>
         <button className="btn" onClick={() => fileRef.current.click()}>
-          Importar (PNG / JSON)
+          Importar (PNG / JSON / imagen)
         </button>
-        <input ref={fileRef} type="file" accept=".png,.json,image/png,application/json" multiple hidden onChange={onImport} />
+        <input ref={fileRef} type="file" accept=".png,.json,image/*,application/json" multiple hidden onChange={onImport} />
       </div>
+      <p className="muted">Tip: arrastra aquí tarjetas de personaje o cualquier imagen para crear uno nuevo.</p>
       <SearchBox value={query} onChange={setQuery} placeholder="Buscar personajes o etiquetas" />
       <div className="grid-cards">
         {list.map((c) => (
@@ -88,15 +128,37 @@ const EMPTY = {
   extensions: {},
 };
 
-function CharacterEditor({ id, onClose }) {
+function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   const { lorebooks, toast } = useData();
   const { confirm } = useDialog();
-  const [data, setData] = useState(id ? null : { ...EMPTY });
+  const [data, setData] = useState(id ? null : { ...EMPTY, name: initialFile ? guessName(initialFile.name) : '' });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [tagsText, setTagsText] = useState('');
   const [busy, setBusy] = useState(false);
   const fileRef = useRef(null);
+
+  async function applyFile(file) {
+    if (!file?.type?.startsWith('image/')) {
+      toast('Ese archivo no es una imagen', 'error');
+      return;
+    }
+    try {
+      const png = await fileToPngDataUrl(file, 512, 768);
+      setImage(png);
+      setPreview(png);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  // Soltar una imagen en cualquier parte del editor cambia el avatar.
+  const dragging = useFileDrop((files) => applyFile(files.find((f) => f.type.startsWith('image/')) || files[0]));
+
+  React.useEffect(() => {
+    if (initialFile) applyFile(initialFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (!id) return;
@@ -119,14 +181,7 @@ function CharacterEditor({ id, onClose }) {
   async function pickImage(e) {
     const file = e.target.files[0];
     e.target.value = '';
-    if (!file) return;
-    try {
-      const png = await fileToPngDataUrl(file, 512, 768);
-      setImage(png);
-      setPreview(png);
-    } catch (err) {
-      toast(err.message, 'error');
-    }
+    if (file) await applyFile(file);
   }
 
   async function save() {
@@ -171,6 +226,8 @@ function CharacterEditor({ id, onClose }) {
 
   return (
     <div className="stack editor">
+      {dragging && <DropOverlay title="Suelta la imagen para usarla como avatar" />}
+      {remaining > 0 && <p className="muted">Quedan {remaining} {remaining === 1 ? 'imagen' : 'imágenes'} más por convertir en personaje. «Volver» las descarta todas.</p>}
       <div className="btn-row">
         <button className="btn" onClick={() => onClose(false)}>
           <Icon name="back" size={18} /> Volver
@@ -188,9 +245,12 @@ function CharacterEditor({ id, onClose }) {
 
       <section className="card">
         <div className="avatar-edit">
-          <button className="portrait" onClick={() => fileRef.current.click()} aria-label="Cambiar imagen">
-            {preview ? <img src={preview} alt="" /> : <span>Sin imagen</span>}
-          </button>
+          <div>
+            <button className="portrait" onClick={() => fileRef.current.click()} aria-label="Cambiar imagen">
+              {preview ? <img src={preview} alt="" /> : <span>Sin imagen</span>}
+            </button>
+            <p className="portrait-hint">Toca o arrastra una imagen aquí</p>
+          </div>
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickImage} />
           <div className="grow">
             <Field label="Nombre">

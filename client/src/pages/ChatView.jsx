@@ -5,7 +5,7 @@ import { useData } from '../data.jsx';
 import { useDialog } from '../dialogs.jsx';
 import { formatRP, formatTime, isTouch } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
-import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar } from '../components/ui.jsx';
+import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, ViewableAvatar } from '../components/ui.jsx';
 import GroupEditor from '../components/GroupEditor.jsx';
 
 const nameHue = (name) => {
@@ -31,6 +31,7 @@ export default function ChatView() {
   const [presetSheet, setPresetSheet] = useState(false);
   const [inspector, setInspector] = useState(false);
   const [groupSheet, setGroupSheet] = useState(false);
+  const [convertSheet, setConvertSheet] = useState(false);
 
   const abortRef = useRef(null);
   const stopRef = useRef(false);
@@ -164,6 +165,45 @@ export default function ChatView() {
     }
   }
 
+  async function removeSwipe(i) {
+    const m = chat.messages[i];
+    const ok = await confirm({
+      title: 'Eliminar variante',
+      message: `Se eliminará la variante ${(m.swipe_id ?? 0) + 1} de ${m.swipes.length}. El mensaje conserva las demás.`,
+      confirmLabel: 'Eliminar variante',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      const updated = await api.deleteSwipe(ref, i);
+      setChat((c) => ({ ...c, messages: c.messages.map((x, k) => (k === i ? updated : x)) }));
+      refresh('chats');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function branchFrom(i) {
+    const base = String(chat.title || chat.meta.create_date || ref.file).replace(/ \(rama\)$/, '');
+    const title = await prompt({
+      title: 'Ramificar chat',
+      message: 'Se creará una copia del chat con los mensajes hasta este punto (inclusive). El chat original no cambia.',
+      label: 'Nombre de la rama',
+      defaultValue: `${base} (rama)`,
+      confirmLabel: 'Crear rama',
+    });
+    if (title === null) return;
+    try {
+      const created = await api.branchChat(ref, i, title);
+      setSelected(null);
+      await refresh('chats');
+      toast('Rama creada: ahora estás en la copia');
+      navigate(chatUrl(created));
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
   async function saveEdit() {
     try {
       const updated = await api.editMessage(ref, editing.index, editing.text);
@@ -195,6 +235,25 @@ export default function ChatView() {
       await api.patchChat(ref, { title: t });
       await load();
       refresh('chats');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function copyChat() {
+    const base = String(chat.title || chat.meta.create_date || ref.file).replace(/ \((rama|copia)\)$/, '');
+    const title = await prompt({
+      title: 'Copiar chat',
+      message: 'Se duplicará la conversación completa como un chat independiente. Este chat no cambia.',
+      label: 'Nombre de la copia',
+      defaultValue: `${base} (copia)`,
+      confirmLabel: 'Crear copia',
+    });
+    if (title === null) return;
+    try {
+      await api.copyChat(ref, title);
+      await refresh('chats');
+      toast('Copia creada');
     } catch (e) {
       toast(e.message, 'error');
     }
@@ -241,7 +300,7 @@ export default function ChatView() {
         <button className="icon-btn back" onClick={() => navigate('/chats')} aria-label="Volver">
           <Icon name="back" />
         </button>
-        {isGroup ? <GroupAvatar members={members} size={40} /> : <CharAvatar character={character} name={title} size={40} />}
+        {isGroup ? <GroupAvatar members={members} size={40} /> : <ViewableAvatar character={character} name={title} size={40} />}
         <div className="chat-head-text">
           <strong>{title}</strong>
           <small>{generating ? `${streaming.name} está escribiendo…` : isGroup ? members.map((m) => m.name).join(', ') : chat.title || `Tú: ${chat.persona.name}`}</small>
@@ -249,11 +308,13 @@ export default function ChatView() {
         <Menu
           items={[
             { label: 'Renombrar chat', onClick: renameChat },
+            { label: 'Copiar chat', onClick: copyChat },
             { label: `Persona: ${chat.persona.name}`, onClick: () => setPersonaSheet(true) },
             { label: `Modelo: ${settings.model || 'sin elegir'}`, onClick: () => setModelSheet(true) },
             { label: `Preset: ${settings.activePreset || '—'}`, onClick: () => setPresetSheet(true) },
             { label: 'Ver prompt que se enviará', onClick: () => setInspector(true) },
             isGroup && group && { label: 'Editar grupo', onClick: () => setGroupSheet(true) },
+            !isGroup && character && { label: 'Convertir en grupo…', onClick: () => setConvertSheet(true) },
             { label: 'Exportar chat (.jsonl)', href: `/api${chatUrl(ref)}/export`, download: `${ref.file}.jsonl` },
             { label: 'Eliminar chat', danger: true, onClick: deleteChat },
           ]}
@@ -275,11 +336,11 @@ export default function ChatView() {
           const swipes = m.swipes?.length || 1;
           return (
             <div key={i} className={`msg ${m.is_user ? 'me' : 'them'} ${selected === i ? 'selected' : ''}`}>
-              {!m.is_user && isGroup && <CharAvatar character={speaker} name={m.name} size={32} />}
+              {!m.is_user && isGroup && <ViewableAvatar character={speaker} name={m.name} size={32} />}
               <div className="bubble-wrap">
                 <div className="bubble" onClick={() => setSelected(selected === i ? null : i)}>
                   {!m.is_user && isGroup && (
-                    <div className="sender" style={{ color: `hsl(${nameHue(m.name)} 70% 70%)` }}>
+                    <div className="sender" style={{ color: `hsl(${nameHue(m.name)} 65% var(--sender-l))` }}>
                       {m.name}
                     </div>
                   )}
@@ -308,6 +369,9 @@ export default function ChatView() {
                     <button onClick={() => navigator.clipboard?.writeText(m.mes).then(() => toast('Copiado'))}>
                       <Icon name="copy" size={16} /> Copiar
                     </button>
+                    <button onClick={() => branchFrom(i)} title="Crear una copia del chat hasta este mensaje">
+                      <Icon name="branch" size={16} /> Ramificar
+                    </button>
                     <button className="danger" onClick={() => removeMessage(i)}>
                       <Icon name="trash" size={16} /> Borrar
                     </button>
@@ -327,6 +391,11 @@ export default function ChatView() {
                     <button onClick={() => runReplies([speaker || members[0]], true)} aria-label="Regenerar" title="Generar otra respuesta">
                       <Icon name="refresh" size={18} />
                     </button>
+                    {swipes > 1 && (
+                      <button className="danger" onClick={() => removeSwipe(i)} aria-label="Eliminar esta variante" title="Eliminar esta variante">
+                        <Icon name="trash" size={18} />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -335,11 +404,11 @@ export default function ChatView() {
         })}
         {streaming && (
           <div className="msg them">
-            {isGroup && <CharAvatar character={charById[streaming.characterId]} name={streaming.name} size={32} />}
+            {isGroup && <ViewableAvatar character={charById[streaming.characterId]} name={streaming.name} size={32} />}
             <div className="bubble-wrap">
               <div className="bubble">
                 {isGroup && (
-                  <div className="sender" style={{ color: `hsl(${nameHue(streaming.name)} 70% 70%)` }}>
+                  <div className="sender" style={{ color: `hsl(${nameHue(streaming.name)} 65% var(--sender-l))` }}>
                     {streaming.name}
                   </div>
                 )}
@@ -409,6 +478,7 @@ export default function ChatView() {
           </ul>
         </Modal>
       )}
+      {convertSheet && character && <ConvertToGroupSheet chatRef={ref} character={character} onClose={() => setConvertSheet(false)} />}
       {groupSheet && group && (
         <GroupEditor
           group={group}
@@ -421,6 +491,85 @@ export default function ChatView() {
         />
       )}
     </div>
+  );
+}
+
+function ConvertToGroupSheet({ chatRef, character, onClose }) {
+  const { characters, refresh, toast } = useData();
+  const navigate = useNavigate();
+  const [name, setName] = useState(`${character.name} y amigos`);
+  const [chosen, setChosen] = useState([]);
+  const [replyMode, setReplyMode] = useState('smart');
+  const [keepOriginal, setKeepOriginal] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const others = characters.filter((c) => c.id !== character.id);
+  const toggle = (id) => setChosen((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+
+  async function submit(e) {
+    e.preventDefault();
+    if (busy || !name.trim() || !chosen.length) return;
+    setBusy(true);
+    try {
+      const created = await api.chatToGroup(chatRef, { name: name.trim(), members: chosen, replyMode, keepOriginal });
+      await refresh('groups', 'chats');
+      toast('Chat convertido en grupo');
+      onClose();
+      navigate(chatUrl(created));
+    } catch (err) {
+      toast(err.message, 'error');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      title="Convertir en grupo"
+      onClose={onClose}
+      footer={
+        <>
+          <span className="spacer" />
+          <button className="btn" type="button" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn primary" disabled={busy || !name.trim() || !chosen.length} onClick={submit}>
+            Convertir
+          </button>
+        </>
+      }
+    >
+      <form onSubmit={submit}>
+        <p className="muted">
+          Se crea un grupo con {character.name} y los personajes que elijas, y esta conversación pasa a ser un chat del grupo con todo su historial.
+        </p>
+        <label className="field">
+          <span className="field-label">Nombre del grupo</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <div className="field-label">Añadir personajes ({chosen.length})</div>
+        <div className="pick-list">
+          {others.map((c) => (
+            <label key={c.id} className="pick-row">
+              <input type="checkbox" checked={chosen.includes(c.id)} onChange={() => toggle(c.id)} />
+              <CharAvatar character={c} size={36} />
+              <span>{c.name}</span>
+            </label>
+          ))}
+          {!others.length && <p className="muted">No hay otros personajes. Crea o importa más en Ajustes → Personajes.</p>}
+        </div>
+        <label className="field">
+          <span className="field-label">Quién responde</span>
+          <select value={replyMode} onChange={(e) => setReplyMode(e.target.value)}>
+            <option value="smart">Inteligente: el mencionado, o el siguiente por turnos</option>
+            <option value="all">Todos, uno tras otro</option>
+            <option value="manual">Manual: yo elijo quién responde</option>
+          </select>
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={keepOriginal} onChange={(e) => setKeepOriginal(e.target.checked)} /> Conservar también el chat original con {character.name}
+        </label>
+        <button type="submit" hidden />
+      </form>
+    </Modal>
   );
 }
 

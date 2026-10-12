@@ -33,6 +33,22 @@ Puedes crear, duplicar, renombrar, eliminar, importar y exportar presets (se lee
 
 Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y elige el personaje o grupo destino (se detecta por el nombre del personaje en el archivo). Cada archivo se añade como un chat nuevo.
 
+## Apariencia
+
+**Ajustes → Apariencia** (se aplica al instante y se guarda en el servidor, así que se ve igual en tus dispositivos):
+- **Modo** claro, oscuro o automático (sigue al dispositivo).
+- **Colores** de acento, de tus burbujas, de las del personaje y del fondo del chat, con paletas rápidas (Clásico, Café, Océano, Rosa, Bosque, Púrpura). Cada modo guarda sus propios colores y el texto de las burbujas se ajusta solo para mantener el contraste.
+- **Fuentes** (de la interfaz y de los mensajes, por separado; incluye «otra fuente instalada») y **tamaños** de letra.
+- **Burbujas:** opacidad de las tuyas y de las del personaje, desenfoque detrás de ellas y redondeo.
+- **Fondo de pantalla:** una imagen detrás de los mensajes, con desenfoque y oscurecido/aclarado ajustables. Se guarda como `data/wallpaper.*` y la apariencia en `data/appearance.json` (ambos fuera de git).
+
+## Variantes, ramas y grupos
+
+- **Eliminar una variante:** en el último mensaje del personaje, el botón rojo 🗑 junto a «‹ 2/3 ›» borra solo la variante que estás viendo; el mensaje conserva las demás (la última no se puede quitar: borra el mensaje).
+- **Ramificar:** toca un mensaje → *Ramificar*. Se crea un chat nuevo con una copia de la conversación hasta ese mensaje (inclusive), enlazado al original (`main_chat` en el `.jsonl`) y titulado «… (rama)». El original no cambia.
+- **Copiar chat:** menú ⋮ de un chat (en la lista o dentro del chat) → *Copiar chat*. Duplica la conversación completa como un chat independiente («… (copia)»); el original no cambia.
+- **Convertir en grupo:** menú del chat individual → *Convertir en grupo…*. Elige los demás personajes y el modo de respuesta; el chat pasa al grupo con todo su historial (o se copia, si marcas «Conservar también el chat original»).
+
 ## Seguridad
 
 - Inicio de sesión con cookie firmada (30 días), contraseña con scrypt y bloqueo progresivo tras 5 intentos fallidos.

@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111b21" />
+    <script>
+      try {
+        var a = JSON.parse(localStorage.getItem('chatpuccino.appearance') || '{}');
+        var m = a.mode === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : a.mode || 'dark';
+        document.documentElement.dataset.theme = m;
+      } catch (e) {}
+    </script>
     <title>Chatpuccino</title>
   </head>
   <body>

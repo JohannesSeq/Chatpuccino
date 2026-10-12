@@ -426,6 +426,134 @@ test('presets: CRUD, importación estilo SillyTavern, orden y posiciones de prom
   assert.equal((await call('DELETE', '/presets/Default')).status, 409);
 });
 
+test('mensajes: eliminar una variante, ramificar y convertir en grupo', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const chat = await call('POST', '/chats', { kind: 'c', ownerId: 'Luna' });
+  const ref = `/chats/c/Luna/${encodeURIComponent(chat.json.file)}`;
+  await call('POST', `${ref}/messages`, { mes: 'uno' });
+  await call('POST', `${ref}/messages`, { mes: 'dos' });
+
+  // el saludo tiene 2 variantes (principal + alternativa): se puede quitar una pero no la última
+  const before = (await call('GET', ref)).json.messages[0];
+  assert.equal(before.swipes.length, 2);
+  const removed = await call('DELETE', `${ref}/messages/0/swipe`);
+  assert.equal(removed.json.swipes.length, 1);
+  assert.equal(removed.json.mes, before.swipes[1]);
+  assert.equal(removed.json.swipe_id, 0);
+  assert.equal((await call('DELETE', `${ref}/messages/0/swipe`)).status, 409);
+  assert.equal((await call('DELETE', `${ref}/messages/9/swipe`)).status, 404);
+
+  // quitar una variante concreta con ?id= y mantener la selección coherente
+  await call('PATCH', `${ref}/messages/1`, { mes: 'uno' });
+  const m = (await call('GET', ref)).json.messages[1];
+  assert.equal(m.swipes.length, 1);
+
+  // ramificar hasta el mensaje 1 (inclusive)
+  const branch = await call('POST', `${ref}/branch`, { index: 1 });
+  assert.equal(branch.status, 201);
+  const b = (await call('GET', `/chats/c/Luna/${encodeURIComponent(branch.json.file)}`)).json;
+  assert.equal(b.messages.length, 2);
+  assert.equal(b.messages[1].mes, 'uno');
+  assert.equal(b.meta.chat_metadata.main_chat, chat.json.file);
+  assert.match(b.title, /\(rama\)$/);
+  assert.equal((await call('GET', ref)).json.messages.length, 3, 'el original no cambia');
+  const named = await call('POST', `${ref}/branch`, { index: 0, title: 'Otra historia' });
+  assert.equal((await call('GET', `/chats/c/Luna/${encodeURIComponent(named.json.file)}`)).json.title, 'Otra historia');
+  assert.equal((await call('POST', `${ref}/branch`, { index: 99 })).status, 400);
+
+  // copiar: duplicado completo e independiente (sin enlace al original)
+  const cp = await call('POST', `${ref}/copy`, {});
+  assert.equal(cp.status, 201);
+  assert.notEqual(cp.json.file, chat.json.file);
+  const copied = (await call('GET', `/chats/c/Luna/${encodeURIComponent(cp.json.file)}`)).json;
+  assert.equal(copied.messages.length, 3);
+  assert.equal(copied.meta.chat_metadata.main_chat, undefined);
+  assert.match(copied.title, /\(copia\)$/);
+  const cp2 = await call('POST', `/chats/c/Luna/${encodeURIComponent(cp.json.file)}/copy`, { title: 'Mi copia' });
+  assert.equal((await call('GET', `/chats/c/Luna/${encodeURIComponent(cp2.json.file)}`)).json.title, 'Mi copia');
+  assert.equal((await call('POST', '/chats/c/Luna/noexiste/copy', {})).status, 404);
+  assert.equal((await call('GET', ref)).json.messages.length, 3, 'copiar no modifica el original');
+
+  // convertir en grupo: valida miembros y mueve el chat (o lo copia con keepOriginal)
+  assert.equal((await call('POST', `${ref}/to-group`, { name: 'Solo', members: [] })).status, 400);
+  assert.equal((await call('POST', `${ref}/to-group`, { name: 'X', members: ['Nadie'] })).status, 404);
+  assert.equal((await call('POST', '/chats/g/Equipo/x/to-group', { name: 'Y', members: ['Luna'] })).status, 400);
+  const keep = await call('POST', `/chats/c/Luna/${encodeURIComponent(named.json.file)}/to-group`, { name: 'Copia', members: ['Kai'], keepOriginal: true });
+  assert.equal(keep.status, 201);
+  assert.equal((await call('GET', `/chats/c/Luna/${encodeURIComponent(named.json.file)}`)).status, 200, 'se conserva el original');
+
+  const conv = await call('POST', `${ref}/to-group`, { name: 'Dúo', members: ['Kai', 'Luna', 'Kai'], replyMode: 'all' });
+  assert.equal(conv.status, 201);
+  assert.equal(conv.json.kind, 'g');
+  const grp = (await call('GET', `/groups/${encodeURIComponent(conv.json.ownerId)}`)).json;
+  assert.deepEqual(grp.members, ['Luna', 'Kai']);
+  assert.equal(grp.replyMode, 'all');
+  const moved = (await call('GET', `/chats/g/${encodeURIComponent(conv.json.ownerId)}/${encodeURIComponent(conv.json.file)}`)).json;
+  assert.equal(moved.messages.length, 3);
+  assert.equal(moved.meta.character_name, 'Dúo');
+  assert.equal(moved.messages[0].original_avatar, 'Luna.png');
+  assert.equal((await call('GET', ref)).status, 404, 'el chat individual se movió al grupo');
+});
+
+test('apariencia: valores por defecto, saneado y fondo de pantalla', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const def = (await call('GET', '/appearance')).json;
+  assert.equal(def.mode, 'dark');
+  assert.equal(def.uiSize, 15);
+  assert.equal(def.hasWallpaper, false);
+  assert.equal(def.colors.dark.accent, null);
+
+  const saved = (await call('PUT', '/appearance', {
+    mode: 'system',
+    colors: { light: { accent: '#AA00FF', mine: 'rojo', theirs: '#12', chat: '#ffffff' } },
+    uiFont: 'comic-sans',
+    msgFont: 'custom',
+    msgFontCustom: 'Fira Code; } body { display:none',
+    uiSize: 99,
+    msgSize: 'x',
+    bubbles: { mineOpacity: 40, theirsOpacity: -5, blur: 300, radius: 10 },
+    wallpaper: { blur: 5, dim: 200 },
+  })).json;
+  assert.equal(saved.mode, 'system');
+  assert.equal(saved.colors.light.accent, '#aa00ff');
+  assert.equal(saved.colors.light.mine, null);
+  assert.equal(saved.colors.light.theirs, null);
+  assert.equal(saved.colors.light.chat, '#ffffff');
+  assert.equal(saved.uiFont, 'system');
+  assert.equal(saved.msgFont, 'custom');
+  assert.ok(!/[;{}]/.test(saved.msgFontCustom));
+  assert.equal(saved.uiSize, 22);
+  assert.equal(saved.msgSize, 15);
+  assert.deepEqual(saved.bubbles, { mineOpacity: 40, theirsOpacity: 0, blur: 24, radius: 10 });
+  assert.deepEqual(saved.wallpaper, { blur: 5, dim: 90 });
+  assert.equal((await call('GET', '/appearance')).json.colors.light.accent, '#aa00ff', 'persiste');
+
+  // fondo de pantalla: solo imágenes; se sirve con sesión
+  const put = (body) => fetch(`${base}/appearance/wallpaper`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', Cookie: cookie }, body });
+  assert.equal((await put(Buffer.from('no soy una imagen'))).status, 415);
+  const ok = await put(placeholderPng('f', 16, 16));
+  assert.equal(ok.status, 201);
+  const info = await ok.json();
+  assert.equal(info.hasWallpaper, true);
+  assert.ok(info.wallpaperVersion > 0);
+  const img = await fetch(`${base}/appearance/wallpaper`, { headers: { Cookie: cookie } });
+  assert.equal(img.status, 200);
+  assert.match(img.headers.get('content-type'), /image\/png/);
+  assert.equal((await fetch(`${base}/appearance/wallpaper`)).status, 401);
+  assert.equal((await call('DELETE', '/appearance/wallpaper')).json.hasWallpaper, false);
+  assert.equal((await fetch(`${base}/appearance/wallpaper`, { headers: { Cookie: cookie } })).status, 404);
+});
+
+test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo desde la imagen)', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const plain = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: placeholderPng('x', 8, 8) });
+  assert.equal(plain.status, 422);
+  assert.equal((await plain.json()).code, 'NO_CARD');
+  const bad = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: Buffer.from('no es png') });
+  assert.equal(bad.status, 400);
+  assert.equal((await bad.json()).code, undefined);
+});
+
 test('presets: los parámetros del preset activo llegan al modelo', async () => {
   await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
   const def = (await call('GET', '/presets/Default')).json;
