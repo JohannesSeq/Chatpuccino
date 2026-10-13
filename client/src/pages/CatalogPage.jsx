@@ -6,6 +6,7 @@ import TagsTab from './catalog/TagsTab.jsx';
 import LorebooksTab from './catalog/LorebooksTab.jsx';
 import BackgroundsLibrary from './novel/BackgroundsLibrary.jsx';
 import StatsLibrary from './novel/StatsLibrary.jsx';
+import SpritesLibrary from './novel/SpritesLibrary.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 import { useT } from '../i18n.jsx';
 import '../styles/novel-library.css';
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'etiquetas', label: 'catalog.tabs.tags', C: TagsTab },
   { id: 'lorebooks', label: 'catalog.tabs.lorebooks', C: LorebooksTab },
   { id: 'fondos', label: 'catalog.tabs.backgrounds', C: BackgroundsLibrary, wide: true },
+  { id: 'sprites', label: 'catalog.tabs.sprites', C: SpritesLibrary, wide: true },
   { id: 'estadisticas', label: 'catalog.tabs.stats', C: StatsLibrary, wide: true },
 ];
 

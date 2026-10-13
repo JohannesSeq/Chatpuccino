@@ -145,7 +145,7 @@ export default function ScenePanel({ world, cast, stats, backgrounds, state, lor
                 ) : (
                   <small className="muted vn-cast-outfit">{c.outfits?.[0]?.name || t('novelview.panel.no_outfits')}</small>
                 )}
-                <Link className="btn small" to="/novel/library/sprites" title={t('novelview.panel.sprites_hint', { name: c.name })}>
+                <Link className="btn small" to="/catalog/sprites" title={t('novelview.panel.sprites_hint', { name: c.name })}>
                   {t('novelview.panel.sprites')}
                 </Link>
               </div>

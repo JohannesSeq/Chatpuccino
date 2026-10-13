@@ -186,6 +186,7 @@
       "characters": "Personajes",
       "lorebooks": "Lorebooks",
       "personas": "Personas",
+      "sprites": "Sprites",
       "stats": "Estadísticas",
       "tags": "Etiquetas"
     },
@@ -626,11 +627,28 @@
       "uploaded_other": "Se subieron {count} fondos",
       "uploading": "Subiendo {done}/{total}…"
     },
-    "shortcuts": {
-      "characters": "Personajes",
-      "hint": "Se abre en el Catálogo",
-      "label": "Catálogo:",
-      "lorebooks": "Lorebooks"
+    "hub": {
+      "backgrounds": {
+        "text": "Imágenes de escenario que la IA elige según la historia.",
+        "title": "Fondos"
+      },
+      "characters": {
+        "text": "Crea, importa y edita las tarjetas de personaje.",
+        "title": "Personajes"
+      },
+      "intro": "Todo lo que usa la novela se gestiona en el Catálogo. Estos son accesos directos.",
+      "lorebooks": {
+        "text": "Contexto adicional del mundo para el modelo.",
+        "title": "Lorebooks"
+      },
+      "sprites": {
+        "text": "Atuendos y una imagen por expresión de cada personaje, y sus estadísticas iniciales.",
+        "title": "Sprites"
+      },
+      "stats": {
+        "text": "Lo que se mide en la historia (afecto, peligro…) y cómo influye en los personajes.",
+        "title": "Estadísticas"
+      }
     },
     "sprites": {
       "bulk": {
@@ -751,12 +769,7 @@
       "scope_world": "Del mundo",
       "search": "Buscar estadísticas…"
     },
-    "tabs": {
-      "backgrounds": "Fondos",
-      "sprites": "Sprites",
-      "stats": "Estadísticas"
-    },
-    "title": "Biblioteca de la novela"
+    "title": "Catálogo de la novela"
   },
   "lorebooks": {
     "activation": {
@@ -862,8 +875,8 @@
     "last_line": {
       "none": "Historia sin empezar"
     },
-    "library_aria": "Biblioteca de la novela",
-    "library_title": "Biblioteca: sprites y accesos al catálogo",
+    "library_aria": "Accesos al catálogo",
+    "library_title": "Accesos directos al catálogo",
     "new_world": "Nuevo mundo",
     "search_placeholder": "Buscar mundos…",
     "title": "Mundos"

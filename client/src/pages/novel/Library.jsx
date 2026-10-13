@@ -1,23 +1,24 @@
 import React from 'react';
-import { NavLink, Navigate } from 'react-router-dom';
+import { Link, NavLink, Navigate } from 'react-router-dom';
 import { Icon } from '../../components/Icon.jsx';
 import { useT } from '../../i18n.jsx';
 import '../../styles/novel-library.css';
-import SpritesLibrary from './SpritesLibrary.jsx';
 
-// Lo demás de la biblioteca (estadísticas, fondos…) vive en el Catálogo; estos son accesos directos.
-const SHORTCUTS = [
-  { to: '/catalog/estadisticas', label: 'library.tabs.stats' },
-  { to: '/catalog/fondos', label: 'library.tabs.backgrounds' },
-  { to: '/catalog/personajes', label: 'library.shortcuts.characters' },
-  { to: '/catalog/lorebooks', label: 'library.shortcuts.lorebooks' },
+// Todo vive en el Catálogo; esta página es un acceso rápido desde la novela.
+const ITEMS = [
+  { id: 'sprites', to: '/catalog/sprites', icon: 'image' },
+  { id: 'stats', to: '/catalog/estadisticas', icon: 'tune' },
+  { id: 'backgrounds', to: '/catalog/fondos', icon: 'image' },
+  { id: 'characters', to: '/catalog/personajes', icon: 'group' },
+  { id: 'lorebooks', to: '/catalog/lorebooks', icon: 'book' },
 ];
 
-// Biblioteca del Modo Novela: sprites (expresiones y atuendos) y accesos directos al Catálogo. Ruta: /novel/library/:tab?
+// Ruta: /novel/library/:tab? (los enlaces antiguos con pestaña van directo a su sección del Catálogo).
+const LEGACY = { sprites: 'sprites', stats: 'estadisticas', backgrounds: 'fondos' };
+
 export default function Library({ tab }) {
   const { t } = useT();
-  if (tab === 'stats') return <Navigate to="/catalog/estadisticas" replace />;
-  if (tab === 'backgrounds') return <Navigate to="/catalog/fondos" replace />;
+  if (LEGACY[tab]) return <Navigate to={`/catalog/${LEGACY[tab]}`} replace />;
   return (
     <div className="library-page">
       <header className="topbar library-head">
@@ -26,21 +27,22 @@ export default function Library({ tab }) {
         </NavLink>
         <h1>{t('library.title')}</h1>
       </header>
-      <nav className="tabs scroll" aria-label={t('library.title')}>
-        <NavLink to="/novel/library/sprites" className="active" aria-current="page">
-          {t('library.tabs.sprites')}
-        </NavLink>
-        <span className="tabs-label" aria-hidden="true">
-          {t('library.shortcuts.label')}
-        </span>
-        {SHORTCUTS.map((x) => (
-          <NavLink key={x.to} to={x.to} title={t('library.shortcuts.hint')}>
-            {t(x.label)} ↗
-          </NavLink>
-        ))}
-      </nav>
       <div className="library-body">
-        <SpritesLibrary />
+        <p className="muted">{t('library.hub.intro')}</p>
+        <ul className="rows">
+          {ITEMS.map((x) => (
+            <li key={x.id} className="row">
+              <Link className="row-main" to={x.to}>
+                <Icon name={x.icon} size={26} />
+                <div className="row-text">
+                  <strong>{t(`library.hub.${x.id}.title`)}</strong>
+                  <div className="row-sub">{t(`library.hub.${x.id}.text`)}</div>
+                </div>
+                <Icon name="right" size={22} />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

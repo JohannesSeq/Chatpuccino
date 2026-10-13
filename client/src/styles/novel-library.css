@@ -8,7 +8,10 @@
 .library-empty strong { color: var(--text); }
 .library-empty p { margin: 0; max-width: 460px; }
 .library-page .tabs.scroll a { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
-.library-page .tabs-label { align-self: center; flex: none; margin: 0 4px 0 12px; padding-left: 12px; border-left: 1px solid var(--border); color: var(--muted); font-size: 12px; white-space: nowrap; }
+.library-page a.row-main { text-decoration: none; color: inherit; }
+.library-page a.row-main .row-sub { color: var(--muted); }
+.library-page a.row-main > svg:first-child { color: var(--accent); }
+.library-page a.row-main > svg:last-child { margin-left: auto; color: var(--muted); }
 
 /* checkerboard para ver la transparencia de los sprites */
 .checker {

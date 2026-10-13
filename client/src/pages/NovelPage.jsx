@@ -110,7 +110,7 @@ function WorldList({ activeId }) {
     <aside className="chat-list novel-list">
       <header className="topbar head-row">
         <h1>{t('novel.title')}</h1>
-        <Link to="/novel/library/sprites" className="icon-btn" aria-label={t('novel.library_aria')} title={t('novel.library_title')}>
+        <Link to="/novel/library" className="icon-btn" aria-label={t('novel.library_aria')} title={t('novel.library_title')}>
           <Icon name="tune" />
         </Link>
       </header>

@@ -186,6 +186,7 @@
       "characters": "Characters",
       "lorebooks": "Lorebooks",
       "personas": "Personas",
+      "sprites": "Sprites",
       "stats": "Stats",
       "tags": "Tags"
     },
@@ -626,11 +627,28 @@
       "uploaded_other": "{count} backgrounds uploaded",
       "uploading": "Uploading {done}/{total}…"
     },
-    "shortcuts": {
-      "characters": "Characters",
-      "hint": "Opens in the Catalog",
-      "label": "Catalog:",
-      "lorebooks": "Lorebooks"
+    "hub": {
+      "backgrounds": {
+        "text": "Scenery images the AI picks according to the story.",
+        "title": "Backgrounds"
+      },
+      "characters": {
+        "text": "Create, import and edit character cards.",
+        "title": "Characters"
+      },
+      "intro": "Everything the novel uses is managed in the Catalog. These are shortcuts.",
+      "lorebooks": {
+        "text": "Extra world context for the model.",
+        "title": "Lorebooks"
+      },
+      "sprites": {
+        "text": "Outfits and one image per expression for each character, plus their starting stats.",
+        "title": "Sprites"
+      },
+      "stats": {
+        "text": "What is measured in the story (affection, danger…) and how it influences the characters.",
+        "title": "Stats"
+      }
     },
     "sprites": {
       "bulk": {
@@ -751,12 +769,7 @@
       "scope_world": "World-wide",
       "search": "Search stats…"
     },
-    "tabs": {
-      "backgrounds": "Backgrounds",
-      "sprites": "Sprites",
-      "stats": "Stats"
-    },
-    "title": "Novel library"
+    "title": "Novel catalog"
   },
   "lorebooks": {
     "activation": {
@@ -862,8 +875,8 @@
     "last_line": {
       "none": "Story not started"
     },
-    "library_aria": "Novel library",
-    "library_title": "Library: sprites and catalog shortcuts",
+    "library_aria": "Catalog shortcuts",
+    "library_title": "Catalog shortcuts",
     "new_world": "New world",
     "search_placeholder": "Search worlds…",
     "title": "Worlds"
