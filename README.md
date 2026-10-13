@@ -2,7 +2,7 @@
 
 # ☕ Chatpuccino
 
-**Roleplay con IA que se siente como chatear por WhatsApp.**
+**Roleplay con IA que se siente como chatear en tu app de mensajería favorita.**
 
 Tus personajes, tus historias y tus modelos, en una app web que corre en tu propio equipo.
 
@@ -18,7 +18,7 @@ Tus personajes, tus historias y tus modelos, en una app web que corre en tu prop
 
 ## ¿Qué es Chatpuccino?
 
-Chatpuccino es una aplicación de chatbots para roleplay inspirada en [SillyTavern](https://github.com/SillyTavern/SillyTavern), pero pensada para sentirse como una app de mensajería: lista de chats, burbujas, fijados, grupos y una interfaz que funciona igual de bien en el móvil que en el escritorio.
+Chatpuccino es una aplicación de chatbots para roleplay inspirada en [SillyTavern](https://github.com/SillyTavern/SillyTavern), pero con una interfaz basada en las aplicaciones de mensajería modernas: lista de chats, burbujas, fijados, grupos y un diseño que funciona igual de bien en el móvil que en el escritorio.
 
 - **Tus datos son tuyos.** Todo vive en archivos en tu equipo (`.jsonl`, `.png`, `.json`). Lo único que sale de tu máquina son las peticiones al proveedor de IA que tú configures.
 - **Compatible con SillyTavern.** Tarjetas de personaje PNG (V2/V3), lorebooks (World Info), presets de Chat Completion y chats `.jsonl`: los traes y los llevas sin conversión.
