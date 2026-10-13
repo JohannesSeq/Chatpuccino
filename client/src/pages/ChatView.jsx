@@ -140,6 +140,7 @@ export default function ChatView() {
           else messages.push(out.message);
           return { ...c, messages };
         });
+        if (swipe) setSwipeAnim({ index: out.index, id: out.message.swipe_id ?? 0, dir: 'next' });
       }
     } catch (e) {
       if (e.name !== 'AbortError') toast(e.message, 'error');
@@ -439,6 +440,7 @@ export default function ChatView() {
                   canPrev={(m.swipe_id ?? 0) > 0}
                   canNext={(m.swipe_id ?? 0) < swipes - 1}
                   onSwipe={(delta) => swipeTo(i, delta)}
+                  onOverswipe={isLastBot ? () => runReplies([speaker || members[0]], true) : undefined}
                   onClick={() => setSelected(selected === i ? null : i)}
                 >
                   {!m.is_user && isGroup && (

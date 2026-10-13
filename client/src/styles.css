@@ -362,6 +362,7 @@ html.has-wallpaper .preview-chat::before {
 .bubble-wrap { display: flex; flex-direction: column; max-width: min(82%, 640px); }
 .msg.me .bubble-wrap { align-items: flex-end; }
 .bubble {
+  position: relative;
   background: var(--bubble-theirs-bg); color: var(--bubble-theirs-text); font-family: var(--font-msg);
   border-radius: var(--bubble-r) var(--bubble-r) var(--bubble-r) 2px; padding: 7px 10px 4px; word-break: break-word;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25); backdrop-filter: blur(var(--bubble-blur)); -webkit-backdrop-filter: blur(var(--bubble-blur));
@@ -394,6 +395,8 @@ html.has-wallpaper .preview-chat::before {
 @keyframes swipe-next { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
 @keyframes swipe-prev { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
 .bubble .text.swipe-next { animation: swipe-next 0.22s ease-out; }
+.swipe-hint { position: absolute; top: 50%; right: 8px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--panel-3); color: var(--muted); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); opacity: 0; transform: translateY(-50%); pointer-events: none; transition: background 0.12s, color 0.12s; }
+.swipe-hint.armed { background: var(--accent); color: var(--on-accent); }
 .bubble .text.swipe-prev { animation: swipe-prev 0.22s ease-out; }
 @media (prefers-reduced-motion: reduce) { .bubble .text.swipe-next, .bubble .text.swipe-prev { animation: none; } }
 
