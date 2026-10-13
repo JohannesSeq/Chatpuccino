@@ -77,7 +77,7 @@ function AssistModal({ field, label, value, context, onApply, onClose }) {
     } catch (e) {
       if (e.name !== 'AbortError') {
         setError(e.message);
-        setNeedsSetup(e.code === 'ASSISTANT_NOT_READY');
+        setNeedsSetup(e.code === 'ASSISTANT_NOT_READY' || (e.code === 'EMPTY_RESPONSE' && ['length', 'length_reasoning', 'reasoning_only', 'no_events'].includes(e.reason)));
       }
     } finally {
       abortRef.current = null;

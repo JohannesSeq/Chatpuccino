@@ -208,7 +208,14 @@ async function stream(path, body, signal, onDelta) {
     if (!line) return;
     const evt = JSON.parse(line.slice(5));
     if (evt.delta) onDelta(evt.delta);
-    else if (evt.error) throw new Error(evt.error);
+    else if (evt.error) {
+      const err = new Error(evt.error);
+      err.code = evt.code;
+      err.reason = evt.reason;
+      err.details = evt.details;
+      if (evt.code === 'EMPTY_RESPONSE') console.warn(`[IA] Respuesta vacía (${evt.reason}):`, evt.details);
+      throw err;
+    }
     else if (evt.done) result = evt;
   };
   for (;;) {

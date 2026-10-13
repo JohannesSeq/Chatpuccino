@@ -19,6 +19,7 @@ import { estimateTokens } from '../lore.js';
 import { getActivePreset } from '../presets.js';
 import { activeConnection, chatKey, getSettings, isReady, setPinned } from '../settings.js';
 import { samplingParams } from '../sampling.js';
+import { reportEmpty } from '../aiDiagnostics.js';
 import { startSse } from '../sse.js';
 import { getGroup, getPersona, saveGroup } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
@@ -308,15 +309,17 @@ r.post('/:kind/:owner/:file/impersonate', wrap(async (req, res) => {
   const { ac, send } = startSse(res);
 
   let streamed = '';
+  const meta = {};
   const finish = (text, extra = {}) => {
     const clean = stripSpeakerPrefix(text, persona.name).trim();
     if (clean) send({ done: true, text: clean, ...extra });
-    else send({ error: t('server.common.empty_response') });
+    else send(reportEmpty({ where: 'chat', conn, meta, maxTokens: preset.openai_max_tokens, cleanedEmpty: Boolean(text.trim()) }));
   };
   try {
     streamed = await streamChat({
       conn,
       signal: ac.signal,
+      meta,
       body: { model: conn.model, messages: prompt, ...samplingParams(preset, persona.name, stop) },
       onDelta: (delta) => send({ delta }),
     });
@@ -368,15 +371,17 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
     });
   };
 
+  const meta = {};
   try {
     const text = await streamChat({
       conn,
       signal: ac.signal,
+      meta,
       body: { model: conn.model, messages: prompt, ...samplingParams(preset, persona.name) },
       onDelta: (delta) => send({ delta }),
     });
     const saved = await persist(text);
-    if (!saved) send({ error: t('server.common.empty_response') });
+    if (!saved) send(reportEmpty({ where: 'chat', conn, meta, maxTokens: preset.openai_max_tokens, cleanedEmpty: Boolean(text.trim()) }));
     else send({ done: true, ...saved });
   } catch (e) {
     const partial = e.partial || '';

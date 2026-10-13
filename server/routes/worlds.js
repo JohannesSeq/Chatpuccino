@@ -5,6 +5,7 @@ import { stripSpeakerPrefix } from '../prompt.js';
 import { getActivePreset } from '../presets.js';
 import { activeConnection, getSettings, isReady } from '../settings.js';
 import { samplingParams } from '../sampling.js';
+import { reportEmpty } from '../aiDiagnostics.js';
 import { startSse } from '../sse.js';
 import { HttpError, nowIso, wrap } from '../util.js';
 import { t } from '../i18n.js';
@@ -157,15 +158,17 @@ r.post('/:id/impersonate', wrap(async (req, res) => {
   const { persona, preset, messages } = await prepare(req.params.id, { impersonate: true, draft: req.body?.draft });
   const { ac, send } = startSse(res);
 
+  const meta = {};
   const finish = (text, extra = {}) => {
     const clean = stripSpeakerPrefix(text, persona.name).replace(LEADING_TAG, '').trim();
     if (clean) send({ done: true, text: clean, ...extra });
-    else send({ error: t('server.common.empty_response') });
+    else send(reportEmpty({ where: 'world', conn, meta, maxTokens: preset.openai_max_tokens, cleanedEmpty: Boolean(text.trim()) }));
   };
   try {
     const text = await streamChat({
       conn,
       signal: ac.signal,
+      meta,
       body: { model: conn.model, messages, ...samplingParams(preset, persona.name, []) },
       onDelta: (delta) => send({ delta }),
     });
@@ -225,10 +228,13 @@ r.post('/:id/generate', wrap(async (req, res) => {
 
   let acc = '';
   let sent = 0;
+  const meta = {};
+  const maxTokens = Math.max(prep.preset.openai_max_tokens || 0, 800);
   try {
     const text = await streamChat({
       conn,
       signal: ac.signal,
+      meta,
       // Una escena con varias líneas y el bloque de control necesita más margen que un mensaje de chat.
       body: { model: conn.model, messages: prep.messages, ...samplingParams({ ...prep.preset, openai_max_tokens: Math.max(prep.preset.openai_max_tokens || 0, 800) }, prep.persona.name, []) },
       onDelta: (delta) => {
@@ -241,7 +247,7 @@ r.post('/:id/generate', wrap(async (req, res) => {
       },
     });
     const saved = await persist(text, { analysis: true });
-    if (!saved) send({ error: t('server.common.empty_response') });
+    if (!saved) send(reportEmpty({ where: 'world', conn, meta, maxTokens, cleanedEmpty: Boolean(text.trim()) }));
     else send({ done: true, ...saved });
   } catch (e) {
     const partial = e.partial || '';

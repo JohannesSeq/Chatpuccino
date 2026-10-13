@@ -120,6 +120,10 @@ El texto se va escribiendo en vivo en una vista previa que puedes editar; solo s
 
 Si el asistente no está configurado, la ventana lo indica y enlaza a su configuración.
 
+### ¿Respuesta vacía?
+
+Cuando el modelo no devuelve texto (en el asistente, en los chats o en los mundos), la aplicación te explica el **motivo** y qué hacer: se quedó sin tokens (sube *Máx. tokens*), gastó todo en razonar (usa un modelo sin razonamiento), rechazó la petición (filtro de contenido) o el proveedor no devolvió datos. Además, la **consola del servidor** registra una línea `[IA] Respuesta vacía…` con el modelo, el proveedor, el motivo de fin (`finish_reason`), los caracteres de razonamiento, el uso de tokens y una muestra de lo recibido (nunca la key ni tu conversación); la consola del navegador muestra los mismos datos.
+
 ## Modo Novela
 
 Tercera sección del menú (**Novela**): roleplay como una **novela visual**, con escena, sprites del personaje y cuadro de diálogo. Los «chats» se llaman **Mundos**.

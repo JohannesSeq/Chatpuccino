@@ -1357,6 +1357,18 @@
       "model_required": "The model is missing",
       "not_found": "Connection not found"
     },
+    "empty": {
+      "cleaned_empty": "The model replied, but the text was empty after cleaning it up (it only contained tags or formatting). Try again.",
+      "empty": "The model (“{model}”) finished without writing anything. Try again or try another model; the details were logged in the server console.",
+      "length": "The model hit the token limit before writing anything. Raise “Max response tokens” ({setting}; currently {maxTokens}).",
+      "length_reasoning": "The model (“{model}”) spent all its tokens reasoning and never wrote the answer. Raise “Max response tokens” ({setting}; currently {maxTokens}) or use a model without reasoning.",
+      "no_events": "The provider returned no data. Check the connection and the model (“{model}”): it may be down or may not support this kind of request.",
+      "reasoning_only": "The model (“{model}”) only produced reasoning and no answer. Try a model without reasoning or raise the token limit ({setting}; currently {maxTokens}).",
+      "refusal": "The model refused the request (content filter or refusal). Try another model or change the text.",
+      "setting_assistant": "Settings → Character Assistant → Sampling",
+      "setting_chat": "Settings → Presets → Sampling",
+      "setting_world": "Settings → Presets → Sampling"
+    },
     "groups": {
       "min_members": "A group needs at least 2 characters",
       "name_required": "The group needs a name",

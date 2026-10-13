@@ -13,6 +13,7 @@ import {
 } from '../assistant.js';
 import { checkConnection, listModels, normalizeBaseUrl, streamChat } from '../providers.js';
 import { samplingParams } from '../sampling.js';
+import { reportEmpty } from '../aiDiagnostics.js';
 import { startSse } from '../sse.js';
 import { HttpError, wrap } from '../util.js';
 import { t } from '../i18n.js';
@@ -55,15 +56,17 @@ r.post('/test', wrap(async (req, res) => {
 // Envía la petición al modelo y devuelve el texto por SSE (delta / done / error). Nada se guarda en el servidor.
 async function runAssistant(res, { conn, messages, sampling }) {
   const { ac, send } = startSse(res);
+  const meta = {};
   const finish = (text, extra = {}) => {
     const clean = cleanOutput(text);
     if (clean) send({ done: true, text: clean, ...extra });
-    else send({ error: t('server.common.empty_response') });
+    else send(reportEmpty({ where: 'assistant', conn, meta, maxTokens: sampling?.openai_max_tokens, cleanedEmpty: Boolean(text.trim()) }));
   };
   try {
     const text = await streamChat({
       conn,
       signal: ac.signal,
+      meta,
       body: { model: conn.model, messages, ...samplingParams(sampling) },
       onDelta: (delta) => send({ delta }),
     });

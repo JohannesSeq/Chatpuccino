@@ -23,7 +23,26 @@ const fake = http.createServer((req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify({ data: { label: 'test-key', usage: 1 } }));
     }
-    requests.push(JSON.parse(body));
+    const parsed = JSON.parse(body);
+    requests.push(parsed);
+    const scenario = String(parsed.model || '').startsWith('empty/') ? parsed.model.slice(6) : '';
+    if (scenario) {
+      const chunk = (choice, extra = {}) => `data: ${JSON.stringify({ id: 'gen-1', model: parsed.model, provider: 'FakeProv', choices: [choice], ...extra })}\n\n`;
+      if (scenario === 'json') {
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ choices: [{ message: { content: 'Respuesta sin streaming' }, finish_reason: 'stop' }] }));
+      }
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      if (scenario === 'reasoning') res.write(chunk({ delta: { reasoning: 'pensando…' } }));
+      if (scenario === 'length') res.write(chunk({ delta: { content: '' }, finish_reason: 'length' }));
+      if (scenario === 'length_reasoning') {
+        res.write(chunk({ delta: { reasoning: 'pensando mucho…' } }));
+        res.write(chunk({ delta: {}, finish_reason: 'length' }, { usage: { completion_tokens: 50 } }));
+      }
+      if (scenario === 'refusal') res.write(chunk({ delta: { refusal: 'No puedo ayudar con eso.' }, finish_reason: 'content_filter' }));
+      if (scenario === 'stop') res.write(chunk({ delta: { content: '' }, finish_reason: 'stop' }));
+      return res.end('data: [DONE]\n\n');
+    }
     res.writeHead(200, { 'Content-Type': 'text/event-stream' });
     res.write(': OPENROUTER PROCESSING\n\n');
     for (const t of ['Hola', ' mundo', '!']) res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: t } }] })}\n\n`);
@@ -718,6 +737,38 @@ test('asistente: campos de mundos, lorebooks y estadísticas con su contexto', a
 
   for (const field of ['lorebook_description', 'lorebook_entry', 'lorebook_entry_title']) await ask({ field, mode: 'generate', context: { name: 'Mundo' } });
   await call('PUT', '/assistant', { connection: { apiKey: '__clear__' } });
+});
+
+test('respuestas vacías: se explica el motivo al usuario y se registra en consola', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+  const warn = console.warn;
+  const logged = [];
+  console.warn = (...args) => logged.push(args.join(' '));
+  try {
+    const expected = { reasoning: 'reasoning_only', length: 'length', length_reasoning: 'length_reasoning', refusal: 'refusal', stop: 'empty' };
+    for (const [scenario, reason] of Object.entries(expected)) {
+      await call('PUT', '/assistant', { connection: { type: 'openrouter', apiKey: 'sk-or-empty-1234567890', model: `empty/${scenario}` } });
+      const err = (await sse('/assistant/generate', { field: 'description', mode: 'generate' })).events.at(-1);
+      assert.equal(err.code, 'EMPTY_RESPONSE', scenario);
+      assert.equal(err.reason, reason, scenario);
+      assert.ok(err.error.length > 20 && !err.error.includes('{'), `mensaje legible: ${scenario}`);
+      assert.equal(err.details.model, `empty/${scenario}`);
+    }
+    assert.ok(logged.some((l) => l.includes('reasoning_only') && l.includes('reasoningChars')), 'el motivo queda en la consola');
+    assert.ok(logged.some((l) => l.includes('FakeProv') && l.includes('"finishReason": "length"')));
+
+    await call('PUT', '/assistant', { connection: { model: 'empty/refusal' } });
+    const en = await fetch(`${base}/assistant/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie, 'X-Lang': 'en' }, body: JSON.stringify({ field: 'description', mode: 'generate' }) });
+    assert.match((await en.text()), /refused the request/);
+
+    // algunos servidores responden con JSON normal aunque se pida stream
+    await call('PUT', '/assistant', { connection: { model: 'empty/json' } });
+    const plain = (await sse('/assistant/generate', { field: 'description', mode: 'generate' })).events.at(-1);
+    assert.equal(plain.text, 'Respuesta sin streaming');
+  } finally {
+    console.warn = warn;
+    await call('PUT', '/assistant', { connection: { apiKey: '__clear__' } });
+  }
 });
 
 test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo desde la imagen)', async () => {

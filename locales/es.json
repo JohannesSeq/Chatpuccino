@@ -1357,6 +1357,18 @@
       "model_required": "Falta el modelo",
       "not_found": "Conexión no encontrada"
     },
+    "empty": {
+      "cleaned_empty": "El modelo respondió, pero el texto quedó vacío al limpiarlo (solo contenía etiquetas o formato). Inténtalo de nuevo.",
+      "empty": "El modelo («{model}») terminó sin escribir nada. Inténtalo de nuevo o prueba con otro modelo; el detalle quedó registrado en la consola del servidor.",
+      "length": "El modelo llegó al límite de tokens antes de escribir nada. Sube «Máx. tokens de respuesta» ({setting}; ahora {maxTokens}).",
+      "length_reasoning": "El modelo («{model}») gastó todos los tokens razonando y no llegó a escribir la respuesta. Sube «Máx. tokens de respuesta» ({setting}; ahora {maxTokens}) o usa un modelo sin razonamiento.",
+      "no_events": "El proveedor no devolvió ningún dato. Revisa la conexión y el modelo («{model}»): puede estar caído o no admitir este tipo de petición.",
+      "reasoning_only": "El modelo («{model}») solo produjo razonamiento y ninguna respuesta. Prueba con un modelo sin razonamiento o sube el límite de tokens ({setting}; ahora {maxTokens}).",
+      "refusal": "El modelo rechazó la solicitud (filtro de contenido o negativa). Prueba con otro modelo o cambia el texto.",
+      "setting_assistant": "Ajustes → Asistente de personajes → Muestreo",
+      "setting_chat": "Ajustes → Presets → Muestreo",
+      "setting_world": "Ajustes → Presets → Muestreo"
+    },
     "groups": {
       "min_members": "Un grupo necesita al menos 2 personajes",
       "name_required": "El grupo necesita un nombre",

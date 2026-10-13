@@ -94,14 +94,54 @@ async function errorFromResponse(conn, res) {
   return new HttpError(res.status === 401 ? 401 : 502, `${where(conn)} (${res.status}): ${detail || res.statusText}`);
 }
 
-/** Pide una respuesta en streaming y llama a onDelta por cada fragmento. Devuelve el texto completo. */
-export async function streamChat({ conn, body, signal, onDelta }) {
+const textOf = (v) => {
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v)) return v.map((p) => (typeof p === 'string' ? p : p?.text || '')).join('');
+  return '';
+};
+
+/**
+ * Pide una respuesta en streaming y llama a onDelta por cada fragmento. Devuelve el texto completo.
+ * Si se pasa `meta` se rellena con datos de diagnóstico (motivo de fin, razonamiento, rechazos, uso…)
+ * para poder explicar por qué una respuesta salió vacía (ver aiDiagnostics.js).
+ */
+export async function streamChat({ conn, body, signal, onDelta, meta = {} }) {
+  const startedAt = Date.now();
+  Object.assign(meta, { events: 0, contentChars: 0, reasoningChars: 0, finishReason: '', refusal: '', usage: null, responseModel: '', provider: '', id: '', sample: [], nonStream: false });
   const res = await request(conn, '/chat/completions', { method: 'POST', body: JSON.stringify({ ...body, stream: true }), signal });
+  meta.status = res.status;
+  meta.contentType = res.headers.get('content-type') || '';
   if (!res.ok) throw await errorFromResponse(conn, res);
 
   const decoder = new TextDecoder();
   let buffer = '';
   let text = '';
+  const note = (json) => {
+    meta.id ||= json.id || '';
+    meta.responseModel ||= json.model || '';
+    meta.provider ||= json.provider || '';
+    if (json.usage) meta.usage = json.usage;
+    const choice = json.choices?.[0];
+    if (choice?.finish_reason) meta.finishReason = choice.finish_reason;
+    if (choice?.native_finish_reason && !meta.nativeFinishReason) meta.nativeFinishReason = choice.native_finish_reason;
+  };
+  const addContent = (delta) => {
+    if (!delta) return;
+    text += delta;
+    meta.contentChars += delta.length;
+    onDelta(delta);
+  };
+  const handleJson = (json) => {
+    meta.events += 1;
+    if (meta.sample.length < 3) meta.sample.push(JSON.stringify(json).slice(0, 400));
+    if (json.error) throw new HttpError(502, `${where(conn)}: ${json.error.message || t('server.providers.generation_error')}`);
+    note(json);
+    const choice = json.choices?.[0];
+    const delta = choice?.delta || choice?.message || {};
+    addContent(textOf(delta.content));
+    meta.reasoningChars += textOf(delta.reasoning || delta.reasoning_content).length;
+    if (delta.refusal) meta.refusal += textOf(delta.refusal);
+  };
   const handleLine = (line) => {
     if (!line.startsWith('data:')) return;
     const payload = line.slice(5).trim();
@@ -112,25 +152,28 @@ export async function streamChat({ conn, body, signal, onDelta }) {
     } catch {
       return;
     }
-    if (json.error) throw new HttpError(502, `${where(conn)}: ${json.error.message || t('server.providers.generation_error')}`);
-    const delta = json.choices?.[0]?.delta?.content;
-    if (delta) {
-      text += delta;
-      onDelta(delta);
-    }
+    handleJson(json);
   };
 
   try {
-    for await (const chunk of res.body) {
-      buffer += decoder.decode(chunk, { stream: true });
-      const lines = buffer.split(/\r?\n/);
-      buffer = lines.pop();
-      lines.forEach(handleLine);
+    if (/application\/json/i.test(meta.contentType)) {
+      // Algunos servidores ignoran `stream` y responden con la respuesta completa en un JSON.
+      meta.nonStream = true;
+      handleJson(await res.json());
+    } else {
+      for await (const chunk of res.body) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop();
+        lines.forEach(handleLine);
+      }
+      handleLine(buffer);
     }
-    handleLine(buffer);
   } catch (e) {
     e.partial = text;
+    meta.ms = Date.now() - startedAt;
     throw e;
   }
+  meta.ms = Date.now() - startedAt;
   return text;
 }
