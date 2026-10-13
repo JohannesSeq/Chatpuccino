@@ -11,9 +11,13 @@ import connectionRoutes from './routes/connections.js';
 import presetRoutes from './routes/presets.js';
 import appearanceRoutes from './routes/appearance.js';
 import assistantRoutes from './routes/assistant.js';
+import statsRoutes from './routes/stats.js';
+import backgroundRoutes from './routes/backgrounds.js';
+import spriteRoutes from './routes/sprites.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
+import worldRoutes from './routes/worlds.js';
 import { groups, lorebooks, personas } from './routes/library.js';
 
 export function createApp() {
@@ -33,11 +37,15 @@ export function createApp() {
   app.use('/api/presets', presetRoutes);
   app.use('/api/appearance', appearanceRoutes);
   app.use('/api/assistant', assistantRoutes);
+  app.use('/api/stats', statsRoutes);
+  app.use('/api/backgrounds', backgroundRoutes);
+  app.use('/api/sprites', spriteRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);
   app.use('/api/lorebooks', lorebooks);
   app.use('/api/chats', chatRoutes);
+  app.use('/api/worlds', worldRoutes);
   app.use('/api', (_req, res) => res.status(404).json({ error: t('server.common.route_not_found') }));
 
   const dist = path.join(ROOT, 'dist');

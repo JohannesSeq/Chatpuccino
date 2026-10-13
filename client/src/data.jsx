@@ -14,10 +14,14 @@ const LOADERS = {
   lorebooks: api.lorebooks,
   chats: api.chats,
   appearance: api.appearance,
+  // Modo Novela
+  worlds: api.worlds,
+  stats: api.stats,
+  backgrounds: api.backgrounds,
 };
 
 export function DataProvider({ children }) {
-  const [state, setState] = useState({ settings: null, characters: [], personas: [], groups: [], lorebooks: [], chats: [], appearance: loadCachedAppearance() });
+  const [state, setState] = useState({ settings: null, characters: [], personas: [], groups: [], lorebooks: [], chats: [], appearance: loadCachedAppearance(), worlds: [], stats: [], backgrounds: [] });
   const [ready, setReady] = useState(false);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);

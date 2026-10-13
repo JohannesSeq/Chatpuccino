@@ -140,6 +140,49 @@ export const api = {
   pinChat: (ref, pinned) => req('POST', `${chatUrl(ref)}/pin`, { pinned }),
   branchChat: (ref, index, title) => req('POST', `${chatUrl(ref)}/branch`, { index, title }),
   chatToGroup: (ref, body) => req('POST', `${chatUrl(ref)}/to-group`, body),
+
+  // ---- Modo Novela: estadísticas globales, fondos, sprites de personajes y mundos (ver el contrato en vn-spec) ----
+  stats: () => req('GET', '/stats'),
+  createStat: (body) => req('POST', '/stats', body),
+  updateStat: (id, body) => req('PUT', `/stats/${enc(id)}`, body),
+  deleteStat: (id) => req('DELETE', `/stats/${enc(id)}`),
+
+  backgrounds: () => req('GET', '/backgrounds'),
+  async uploadBackground(blob, name, description = '') {
+    return upload(`/api/backgrounds?name=${enc(name)}&description=${enc(description)}`, { 'Content-Type': 'application/octet-stream', 'X-Filename': enc(name) }, await blob.arrayBuffer(), name);
+  },
+  updateBackground: (id, body) => req('PUT', `/backgrounds/${enc(id)}`, body),
+  deleteBackground: (id) => req('DELETE', `/backgrounds/${enc(id)}`),
+
+  sprites: (charId) => req('GET', `/sprites/${enc(charId)}`),
+  saveSprites: (charId, patch) => req('PUT', `/sprites/${enc(charId)}`, patch),
+  createOutfit: (charId, name) => req('POST', `/sprites/${enc(charId)}/outfits`, { name }),
+  renameOutfit: (charId, outfitId, name) => req('PUT', `/sprites/${enc(charId)}/outfits/${enc(outfitId)}`, { name }),
+  deleteOutfit: (charId, outfitId) => req('DELETE', `/sprites/${enc(charId)}/outfits/${enc(outfitId)}`),
+  // Sin `label` la expresión se deduce del nombre del archivo, como en SillyTavern (joy.png, joy-2.png…).
+  async uploadSprite(charId, outfitId, file, label = '') {
+    return upload(
+      `/api/sprites/${enc(charId)}/outfits/${enc(outfitId)}/files${label ? `?label=${enc(label)}` : ''}`,
+      { 'Content-Type': 'application/octet-stream', 'X-Filename': enc(file.name) },
+      await file.arrayBuffer(),
+      file.name,
+    );
+  },
+  deleteSprite: (charId, outfitId, file) => req('DELETE', `/sprites/${enc(charId)}/outfits/${enc(outfitId)}/files/${enc(file)}`),
+
+  worlds: () => req('GET', '/worlds'),
+  createWorld: (body) => req('POST', '/worlds', body),
+  world: (id) => req('GET', `/worlds/${enc(id)}`),
+  updateWorld: (id, body) => req('PUT', `/worlds/${enc(id)}`, body),
+  deleteWorld: (id) => req('DELETE', `/worlds/${enc(id)}`),
+  addWorldMessage: (id, mes) => req('POST', `/worlds/${enc(id)}/messages`, { mes }),
+  editWorldMessage: (id, i, mes) => req('PATCH', `/worlds/${enc(id)}/messages/${i}`, { mes }),
+  deleteWorldMessage: (id, i) => req('DELETE', `/worlds/${enc(id)}/messages/${i}`),
+  setWorldSwipe: (id, i, swipe_id) => req('POST', `/worlds/${enc(id)}/messages/${i}/swipe`, { swipe_id }),
+  deleteWorldSwipe: (id, i) => req('DELETE', `/worlds/${enc(id)}/messages/${i}/swipe`),
+  branchWorld: (id, index, name) => req('POST', `/worlds/${enc(id)}/branch`, { index, name }),
+  copyWorld: (id, name) => req('POST', `/worlds/${enc(id)}/copy`, { name }),
+  setWorldStat: (id, body) => req('PATCH', `/worlds/${enc(id)}/state`, body),
 };
 
 /** Lee un stream SSE de eventos {delta}/{done}/{error}. Resuelve con el evento final `done`. */
@@ -185,6 +228,12 @@ export const generate = (ref, body, signal, onDelta) => stream(`${chatUrl(ref)}/
 
 /** Pide al modelo un mensaje escrito como el usuario. Resuelve con { text }; no guarda nada en el chat. */
 export const impersonate = (ref, body, signal, onDelta) => stream(`${chatUrl(ref)}/impersonate`, body, signal, onDelta);
+
+/** Modo Novela: genera la siguiente escena. Resuelve con el evento `done` ({ index, message, changes, state }). */
+export const worldGenerate = (id, body, signal, onDelta) => stream(`/worlds/${enc(id)}/generate`, body, signal, onDelta);
+
+/** Modo Novela: el modelo escribe la respuesta del usuario. Resuelve con { text }. */
+export const worldImpersonate = (id, body, signal, onDelta) => stream(`/worlds/${enc(id)}/impersonate`, body, signal, onDelta);
 
 /** Asistente de personajes: genera o mejora el texto de un campo. Resuelve con { text }. */
 export const assistantGenerate = (body, signal, onDelta) => stream('/assistant/generate', body, signal, onDelta);

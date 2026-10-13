@@ -41,6 +41,7 @@
   "app": {
     "nav": {
       "chats": "Chats",
+      "novel": "Novela",
       "settings": "Ajustes"
     }
   },
@@ -575,6 +576,164 @@
     "label": "Idioma",
     "title": "Idioma"
   },
+  "library": {
+    "back": "Volver a Novela",
+    "back_aria": "Volver a la lista de mundos",
+    "backgrounds": {
+      "drop_hint": "Se añadirán a la biblioteca de fondos",
+      "drop_title": "Suelta las imágenes aquí",
+      "editor": {
+        "delete_message": "«{name}» se eliminará de la biblioteca y se quitará de los mundos que lo usan como escena actual.",
+        "delete_title": "¿Eliminar el fondo?",
+        "deleted": "Fondo eliminado",
+        "description": "Descripción",
+        "description_hint": "Ayuda a la IA a elegir este fondo en el momento adecuado (lugar, ambiente, hora del día…).",
+        "description_placeholder": "Taberna llena de gente, de noche, luz de velas…",
+        "name": "Nombre",
+        "name_required": "Escribe un nombre.",
+        "preview_aria": "Ver imagen completa",
+        "saved": "Fondo guardado",
+        "title": "Fondo"
+      },
+      "empty_text": "Sube imágenes (o arrástralas a esta página). Se reducen a 1920 px como máximo para que carguen rápido.",
+      "empty_title": "Aún no hay fondos",
+      "intro": "Imágenes de escenario que la historia puede usar como fondo. La IA las elige según su nombre y descripción.",
+      "no_description": "Sin descripción",
+      "no_results": "Ningún fondo coincide con la búsqueda.",
+      "not_image": "«{name}» no es una imagen.",
+      "process_error": "No se pudo procesar la imagen.",
+      "search": "Buscar fondos…",
+      "upload": "Subir fondos",
+      "uploaded_one": "Se subió 1 fondo",
+      "uploaded_other": "Se subieron {count} fondos",
+      "uploading": "Subiendo {done}/{total}…"
+    },
+    "sprites": {
+      "bulk": {
+        "button": "Elegir archivos",
+        "drop": "o suéltalos en cualquier parte fuera de una casilla",
+        "hint": "Sube muchas imágenes de golpe: la expresión se deduce del nombre del archivo, como en SillyTavern (joy.png, joy-2.png, joy_3.webp → «joy»; las repetidas son variantes).",
+        "result": "Subidas: {ok} · Con error: {failed}",
+        "skipped_one": "1 archivo se ignoró por no ser una imagen.",
+        "skipped_other": "{count} archivos se ignoraron por no ser imágenes.",
+        "target": "Se subirán al conjunto «{outfit}».",
+        "title": "Subida masiva"
+      },
+      "change_character": "Cambiar personaje",
+      "expressions": {
+        "add_variant": "Añadir variante",
+        "count_one": "1 imagen",
+        "count_other": "{count} imágenes",
+        "custom_tag": "Propia",
+        "delete_message": "Se eliminará esta imagen de la expresión «{label}».",
+        "delete_title": "¿Eliminar la imagen?",
+        "delete_variant_aria": "Eliminar la variante {n} de {label}",
+        "fallback_tag": "Reserva",
+        "hint": "Toca una casilla para ver la imagen o súbela con el botón; también puedes arrastrar archivos encima. Si subes varias a la misma expresión serán variantes. La marcada como «Reserva» se usa cuando falta la expresión pedida.",
+        "other_tag": "Otra",
+        "preview_aria": "Ver la imagen de la expresión {label}",
+        "progress": "{done}/{total} expresiones",
+        "title": "Expresiones de «{outfit}»",
+        "upload": "Subir",
+        "upload_aria": "Subir imagen para la expresión {label}"
+      },
+      "intro": "Cada personaje puede tener varios conjuntos de ropa y una imagen por cada expresión. Elige un personaje para gestionar sus sprites.",
+      "load_error": "No se pudieron cargar los sprites",
+      "loading": "Cargando sprites…",
+      "no_characters": "Aún no hay personajes. Créalos o impórtalos desde Ajustes.",
+      "no_results": "Ningún personaje coincide con la búsqueda.",
+      "not_image": "Solo se pueden subir imágenes.",
+      "outfits": {
+        "add": "Añadir conjunto",
+        "add_title": "Nuevo conjunto",
+        "default_set": "Conjunto por defecto actualizado",
+        "delete": "Eliminar",
+        "delete_last": "Debe quedar al menos un conjunto.",
+        "delete_message": "«{name}» y todas sus imágenes se eliminarán. Los mundos que lo usaban volverán al conjunto por defecto.",
+        "delete_title": "¿Eliminar el conjunto?",
+        "is_default": "Es el conjunto por defecto",
+        "make_default": "Usar por defecto",
+        "name": "Nombre del conjunto",
+        "rename": "Renombrar",
+        "rename_title": "Renombrar conjunto",
+        "title": "Conjuntos de ropa"
+      },
+      "pick_title": "Elige un personaje",
+      "retry": "Reintentar",
+      "search": "Buscar personajes…",
+      "settings": {
+        "custom_add": "Añadir",
+        "custom_exists": "Esa expresión ya existe.",
+        "custom_hint": "Además de las 28 expresiones estándar. Solo minúsculas, números, guion y guion bajo.",
+        "custom_invalid": "Usa solo letras minúsculas, números, «-» y «_» (máximo 32).",
+        "custom_placeholder": "p. ej. sonrojo",
+        "custom_remove_aria": "Quitar la expresión propia {label}",
+        "custom_title": "Añadir expresión propia",
+        "fallback": "Expresión de reserva",
+        "fallback_hint": "Se muestra cuando la IA pide una expresión que no tiene imagen.",
+        "saved": "Ajustes guardados",
+        "title": "Ajustes del personaje"
+      },
+      "stats": {
+        "empty_hint": "Si dejas un campo vacío se usa el valor inicial de la estadística.",
+        "hint": "Son los valores con los que empieza este personaje en cualquier mundo para cada estadística por personaje. Después cambian con la historia.",
+        "invalid": "«{name}» debe ser un número entre {min} y {max}.",
+        "none": "No hay estadísticas por personaje todavía.",
+        "none_link": "Crear una estadística",
+        "saved": "Valores iniciales guardados",
+        "title": "Valores iniciales de estadísticas"
+      },
+      "upload_done_one": "Imagen subida a «{label}»",
+      "upload_done_other": "{count} imágenes subidas a «{label}»",
+      "uploading": "Subiendo {done}/{total}…"
+    },
+    "stats": {
+      "default_value": "inicial {value}",
+      "editor": {
+        "color": "Color",
+        "color_clear": "Quitar color",
+        "color_hint": "Opcional: se usa en las barras y notificaciones de la estadística.",
+        "color_none": "Sin color",
+        "created": "Estadística creada",
+        "default": "Inicial",
+        "default_invalid": "El valor inicial debe ser un número entre {min} y {max}.",
+        "delete_message": "«{name}» se eliminará de la biblioteca y se desvinculará de todos los mundos que la usan. Esta acción no se puede deshacer.",
+        "delete_title": "¿Eliminar la estadística?",
+        "deleted": "Estadística eliminada",
+        "description": "Descripción para la IA",
+        "description_hint": "La IA lee este texto: define qué mide la estadística y cómo debe influir en la conducta y las decisiones de los personajes (p. ej. «Cuánto confía y se preocupa el personaje por el usuario; con valores bajos es fría y desconfiada, con valores altos, cálida y protectora»).",
+        "description_placeholder": "Qué mide y cómo influye en el comportamiento…",
+        "max": "Máximo",
+        "min": "Mínimo",
+        "name": "Nombre",
+        "name_placeholder": "Afecto, Peligro, Dinero…",
+        "name_required": "Escribe un nombre.",
+        "range_invalid": "El mínimo y el máximo deben ser números y el mínimo debe ser menor que el máximo.",
+        "saved": "Estadística guardada",
+        "scope": "Ámbito",
+        "scope_character_help": "Cada personaje del mundo tiene su propio valor (p. ej. el afecto hacia el usuario).",
+        "scope_world_help": "Un único valor compartido por todo el mundo (p. ej. el peligro o el dinero).",
+        "title_edit": "Editar estadística",
+        "title_new": "Nueva estadística"
+      },
+      "empty_text": "Crea la primera (por ejemplo «Afecto» por personaje o «Peligro» para todo el mundo) y asóciala a un mundo para que la IA la tenga en cuenta.",
+      "empty_title": "Aún no hay estadísticas",
+      "intro": "Las estadísticas miden cosas como el afecto, el peligro o el dinero. Se definen aquí una sola vez y luego se asocian a los mundos que quieras.",
+      "new": "Nueva estadística",
+      "no_description": "Sin descripción",
+      "no_results": "Ninguna estadística coincide con la búsqueda.",
+      "range": "Rango {min} – {max}",
+      "scope_character": "Por personaje",
+      "scope_world": "Del mundo",
+      "search": "Buscar estadísticas…"
+    },
+    "tabs": {
+      "backgrounds": "Fondos",
+      "sprites": "Sprites",
+      "stats": "Estadísticas"
+    },
+    "title": "Biblioteca de la novela"
+  },
   "lorebooks": {
     "activation": {
       "budget": "Presupuesto (tokens)",
@@ -654,6 +813,145 @@
     "rename_dialog": {
       "label": "Nuevo nombre",
       "title": "Renombrar lorebook"
+    }
+  },
+  "novel": {
+    "cast_aria": "Reparto: {names}",
+    "delete_message": "Se borrarán el mundo «{name}» y toda su historia. Esta acción no se puede deshacer.",
+    "delete_title": "Eliminar mundo",
+    "duplicated": "Mundo duplicado",
+    "empty_no_results": "Ningún mundo coincide con la búsqueda.",
+    "empty_select": "Elige un mundo o crea uno nuevo para empezar tu novela visual.",
+    "empty_text": "Un mundo es una historia continua con su reparto de personajes, fondos y estadísticas. La IA narra las escenas y tú decides qué hacer.",
+    "empty_title": "Aún no tienes mundos",
+    "hint": {
+      "need_backgrounds": "Aún no hay fondos: súbelos en la biblioteca",
+      "need_characters": "Aún no hay personajes: crea alguno en Ajustes",
+      "need_stats": "Aún no hay estadísticas: créalas en la biblioteca"
+    },
+    "last_line": {
+      "none": "Historia sin empezar"
+    },
+    "library_aria": "Biblioteca de la novela",
+    "library_title": "Biblioteca: estadísticas, fondos y sprites",
+    "new_world": "Nuevo mundo",
+    "search_placeholder": "Buscar mundos…",
+    "title": "Mundos"
+  },
+  "novelview": {
+    "actions": {
+      "back": "Línea anterior",
+      "begin": "Empezar la historia",
+      "continue": "Continuar",
+      "continue_hint": "Generar la siguiente escena sin escribir nada",
+      "history": "Historial",
+      "latest": "Ir a lo último",
+      "next": "Siguiente",
+      "reply": "Responder",
+      "skip_typing": "Mostrar todo"
+    },
+    "banner": {
+      "not_ready": "La conexión activa no está lista."
+    },
+    "branch": {
+      "confirm": "Crear rama",
+      "default_name": "{base} (rama)",
+      "label": "Nombre del nuevo mundo",
+      "message": "Se creará un mundo nuevo con la historia hasta este punto.",
+      "title": "Ramificar desde aquí"
+    },
+    "composer": {
+      "aria": "Tu respuesta como {name}",
+      "impersonate": "Escribir por mí",
+      "impersonate_hint": "La IA escribe tu respuesta (lo que ya hayas escrito sirve de inicio)",
+      "impersonating": "Escribiendo por ti…",
+      "placeholder": "¿Qué dices o haces?",
+      "send": "Enviar"
+    },
+    "copy": {
+      "confirm": "Copiar",
+      "default_name": "{base} (copia)",
+      "label": "Nombre de la copia",
+      "message": "Se duplicará el mundo completo con su historia.",
+      "title": "Copiar mundo"
+    },
+    "dialogue": {
+      "aria": "Diálogo"
+    },
+    "edit": {
+      "hint": "Formato: [Nombre|expresión] texto, o [Narrator] texto para la narración. Una línea por intervención.",
+      "label": "Texto del mensaje",
+      "title": "Editar mensaje"
+    },
+    "empty": {
+      "cast": "Reparto: {names}",
+      "no_premise": "Este mundo aún no tiene premisa. ¡Empieza la historia y ve a dónde te lleva!"
+    },
+    "errors": {
+      "no_result": "La generación terminó sin resultado."
+    },
+    "focus": {
+      "character": "Centrarse en el personaje",
+      "text": "Centrarse en el texto"
+    },
+    "history": {
+      "empty": "La historia aún no ha empezado.",
+      "title": "Historial de la historia"
+    },
+    "menu": {
+      "branch": "Ramificar desde aquí",
+      "copy_world": "Copiar mundo",
+      "instant": "Texto instantáneo"
+    },
+    "narrator": "Narrador",
+    "panel": {
+      "background": "Fondo de la escena",
+      "characters": "Personajes",
+      "edit_world": "Editar mundo",
+      "hide": "Ocultar panel",
+      "lorebooks": "Libros de lore",
+      "manage": "Gestionar personajes / editar mundo",
+      "no_background": "Sin fondo",
+      "no_backgrounds": "Aún no hay fondos en la biblioteca.",
+      "no_cast": "Este mundo no tiene personajes.",
+      "no_outfits": "Sin vestuarios",
+      "no_premise": "Sin premisa.",
+      "no_stats": "Este mundo no tiene estadísticas asociadas.",
+      "on_stage": "En escena",
+      "open": "Opciones de escena",
+      "open_backgrounds": "Abrir la biblioteca de fondos",
+      "outfit_aria": "Vestuario de {name}",
+      "persona": "Persona",
+      "scene": "Escena",
+      "sprites": "Sprites",
+      "sprites_hint": "Abrir la biblioteca de sprites ({name})",
+      "stats": "Estadísticas",
+      "stats_no_stage": "Pon personajes en escena para ver sus estadísticas.",
+      "title": "Opciones de escena",
+      "world": "Mundo"
+    },
+    "scene": {
+      "background_changed": "Nuevo fondo: {name}",
+      "entered": "Entra en escena: {names}",
+      "left": "Sale de escena: {names}",
+      "outfit_changed": "{name} se cambia a «{outfit}»"
+    },
+    "stage": {
+      "aria": "Escena con {names}",
+      "aria_empty": "Escena sin personajes"
+    },
+    "stats": {
+      "edit_aria": "Editar {stat} de {who}",
+      "edit_hint": "Clic para editar el valor"
+    },
+    "thinking": "La historia continúa…",
+    "toasts": {
+      "branch_created": "Rama creada",
+      "copy_created": "Mundo copiado",
+      "stat_line": "{who} · {stat} {delta} ({from} → {to})"
+    },
+    "variants": {
+      "of": "Variante {current} de {total}"
     }
   },
   "password_banner": {
@@ -959,6 +1257,12 @@
       "too_many_attempts": "Demasiados intentos. Espera {wait} s e inténtalo de nuevo.",
       "wrong_current_password": "La contraseña actual no es correcta"
     },
+    "backgrounds": {
+      "default_name": "Fondo",
+      "name_required": "El fondo necesita un nombre",
+      "name_taken": "Ya existe un fondo con ese nombre",
+      "not_found": "Fondo no encontrado"
+    },
     "cards": {
       "file_not_png": "El archivo no es un PNG válido",
       "image_not_png": "La imagen no es un PNG válido",
@@ -1056,6 +1360,109 @@
       "hint_connection": "una conexión",
       "hint_local_url": "la URL del servidor local",
       "hint_model": "el modelo"
+    },
+    "sprites": {
+      "default_outfit": "Atuendo por defecto",
+      "file_not_found": "Imagen no encontrada",
+      "invalid_file": "Nombre de archivo no válido",
+      "invalid_label": "Etiqueta de expresión no válida (usa letras minúsculas, números, «-» o «_»; máx. 40)",
+      "last_outfit": "No se puede eliminar el último atuendo",
+      "outfit_name_required": "El atuendo necesita un nombre",
+      "outfit_name_taken": "Ya existe un atuendo con ese nombre",
+      "outfit_not_found": "Atuendo no encontrado"
+    },
+    "stats": {
+      "invalid_color": "El color debe tener el formato #rrggbb",
+      "invalid_number": "Los valores mínimo, máximo y por defecto deben ser números válidos",
+      "invalid_range": "El mínimo debe ser menor que el máximo",
+      "invalid_scope": "El ámbito debe ser «character» o «world»",
+      "name_required": "La estadística necesita un nombre",
+      "not_found": "Estadística no encontrada"
+    },
+    "vnassets": {
+      "bad_format": "Formato de imagen no admitido (usa PNG, JPG, WebP o GIF).",
+      "send_octet_stream": "Envía la imagen como cuerpo binario (application/octet-stream).",
+      "too_large": "La imagen supera el máximo de 15 MB."
+    },
+    "worlds": {
+      "active_not_in_roster": "Los personajes en escena deben pertenecer al reparto del mundo",
+      "background_not_found": "El fondo «{id}» no existe",
+      "branch_suffix": "rama",
+      "character_not_found": "El personaje «{id}» no existe",
+      "character_required": "Indica el personaje al que pertenece la estadística",
+      "copy_suffix": "copia",
+      "description_too_long": "La descripción es demasiado larga (máximo {max} caracteres)",
+      "empty_message": "El mensaje está vacío",
+      "generate_error": "Error al generar la escena",
+      "impersonate_error": "Error al generar el mensaje",
+      "invalid_message": "Mensaje inválido",
+      "invalid_speaker": "El personaje que habla debe estar en escena",
+      "invalid_swipe": "Variante inválida",
+      "invalid_value": "El valor debe ser un número",
+      "lorebook_not_found": "El lorebook «{name}» no existe",
+      "message_gone": "El mensaje ya no existe",
+      "message_not_found": "Mensaje no encontrado",
+      "message_too_long": "El mensaje es demasiado largo (máximo {max} caracteres)",
+      "name_required": "El mundo necesita un nombre",
+      "name_too_long": "El nombre es demasiado largo (máximo {max} caracteres)",
+      "not_found": "Mundo no encontrado",
+      "nothing_to_regenerate": "No hay una escena que regenerar",
+      "only_variant": "Es la única variante: elimina el mensaje completo.",
+      "outfit_not_found": "El atuendo «{id}» no existe para el personaje «{character}»",
+      "prompt": {
+        "analysis_system": "Eres el analista de una novela visual. Lees una escena y decides si cambió alguna estadística. Responde ÚNICAMENTE con JSON válido, sin texto adicional ni markdown, con esta forma: {\"stats\":[{\"character\":\"<nombre>\",\"stat\":\"<id>\",\"change\":<número>,\"reason\":\"<motivo breve en {language}>\"}]}. Los cambios son pequeños (como máximo el 25 % del rango); la mayoría de escenas no cambian nada: responde {\"stats\":[]}. Omite \"character\" en las estadísticas compartidas.",
+        "analysis_user": "Estadísticas:\n{stats}\n\nValores actuales:\n{values}\n\nÚltimo mensaje de {user}:\n{message}\n\nEscena nueva:\n{scene}",
+        "background_line": "- {id}: {name}{description}",
+        "backgrounds_intro": "Fondo actual: {current}. Cambia el fondo (`scene.background`) solo cuando la historia cambie de lugar.",
+        "backgrounds_title": "# Fondos disponibles",
+        "character_title": "## {name}",
+        "characters_title": "# Personajes en escena",
+        "control_background": "- `scene.background`: el id o el nombre de uno de los fondos disponibles.",
+        "control_example": "Ejemplo: <vn>{example}</vn>",
+        "control_intro": "Después del guion, en una línea aparte y UNA sola vez, añade el bloque <vn>…</vn> con JSON válido que contenga solo lo que ha cambiado. Si no cambió nada, escribe <vn>{}</vn>. Nunca menciones ni expliques este bloque dentro del guion.",
+        "control_move": "- `scene.enter` / `scene.exit`: listas con los nombres de los personajes del reparto que entran o salen de escena.",
+        "control_outfits": "- `scene.outfits`: objeto `{\"<personaje>\": \"<atuendo>\"}` con los atuendos disponibles.",
+        "control_stats": "- `stats`: lista de `{\"character\": \"<nombre>\", \"stat\": \"<id>\", \"change\": <número>, \"reason\": \"<motivo breve>\"}` (omite `character` en las estadísticas compartidas). Cada cambio es pequeño: como máximo el 25 % del rango de la estadística.",
+        "control_title": "# Bloque de control",
+        "directive_continue": "[Continúa la historia: escribe la siguiente escena.]",
+        "directive_instruction": "[Nota del director para esta escena (síguela): {text}]",
+        "directive_speaker": "[{name} es quien habla primero en esta escena.]",
+        "directive_start": "[Escribe la escena inicial de la historia: sitúa el lugar y a los personajes en escena y termina dejando que {user} actúe.]",
+        "example_reason": "motivo breve",
+        "examples": "Ejemplos de diálogo:\n{text}",
+        "expressions_intro": "En `[Nombre|expresión]` usa solo estas etiquetas:",
+        "expressions_line": "- {name}: {labels}",
+        "expressions_title": "# Expresiones disponibles",
+        "format": "# Formato de salida (obligatorio)\n- Una línea por intervención: `[Nombre|expresión] texto`. Ejemplo: `[{example}|joy] «¡Bienvenido!»`.\n- La narración va como `[Narrator] texto`.\n- Solo pueden hablar y actuar los personajes que están en escena. Los demás solo se mencionan en la narración.\n- Nunca escribas las líneas, acciones, pensamientos ni decisiones de {user}.\n- Escenas cortas: de 1 a 6 líneas, salvo que la historia pida más. Detente cuando {user} deba responder.\n- Escribe en {language} (el idioma del usuario), pero deja las etiquetas `[Nombre|expresión]` y `[Narrator]` tal cual.\n- Sin cabeceras ni comentarios fuera del guion.",
+        "impersonate_directive": "[Escribe ahora el siguiente mensaje de {user}.]",
+        "impersonate_draft": "Empieza el mensaje con este texto y continúa con naturalidad a partir de él:\n{text}",
+        "impersonate_role": "Eres {user}, el jugador de una novela visual interactiva. Escribes lo que {user} dice o hace a continuación.",
+        "impersonate_rules": "# Reglas\n- Escribe solo el mensaje de {user}, en primera persona o como acción breve; nunca escribas por los demás personajes ni por el narrador.\n- Texto plano, sin etiquetas `[Nombre|expresión]` ni bloques de control.\n- Escribe en {language}, breve (1–3 frases).",
+        "lore_title": "# Información del mundo",
+        "nobody": "nadie",
+        "none": "ninguno",
+        "offstage": "# Personajes fuera de escena\n{names}. No hablan ni actúan mientras no entren en escena.",
+        "outfit_line": "- {name}: actual «{current}»; disponibles: {list}",
+        "outfits_intro": "Cambia el atuendo de un personaje (`scene.outfits`) solo cuando la historia lo pida.",
+        "outfits_title": "# Atuendos",
+        "persona_title": "# El jugador: {user}",
+        "personality": "Personalidad: {text}",
+        "premise_title": "# Premisa del mundo",
+        "role": "Eres el narrador y director de juego de una novela visual interactiva. {user} es el jugador y nunca lo controlas. Escribes la siguiente escena de la historia como un guion.",
+        "scenario": "Escenario: {text}",
+        "scene_line": "Fondo: {background}. En escena: {names}.",
+        "scene_title": "# Escena actual",
+        "stat_character": "- {name} (id: {id}; una por personaje; rango {min}–{max}): {description}",
+        "stat_value_character": "- {name}: {values}",
+        "stat_value_world": "- Mundo (compartidas): {values}",
+        "stat_world": "- {name} (id: {id}; compartida por todo el mundo; rango {min}–{max}): {description}",
+        "stats_intro": "Miden el estado de la historia y deben reflejarse en ella.",
+        "stats_rule": "Regla: los valores bajos o altos DEBEN influir en el comportamiento, el tono y las decisiones de cada personaje cuando tenga sentido (p. ej. afecto bajo: más fría o se niega; afecto alto: más cálida y cercana). No menciones los números en el guion. Solo propón cambios en el bloque de control cuando los hechos de la escena los justifiquen: cambios pequeños y, en la mayoría de escenas, ninguno.",
+        "stats_title": "# Estadísticas",
+        "stats_values": "Valores actuales:"
+      },
+      "start_not_empty": "La historia ya ha empezado",
+      "stat_not_found": "La estadística «{id}» no existe"
     }
   },
   "settings": {
@@ -1088,5 +1495,69 @@
   },
   "util": {
     "image_read_error": "No se pudo leer la imagen"
+  },
+  "world_editor": {
+    "active": {
+      "hint": "Quién aparece en escena al empezar. Podrás cambiarlo durante la historia.",
+      "label": "En escena",
+      "need_cast": "Añade antes personajes al reparto",
+      "none_left": "Todo el reparto ya está en escena",
+      "placeholder": "Añadir personaje a la escena…"
+    },
+    "background": {
+      "create": "Subir fondos",
+      "hint": "Imagen de la escena inicial; se puede cambiar durante la historia.",
+      "label": "Fondo inicial",
+      "manage": "Gestionar fondos",
+      "none": "Sin fondo",
+      "none_exist": "Aún no hay fondos en la biblioteca.",
+      "preview_alt": "Vista previa del fondo «{name}»"
+    },
+    "cast": {
+      "hint": "Los personajes que forman parte de este mundo. Solo los que estén en escena hablarán.",
+      "label": "Reparto ({count})",
+      "no_characters": "No hay personajes: créalos en Ajustes",
+      "none_left": "Ya has añadido todos los personajes",
+      "placeholder": "Añadir personaje al reparto…"
+    },
+    "dates": "Creado: {created} · Actualizado: {updated}",
+    "description": {
+      "hint": "Se envía a la IA como ambientación y escenario del mundo: lugar, época, tono, situación inicial…",
+      "label": "Descripción / premisa",
+      "placeholder": "Ej.: Una academia de magia flotante donde cada alumno oculta un secreto…"
+    },
+    "edit_title": "Editar mundo",
+    "lorebooks": {
+      "hint": "Sus entradas se activan según lo que ocurra en la historia.",
+      "label": "Libros de lore",
+      "none_exist": "No hay libros de lore creados",
+      "none_left": "Ya has añadido todos los libros",
+      "placeholder": "Añadir libro de lore…"
+    },
+    "missing": "{name} (no existe)",
+    "name": {
+      "label": "Nombre",
+      "placeholder": "Nombre del mundo"
+    },
+    "new_title": "Nuevo mundo",
+    "persona": {
+      "default": "Persona predeterminada",
+      "hint": "Quién eres tú en esta historia.",
+      "label": "Persona"
+    },
+    "remove_aria": "Quitar {name}",
+    "scope": {
+      "character": "por personaje",
+      "world": "del mundo"
+    },
+    "stats": {
+      "create": "Crear estadísticas",
+      "hint": "Las estadísticas (afecto, peligro, dinero…) influyen en cómo actúan los personajes y cambian a medida que avanza la historia. Se definen en la biblioteca global.",
+      "label": "Estadísticas",
+      "manage": "Gestionar estadísticas",
+      "none_exist": "Aún no hay estadísticas creadas",
+      "none_left": "Ya has añadido todas las estadísticas",
+      "placeholder": "Añadir estadística…"
+    }
   }
 }

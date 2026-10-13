@@ -13,10 +13,16 @@ export const DIRS = {
   personas: path.join(DATA, 'personas'),
   lorebooks: path.join(DATA, 'lorebooks'),
   presets: path.join(DATA, 'presets'),
+  // Modo Novela
+  worlds: path.join(DATA, 'worlds'),
+  vnBackgrounds: path.join(DATA, 'vn', 'backgrounds'),
+  vnSprites: path.join(DATA, 'vn', 'sprites'),
 };
 
 export const SETTINGS_FILE = path.join(DATA, 'settings.json');
 export const ASSISTANT_FILE = path.join(DATA, 'assistant.jsonl');
+export const STATS_FILE = path.join(DATA, 'vn', 'stats.json');
+export const BACKGROUNDS_FILE = path.join(DATA, 'vn', 'backgrounds.json');
 export const OPENROUTER_BASE = process.env.OPENROUTER_BASE || 'https://openrouter.ai/api/v1';
 
 export function ensureDirs() {

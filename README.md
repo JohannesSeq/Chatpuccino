@@ -44,6 +44,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 | 🔀 **Control de la conversación** | Variantes (*swipes*) que puedes borrar una a una, ramas desde cualquier mensaje, copiar chats e **impersonar** (el modelo escribe por ti). |
 | 🎨 **Personalización** | Modo claro/oscuro/automático, colores, fuentes, tamaños, transparencia de burbujas y fondo de pantalla. |
 | 🔐 **Seguridad** | Inicio de sesión con contraseña cifrada (scrypt), bloqueo ante intentos fallidos y cierre de sesiones. |
+| 📖 **Modo Novela** | Roleplay como novela visual: **Mundos** con escena, sprites por expresión y atuendo (sistema de SillyTavern), fondos, **estadísticas** que cambian con la historia (con notificaciones) e influyen en los personajes, y una interfaz pensada para escritorio y móvil. |
 | 📱 **Móvil y escritorio** | Diseño responsivo pensado primero para el pulgar. |
 
 ## 📸 Capturas
@@ -118,6 +119,21 @@ El texto se va escribiendo en vivo en una vista previa que puedes editar; solo s
 **Lectura de imagen:** cuadro adicional en el creador de personajes. **Leer imagen** envía la imagen del personaje al modelo con visión, que describe su aspecto físico. La descripción se guarda en la tarjeta como extensión (`extensions.image_reading`; otros programas la ignoran) y con **Añadir a la descripción** puedes pasarla a la descripción del personaje. También tiene su ✨ para mejorarla.
 
 Si el asistente no está configurado, la ventana lo indica y enlaza a su configuración.
+
+## Modo Novela
+
+Tercera sección del menú (**Novela**): roleplay como una **novela visual**, con escena, sprites del personaje y cuadro de diálogo. Los «chats» se llaman **Mundos**.
+
+- **Mundos:** cada mundo es una historia continua con su propio reparto, personaje(s) **en escena**, lorebooks (se eligen en un desplegable, como las etiquetas), estadísticas asociadas, fondo actual y persona opcional. Se crean con el botón **+** de la lista; puedes duplicarlos y ramificarlos.
+- **Biblioteca global** (botón de la cabecera de la lista → `/novel/library`):
+  - **Estadísticas:** nombre, **descripción** (qué mide y cómo debe influir; se envía a la IA), alcance (*por personaje* o *del mundo*), rango, valor inicial y color. Se asocian a los mundos desde un desplegable.
+  - **Fondos:** imágenes de escenario con nombre y descripción (la IA los elige según la historia). Arrastra varias a la vez.
+  - **Sprites:** por personaje, varios **atuendos** y una imagen por **expresión** siguiendo el sistema de SillyTavern: las 28 etiquetas de emoción (`joy`, `anger`, `neutral`…), varias variantes por etiqueta (`joy.png`, `joy-2.png`), expresión de reserva y expresiones propias. Subida masiva con detección de la etiqueta por el nombre del archivo, o casilla por casilla. Si falta un sprite se usa la expresión de reserva y, en último caso, el avatar de la tarjeta. Aquí también se fijan los **valores iniciales de las estadísticas** de cada personaje.
+- **Generación:** usa la conexión y el preset activos del roleplay. La IA escribe la escena como un **guion** (`[Luna|joy] texto`, `[Narrator] texto`) y, al final, un bloque de control oculto con los cambios (estadísticas, fondo, atuendos, entradas y salidas de escena). El servidor lo valida: solo estadísticas asociadas, valores dentro del rango y cambios pequeños por escena. Si el modelo omite el bloque y el mundo tiene estadísticas, hace una consulta breve de análisis. El prompt incluye las fichas de los personajes en escena, el lorebook, las estadísticas con sus valores actuales y la instrucción de que **influyan en el comportamiento y las decisiones** (afecto bajo → más fría, etc.), y las expresiones, atuendos y fondos disponibles.
+- **Estadísticas:** los valores viven en cada escena (así ramificar, borrar o cambiar de variante los «rebobina»); cada cambio aparece como **notificación emergente** (`Luna · Afecto +4 (30 → 34)` con el motivo). Además se guardan en un JSON por personaje (`data/worlds/<mundo>/characters/<personaje>.json`) y puedes corregir cualquier valor a mano desde el panel.
+- **Vista de novela (escritorio):** fondo, personajes de pie con la expresión de la línea actual (el que habla se resalta, los demás se atenúan) y el cuadro de diálogo debajo. Se avanza con clic, Espacio, Intro o →; ← vuelve atrás. Botones: **Responder** (abre el cuadro para escribir tu respuesta, con ✨ para que la IA la escriba), **Continuar**, **Regenerar**, variantes, editar, borrar, **ramificar**, historial. A la derecha, el panel con **fondo de la escena**, **atuendo** de cada personaje, **quién está en escena**, el reparto, las estadísticas y la edición del mundo.
+- **Teléfonos:** escena arriba y diálogo debajo, con dos modos de enfoque: **texto** (la escena se reduce) y **personaje** (el diálogo se compacta); el panel se abre como hoja inferior.
+- **Datos:** `data/worlds/<mundo>/` (`world.json`, `story.jsonl` en formato de chat de SillyTavern), `data/vn/stats.json`, `data/vn/backgrounds*` y `data/vn/sprites/<personaje>/`; todo dentro de `data/`, que no se sube al repositorio.
 
 ## Importar chats
 
@@ -200,6 +216,7 @@ Para reportar un fallo o proponer una idea, abre un *issue* con los pasos para r
 | --- | --- |
 | `client/` | Interfaz React (Vite): páginas de chats y ajustes, componentes y tema |
 | `locales/` | Idiomas de la interfaz y del servidor (un JSON por idioma) |
+| `shared/` | Código compartido por cliente y servidor (guion y expresiones del Modo Novela) |
 | `server/` | API Express: tarjetas PNG, chats JSONL, lorebooks, presets, conexiones y autenticación |
 | `server/test/` | Pruebas de integración (`node --test`) |
 | `docs/screenshots/` | Capturas usadas en este README |

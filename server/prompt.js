@@ -19,7 +19,7 @@ export function applyMacros(text, ctx) {
     });
 }
 
-async function collectLoreEntries({ settings, cards }) {
+export async function collectLoreEntries({ settings, cards }) {
   const names = new Set(settings.activeLorebooks || []);
   for (const c of cards) if (c.extensions?.world) names.add(c.extensions.world);
   const entries = [];
@@ -41,7 +41,7 @@ async function collectLoreEntries({ settings, cards }) {
 
 const cost = (content) => estimateTokens(content) + 4;
 
-function squash(messages) {
+export function squash(messages) {
   const out = [];
   for (const m of messages) {
     const last = out[out.length - 1];

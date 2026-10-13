@@ -41,6 +41,7 @@
   "app": {
     "nav": {
       "chats": "Chats",
+      "novel": "Novel",
       "settings": "Settings"
     }
   },
@@ -575,6 +576,164 @@
     "label": "Language",
     "title": "Language"
   },
+  "library": {
+    "back": "Back to Novel",
+    "back_aria": "Back to the worlds list",
+    "backgrounds": {
+      "drop_hint": "They will be added to the backgrounds library",
+      "drop_title": "Drop the images here",
+      "editor": {
+        "delete_message": "“{name}” will be removed from the library and cleared from any world using it as the current scene.",
+        "delete_title": "Delete this background?",
+        "deleted": "Background deleted",
+        "description": "Description",
+        "description_hint": "Helps the AI choose this background at the right moment (place, mood, time of day…).",
+        "description_placeholder": "Crowded tavern at night, candlelight…",
+        "name": "Name",
+        "name_required": "Enter a name.",
+        "preview_aria": "View full image",
+        "saved": "Background saved",
+        "title": "Background"
+      },
+      "empty_text": "Upload images (or drag them onto this page). They are scaled down to 1920 px at most so they load fast.",
+      "empty_title": "No backgrounds yet",
+      "intro": "Scenery images the story can use as a backdrop. The AI picks them based on their name and description.",
+      "no_description": "No description",
+      "no_results": "No backgrounds match your search.",
+      "not_image": "“{name}” is not an image.",
+      "process_error": "The image could not be processed.",
+      "search": "Search backgrounds…",
+      "upload": "Upload backgrounds",
+      "uploaded_one": "1 background uploaded",
+      "uploaded_other": "{count} backgrounds uploaded",
+      "uploading": "Uploading {done}/{total}…"
+    },
+    "sprites": {
+      "bulk": {
+        "button": "Choose files",
+        "drop": "or drop them anywhere outside a slot",
+        "hint": "Upload many images at once: the expression is deduced from the file name, like SillyTavern (joy.png, joy-2.png, joy_3.webp → “joy”; repeats become variants).",
+        "result": "Uploaded: {ok} · Failed: {failed}",
+        "skipped_one": "1 file was ignored because it isn't an image.",
+        "skipped_other": "{count} files were ignored because they aren't images.",
+        "target": "They will be uploaded to the “{outfit}” outfit.",
+        "title": "Bulk upload"
+      },
+      "change_character": "Change character",
+      "expressions": {
+        "add_variant": "Add variant",
+        "count_one": "1 image",
+        "count_other": "{count} images",
+        "custom_tag": "Custom",
+        "delete_message": "This image will be removed from the “{label}” expression.",
+        "delete_title": "Delete this image?",
+        "delete_variant_aria": "Delete variant {n} of {label}",
+        "fallback_tag": "Fallback",
+        "hint": "Tap a slot to see its image, or upload with the button; you can also drag files onto it. Several files for the same expression become variants. The one marked “Fallback” is used when the requested expression is missing.",
+        "other_tag": "Other",
+        "preview_aria": "View the image for the {label} expression",
+        "progress": "{done}/{total} expressions",
+        "title": "Expressions for “{outfit}”",
+        "upload": "Upload",
+        "upload_aria": "Upload an image for the {label} expression"
+      },
+      "intro": "Each character can have several outfits and one image per expression. Pick a character to manage their sprites.",
+      "load_error": "Couldn't load the sprites",
+      "loading": "Loading sprites…",
+      "no_characters": "No characters yet. Create or import some in Settings.",
+      "no_results": "No characters match your search.",
+      "not_image": "Only images can be uploaded.",
+      "outfits": {
+        "add": "Add outfit",
+        "add_title": "New outfit",
+        "default_set": "Default outfit updated",
+        "delete": "Delete",
+        "delete_last": "At least one outfit must remain.",
+        "delete_message": "“{name}” and all its images will be deleted. Worlds that used it will go back to the default outfit.",
+        "delete_title": "Delete this outfit?",
+        "is_default": "This is the default outfit",
+        "make_default": "Make default",
+        "name": "Outfit name",
+        "rename": "Rename",
+        "rename_title": "Rename outfit",
+        "title": "Outfits"
+      },
+      "pick_title": "Choose a character",
+      "retry": "Try again",
+      "search": "Search characters…",
+      "settings": {
+        "custom_add": "Add",
+        "custom_exists": "That expression already exists.",
+        "custom_hint": "On top of the 28 standard expressions. Lowercase letters, numbers, hyphen and underscore only.",
+        "custom_invalid": "Use only lowercase letters, numbers, “-” and “_” (32 characters max).",
+        "custom_placeholder": "e.g. blush",
+        "custom_remove_aria": "Remove the custom expression {label}",
+        "custom_title": "Add a custom expression",
+        "fallback": "Fallback expression",
+        "fallback_hint": "Shown when the AI asks for an expression that has no image.",
+        "saved": "Settings saved",
+        "title": "Character settings"
+      },
+      "stats": {
+        "empty_hint": "If you leave a field empty, the stat's starting value is used.",
+        "hint": "These are the values this character starts with in any world, for every per-character stat. They then change as the story unfolds.",
+        "invalid": "“{name}” must be a number between {min} and {max}.",
+        "none": "There are no per-character stats yet.",
+        "none_link": "Create a stat",
+        "saved": "Initial values saved",
+        "title": "Initial stat values"
+      },
+      "upload_done_one": "Image uploaded to “{label}”",
+      "upload_done_other": "{count} images uploaded to “{label}”",
+      "uploading": "Uploading {done}/{total}…"
+    },
+    "stats": {
+      "default_value": "starts at {value}",
+      "editor": {
+        "color": "Color",
+        "color_clear": "Remove color",
+        "color_hint": "Optional: used in the stat's bars and notifications.",
+        "color_none": "No color",
+        "created": "Stat created",
+        "default": "Starting value",
+        "default_invalid": "The starting value must be a number between {min} and {max}.",
+        "delete_message": "“{name}” will be removed from the library and detached from every world that uses it. This can't be undone.",
+        "delete_title": "Delete this stat?",
+        "deleted": "Stat deleted",
+        "description": "Description for the AI",
+        "description_hint": "The AI reads this text: it defines what the stat measures and how it should influence characters' behavior and decisions (e.g. “How much the character trusts and cares about the user; low values make her cold and distrustful, high values warm and protective”).",
+        "description_placeholder": "What it measures and how it shapes behavior…",
+        "max": "Maximum",
+        "min": "Minimum",
+        "name": "Name",
+        "name_placeholder": "Affection, Danger, Money…",
+        "name_required": "Enter a name.",
+        "range_invalid": "Minimum and maximum must be numbers, and the minimum must be lower than the maximum.",
+        "saved": "Stat saved",
+        "scope": "Scope",
+        "scope_character_help": "Every character in the world has their own value (e.g. affection toward the user).",
+        "scope_world_help": "A single value shared by the whole world (e.g. danger or money).",
+        "title_edit": "Edit stat",
+        "title_new": "New stat"
+      },
+      "empty_text": "Create your first one (for example “Affection” per character or “Danger” for the whole world) and attach it to a world so the AI takes it into account.",
+      "empty_title": "No stats yet",
+      "intro": "Stats measure things like affection, danger or money. Define them once here, then attach them to any world you like.",
+      "new": "New stat",
+      "no_description": "No description",
+      "no_results": "No stats match your search.",
+      "range": "Range {min} – {max}",
+      "scope_character": "Per character",
+      "scope_world": "World-wide",
+      "search": "Search stats…"
+    },
+    "tabs": {
+      "backgrounds": "Backgrounds",
+      "sprites": "Sprites",
+      "stats": "Stats"
+    },
+    "title": "Novel library"
+  },
   "lorebooks": {
     "activation": {
       "budget": "Budget (tokens)",
@@ -654,6 +813,145 @@
     "rename_dialog": {
       "label": "New name",
       "title": "Rename lorebook"
+    }
+  },
+  "novel": {
+    "cast_aria": "Cast: {names}",
+    "delete_message": "The world “{name}” and its whole story will be deleted. This can't be undone.",
+    "delete_title": "Delete world",
+    "duplicated": "World duplicated",
+    "empty_no_results": "No worlds match your search.",
+    "empty_select": "Pick a world or create a new one to start your visual novel.",
+    "empty_text": "A world is one continuous story with its own cast, backgrounds and stats. The AI narrates the scenes and you decide what to do.",
+    "empty_title": "You have no worlds yet",
+    "hint": {
+      "need_backgrounds": "No backgrounds yet: upload some in the library",
+      "need_characters": "No characters yet: create some in Settings",
+      "need_stats": "No stats yet: create them in the library"
+    },
+    "last_line": {
+      "none": "Story not started"
+    },
+    "library_aria": "Novel library",
+    "library_title": "Library: stats, backgrounds and sprites",
+    "new_world": "New world",
+    "search_placeholder": "Search worlds…",
+    "title": "Worlds"
+  },
+  "novelview": {
+    "actions": {
+      "back": "Previous line",
+      "begin": "Begin the story",
+      "continue": "Continue",
+      "continue_hint": "Generate the next scene without writing anything",
+      "history": "History",
+      "latest": "Jump to latest",
+      "next": "Next",
+      "reply": "Reply",
+      "skip_typing": "Show all"
+    },
+    "banner": {
+      "not_ready": "The active connection isn't ready."
+    },
+    "branch": {
+      "confirm": "Create branch",
+      "default_name": "{base} (branch)",
+      "label": "New world name",
+      "message": "A new world will be created with the story up to this point.",
+      "title": "Branch from here"
+    },
+    "composer": {
+      "aria": "Your reply as {name}",
+      "impersonate": "Write for me",
+      "impersonate_hint": "The AI writes your reply (anything you've already typed is used as a starting point)",
+      "impersonating": "Writing for you…",
+      "placeholder": "What do you say or do?",
+      "send": "Send"
+    },
+    "copy": {
+      "confirm": "Copy",
+      "default_name": "{base} (copy)",
+      "label": "Name of the copy",
+      "message": "The whole world will be duplicated with its story.",
+      "title": "Copy world"
+    },
+    "dialogue": {
+      "aria": "Dialogue"
+    },
+    "edit": {
+      "hint": "Format: [Name|expression] text, or [Narrator] text for narration. One line per speaker turn.",
+      "label": "Message text",
+      "title": "Edit message"
+    },
+    "empty": {
+      "cast": "Cast: {names}",
+      "no_premise": "This world has no premise yet. Begin the story and see where it leads!"
+    },
+    "errors": {
+      "no_result": "The generation finished without a result."
+    },
+    "focus": {
+      "character": "Focus on the character",
+      "text": "Focus on the text"
+    },
+    "history": {
+      "empty": "The story hasn't started yet.",
+      "title": "Story history"
+    },
+    "menu": {
+      "branch": "Branch from here",
+      "copy_world": "Copy world",
+      "instant": "Instant text"
+    },
+    "narrator": "Narrator",
+    "panel": {
+      "background": "Scene background",
+      "characters": "Characters",
+      "edit_world": "Edit world",
+      "hide": "Hide panel",
+      "lorebooks": "Lorebooks",
+      "manage": "Manage characters / edit world",
+      "no_background": "No background",
+      "no_backgrounds": "There are no backgrounds in the library yet.",
+      "no_cast": "This world has no characters.",
+      "no_outfits": "No outfits",
+      "no_premise": "No premise.",
+      "no_stats": "This world has no stats attached.",
+      "on_stage": "On stage",
+      "open": "Scene options",
+      "open_backgrounds": "Open the backgrounds library",
+      "outfit_aria": "{name}'s outfit",
+      "persona": "Persona",
+      "scene": "Scene",
+      "sprites": "Sprites",
+      "sprites_hint": "Open the sprites library ({name})",
+      "stats": "Stats",
+      "stats_no_stage": "Put characters on stage to see their stats.",
+      "title": "Scene options",
+      "world": "World"
+    },
+    "scene": {
+      "background_changed": "New background: {name}",
+      "entered": "Enters the scene: {names}",
+      "left": "Leaves the scene: {names}",
+      "outfit_changed": "{name} changes into “{outfit}”"
+    },
+    "stage": {
+      "aria": "Scene with {names}",
+      "aria_empty": "Scene with no characters"
+    },
+    "stats": {
+      "edit_aria": "Edit {stat} for {who}",
+      "edit_hint": "Click to edit the value"
+    },
+    "thinking": "The story continues…",
+    "toasts": {
+      "branch_created": "Branch created",
+      "copy_created": "World copied",
+      "stat_line": "{who} · {stat} {delta} ({from} → {to})"
+    },
+    "variants": {
+      "of": "Variant {current} of {total}"
     }
   },
   "password_banner": {
@@ -959,6 +1257,12 @@
       "too_many_attempts": "Too many attempts. Wait {wait} s and try again.",
       "wrong_current_password": "The current password is incorrect"
     },
+    "backgrounds": {
+      "default_name": "Background",
+      "name_required": "The background needs a name",
+      "name_taken": "A background with that name already exists",
+      "not_found": "Background not found"
+    },
     "cards": {
       "file_not_png": "The file is not a valid PNG",
       "image_not_png": "The image is not a valid PNG",
@@ -1056,6 +1360,109 @@
       "hint_connection": "a connection",
       "hint_local_url": "the local server URL",
       "hint_model": "the model"
+    },
+    "sprites": {
+      "default_outfit": "Default outfit",
+      "file_not_found": "Image not found",
+      "invalid_file": "Invalid file name",
+      "invalid_label": "Invalid expression label (use lowercase letters, numbers, \"-\" or \"_\"; max 40)",
+      "last_outfit": "The last outfit cannot be deleted",
+      "outfit_name_required": "The outfit needs a name",
+      "outfit_name_taken": "An outfit with that name already exists",
+      "outfit_not_found": "Outfit not found"
+    },
+    "stats": {
+      "invalid_color": "The color must use the #rrggbb format",
+      "invalid_number": "Minimum, maximum and default values must be valid numbers",
+      "invalid_range": "The minimum must be lower than the maximum",
+      "invalid_scope": "The scope must be \"character\" or \"world\"",
+      "name_required": "The stat needs a name",
+      "not_found": "Stat not found"
+    },
+    "vnassets": {
+      "bad_format": "Unsupported image format (use PNG, JPG, WebP or GIF).",
+      "send_octet_stream": "Send the image as a binary body (application/octet-stream).",
+      "too_large": "The image exceeds the 15 MB limit."
+    },
+    "worlds": {
+      "active_not_in_roster": "Characters on stage must belong to the world's cast",
+      "background_not_found": "Background “{id}” does not exist",
+      "branch_suffix": "branch",
+      "character_not_found": "Character “{id}” does not exist",
+      "character_required": "Specify which character the stat belongs to",
+      "copy_suffix": "copy",
+      "description_too_long": "The description is too long (maximum {max} characters)",
+      "empty_message": "The message is empty",
+      "generate_error": "Error generating the scene",
+      "impersonate_error": "Error generating the message",
+      "invalid_message": "Invalid message",
+      "invalid_speaker": "The speaking character must be on stage",
+      "invalid_swipe": "Invalid variant",
+      "invalid_value": "The value must be a number",
+      "lorebook_not_found": "Lorebook “{name}” does not exist",
+      "message_gone": "The message no longer exists",
+      "message_not_found": "Message not found",
+      "message_too_long": "The message is too long (maximum {max} characters)",
+      "name_required": "The world needs a name",
+      "name_too_long": "The name is too long (maximum {max} characters)",
+      "not_found": "World not found",
+      "nothing_to_regenerate": "There is no scene to regenerate",
+      "only_variant": "It is the only variant: delete the whole message instead.",
+      "outfit_not_found": "Outfit “{id}” does not exist for character “{character}”",
+      "prompt": {
+        "analysis_system": "You are the analyst of a visual novel. You read a scene and decide whether any stat changed. Reply ONLY with valid JSON, no extra text or markdown, in this shape: {\"stats\":[{\"character\":\"<name>\",\"stat\":\"<id>\",\"change\":<number>,\"reason\":\"<short reason in {language}>\"}]}. Changes are small (at most 25% of the range); most scenes change nothing: reply {\"stats\":[]}. Omit \"character\" for shared stats.",
+        "analysis_user": "Stats:\n{stats}\n\nCurrent values:\n{values}\n\nLatest message from {user}:\n{message}\n\nNew scene:\n{scene}",
+        "background_line": "- {id}: {name}{description}",
+        "backgrounds_intro": "Current background: {current}. Change the background (`scene.background`) only when the story moves to a new place.",
+        "backgrounds_title": "# Available backgrounds",
+        "character_title": "## {name}",
+        "characters_title": "# Characters on stage",
+        "control_background": "- `scene.background`: the id or name of one of the available backgrounds.",
+        "control_example": "Example: <vn>{example}</vn>",
+        "control_intro": "After the script, on its own line and exactly ONCE, add the block <vn>…</vn> containing valid JSON with only what changed. If nothing changed, write <vn>{}</vn>. Never mention or explain this block inside the script.",
+        "control_move": "- `scene.enter` / `scene.exit`: lists with the names of cast characters who enter or leave the scene.",
+        "control_outfits": "- `scene.outfits`: object `{\"<character>\": \"<outfit>\"}` using the available outfits.",
+        "control_stats": "- `stats`: list of `{\"character\": \"<name>\", \"stat\": \"<id>\", \"change\": <number>, \"reason\": \"<short reason>\"}` (omit `character` for shared stats). Every change is small: at most 25% of the stat's range.",
+        "control_title": "# Control block",
+        "directive_continue": "[Continue the story: write the next scene.]",
+        "directive_instruction": "[Director's note for this scene (follow it): {text}]",
+        "directive_speaker": "[{name} speaks first in this scene.]",
+        "directive_start": "[Write the opening scene of the story: set the place and the characters on stage, and end by leaving room for {user} to act.]",
+        "example_reason": "short reason",
+        "examples": "Dialogue examples:\n{text}",
+        "expressions_intro": "In `[Name|expression]` use only these labels:",
+        "expressions_line": "- {name}: {labels}",
+        "expressions_title": "# Available expressions",
+        "format": "# Output format (mandatory)\n- One line per utterance: `[Name|expression] text`. Example: `[{example}|joy] “Welcome!”`.\n- Narration goes as `[Narrator] text`.\n- Only characters who are on stage may speak or act. Everyone else can only be mentioned in the narration.\n- Never write {user}'s lines, actions, thoughts or decisions.\n- Keep scenes short: 1 to 6 lines unless the story needs more. Stop when {user} has to respond.\n- Write in {language} (the user's language), but keep the `[Name|expression]` and `[Narrator]` tags as they are.\n- No headings or comments outside the script.",
+        "impersonate_directive": "[Now write {user}'s next message.]",
+        "impersonate_draft": "Begin the message with the following text and continue naturally from it:\n{text}",
+        "impersonate_role": "You are {user}, the player of an interactive visual novel. You write what {user} says or does next.",
+        "impersonate_rules": "# Rules\n- Write only {user}'s message, in first person or as a brief action; never write for the other characters or the narrator.\n- Plain text, no `[Name|expression]` tags and no control blocks.\n- Write in {language}, briefly (1–3 sentences).",
+        "lore_title": "# World information",
+        "nobody": "nobody",
+        "none": "none",
+        "offstage": "# Characters off stage\n{names}. They do not speak or act until they enter the scene.",
+        "outfit_line": "- {name}: current “{current}”; available: {list}",
+        "outfits_intro": "Change a character's outfit (`scene.outfits`) only when the story calls for it.",
+        "outfits_title": "# Outfits",
+        "persona_title": "# The player: {user}",
+        "personality": "Personality: {text}",
+        "premise_title": "# World premise",
+        "role": "You are the narrator and game master of an interactive visual novel. {user} is the player and you never control them. You write the next scene of the story as a script.",
+        "scenario": "Scenario: {text}",
+        "scene_line": "Background: {background}. On stage: {names}.",
+        "scene_title": "# Current scene",
+        "stat_character": "- {name} (id: {id}; one per character; range {min}–{max}): {description}",
+        "stat_value_character": "- {name}: {values}",
+        "stat_value_world": "- World (shared): {values}",
+        "stat_world": "- {name} (id: {id}; shared by the whole world; range {min}–{max}): {description}",
+        "stats_intro": "They measure the state of the story and must be reflected in it.",
+        "stats_rule": "Rule: low or high values MUST influence each character's behavior, tone and decisions where it makes sense (e.g. low affection: colder or refuses; high affection: warmer and closer). Do not mention the numbers in the script. Only propose changes in the control block when the events of the scene justify them: small changes and, in most scenes, none.",
+        "stats_title": "# Stats",
+        "stats_values": "Current values:"
+      },
+      "start_not_empty": "The story has already started",
+      "stat_not_found": "Stat “{id}” does not exist"
     }
   },
   "settings": {
@@ -1088,5 +1495,69 @@
   },
   "util": {
     "image_read_error": "The image could not be read"
+  },
+  "world_editor": {
+    "active": {
+      "hint": "Who appears in the scene at the start. You can change it later during the story.",
+      "label": "On stage",
+      "need_cast": "Add characters to the cast first",
+      "none_left": "The whole cast is already on stage",
+      "placeholder": "Add a character to the scene…"
+    },
+    "background": {
+      "create": "Upload backgrounds",
+      "hint": "Image for the opening scene; it can be changed during the story.",
+      "label": "Starting background",
+      "manage": "Manage backgrounds",
+      "none": "No background",
+      "none_exist": "There are no backgrounds in the library yet.",
+      "preview_alt": "Preview of background “{name}”"
+    },
+    "cast": {
+      "hint": "The characters that belong to this world. Only those on stage will speak.",
+      "label": "Cast ({count})",
+      "no_characters": "No characters yet: create some in Settings",
+      "none_left": "You've added every character",
+      "placeholder": "Add a character to the cast…"
+    },
+    "dates": "Created: {created} · Updated: {updated}",
+    "description": {
+      "hint": "Sent to the AI as the setting and scenario of the world: place, era, tone, starting situation…",
+      "label": "Description / premise",
+      "placeholder": "E.g.: A floating magic academy where every student hides a secret…"
+    },
+    "edit_title": "Edit world",
+    "lorebooks": {
+      "hint": "Their entries are activated depending on what happens in the story.",
+      "label": "Lorebooks",
+      "none_exist": "No lorebooks created yet",
+      "none_left": "You've added every lorebook",
+      "placeholder": "Add a lorebook…"
+    },
+    "missing": "{name} (missing)",
+    "name": {
+      "label": "Name",
+      "placeholder": "World name"
+    },
+    "new_title": "New world",
+    "persona": {
+      "default": "Default persona",
+      "hint": "Who you are in this story.",
+      "label": "Persona"
+    },
+    "remove_aria": "Remove {name}",
+    "scope": {
+      "character": "per character",
+      "world": "world-wide"
+    },
+    "stats": {
+      "create": "Create stats",
+      "hint": "Stats (affection, danger, money…) influence how the characters act and change as the story goes on. They are managed in the global library.",
+      "label": "Stats",
+      "manage": "Manage stats",
+      "none_exist": "No stats created yet",
+      "none_left": "You've added every stat",
+      "placeholder": "Add a stat…"
+    }
   }
 }

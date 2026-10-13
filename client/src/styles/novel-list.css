@@ -1,0 +1,39 @@
+/* Novela: lista de mundos y editor de mundo */
+
+.world-thumb { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; flex-shrink: 0; background: var(--panel-3); }
+.world-thumb.placeholder { display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: calc(22px * var(--ui-scale)); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.world-cast { display: flex; align-items: center; margin-top: 4px; }
+.world-cast .avatar { border: 2px solid var(--panel); margin-left: -6px; }
+.world-cast .avatar:first-child { margin-left: 0; }
+.novel-page .row:hover .world-cast .avatar, .novel-page .row.active .world-cast .avatar { border-color: var(--panel-2); }
+.world-cast-more { margin-left: 6px; color: var(--muted); font-size: calc(12px * var(--ui-scale)); }
+
+.novel-empty { list-style: none; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 28px 20px; color: var(--muted); }
+.novel-empty strong { color: var(--text); font-size: calc(17px * var(--ui-scale)); }
+.novel-empty p { margin: 0; font-size: calc(14px * var(--ui-scale)); max-width: 34ch; }
+.novel-hints { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: calc(13px * var(--ui-scale)); }
+.novel-hints a { color: var(--accent); }
+
+/* editor */
+.world-editor textarea { min-height: 110px; resize: vertical; }
+.world-editor select, .world-editor input { min-height: 40px; }
+.world-editor .field-hint a, .world-editor .world-link { color: var(--accent); }
+.world-editor .world-link { background: none; padding: 0; text-align: left; text-decoration: underline; font-size: calc(12px * var(--ui-scale)); }
+.world-bg-pick { display: flex; align-items: center; gap: 12px; }
+.world-bg-pick select { flex: 1; min-width: 0; }
+.world-bg-preview { width: 96px; height: 54px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); background: var(--panel-2); flex-shrink: 0; }
+.world-dates { color: var(--muted); font-size: calc(12px * var(--ui-scale)); margin: 2px 0 0; }
+.world-editor-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Dentro de un mundo la escena ocupa todo el ancho (la lista vuelve con la flecha atrás). */
+.chats-page.novel-page.in-world { grid-template-columns: minmax(0, 1fr); }
+.chats-page.novel-page.in-world .novel-list { display: none; }
+.chats-page.novel-page.has-pane .chat-pane.novel-pane { display: flex; }
+
+@media (max-width: 767px) {
+  .novel-page { grid-template-columns: minmax(0, 1fr); }
+  .novel-page.has-pane .novel-list { display: none; }
+  .chats-page.novel-page:not(.has-pane) .chat-pane.novel-pane { display: none; }
+  .world-editor select, .world-editor input, .world-editor textarea { min-height: 46px; font-size: 16px; }
+  .world-bg-preview { width: 80px; height: 45px; }
+}
