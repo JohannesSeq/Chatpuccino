@@ -109,7 +109,7 @@ IA para ayudarte a crear personajes y personas, con su **propia configuración, 
 - **Prompt de sistema** y **muestreo** (temperatura, Top P/K/A, Min P, penalizaciones y máximo de tokens, con los mismos rangos que los presets). También se edita la instrucción de lectura de imagen. Cada uno tiene su botón para restablecer los valores por defecto.
 - Todo se guarda en **`data/assistant.jsonl`** (una línea JSON por sección: `connection`, `prompts` y `sampling`). Como `data/` y `*.jsonl` están en `.gitignore`, la API key no se sube al repositorio.
 
-**Botón ✨ en cada bloque de texto** del creador de personajes (descripción, personalidad, escenario, primer mensaje, ejemplos de diálogo, cada saludo alternativo y los campos de *Avanzado*) y en la descripción de las personas. Abre una ventana donde eliges:
+**Botón ✨ en cada bloque de texto** del creador de personajes (descripción, personalidad, escenario, primer mensaje, ejemplos de diálogo, cada saludo alternativo y los campos de *Avanzado*) y en la descripción de las personas. También está en la **premisa de los mundos** (Modo Novela), en la **descripción de las estadísticas** y en los **lorebooks**: descripción del libro y, en cada entrada, título, palabras clave (la IA las propone separadas por comas y se aplican como lista) y contenido. Abre una ventana donde eliges:
 
 - **Generar** (desde cero), **Mejorar**, **Expandir** o **Reescribir** (los tres últimos necesitan texto en el campo; con el campo vacío solo está *Generar*).
 - **Indicaciones** opcionales («más misteriosa», «tono oscuro»…).

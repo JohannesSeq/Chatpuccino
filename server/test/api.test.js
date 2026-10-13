@@ -698,6 +698,28 @@ test('asistente de personajes: configuración en JSONL, generación por campo y 
   assert.equal(anon.status, 401);
 });
 
+test('asistente: campos de mundos, lorebooks y estadísticas con su contexto', async () => {
+  await call('PUT', '/assistant', { connection: { type: 'openrouter', apiKey: 'sk-or-fields-1234567890', model: 'asst/model' } });
+  const ask = async (body) => {
+    const res = await sse('/assistant/generate', body);
+    assert.equal(res.events.at(-1).done, true);
+    return requests.at(-1).messages[1].content;
+  };
+
+  const world = await ask({ field: 'world_description', mode: 'generate', context: { name: 'La Torre', cast: 'Luna: maga', stats: 'Afecto', lorebooks: 'Torre Norte' } });
+  for (const s of ['Luna: maga', 'Afecto', 'Torre Norte', 'La Torre']) assert.ok(world.includes(s), `contexto del mundo: ${s}`);
+
+  const keys = await ask({ field: 'lorebook_entry_keys', mode: 'generate', context: { name: 'Mundo', entry_title: 'Espada Aurora', entry_content: 'Una espada de luz.', entry_keys: 'IGNORADA' } });
+  assert.ok(keys.includes('Espada Aurora') && keys.includes('Una espada de luz.'), 'título y contenido de la entrada como contexto');
+  assert.ok(keys.includes('IGNORADA'), 'las palabras clave actuales también se envían como contexto cuando no son el campo editado');
+
+  const stat = await ask({ field: 'stat_description', mode: 'improve', text: 'Mide el cariño', context: { name: 'Afecto', scope: 'Por personaje', range: '0 a 100' } });
+  for (const s of ['Mide el cariño', 'Por personaje', '0 a 100']) assert.ok(stat.includes(s), `estadística: ${s}`);
+
+  for (const field of ['lorebook_description', 'lorebook_entry', 'lorebook_entry_title']) await ask({ field, mode: 'generate', context: { name: 'Mundo' } });
+  await call('PUT', '/assistant', { connection: { apiKey: '__clear__' } });
+});
+
 test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo desde la imagen)', async () => {
   await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
   const plain = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: placeholderPng('x', 8, 8) });

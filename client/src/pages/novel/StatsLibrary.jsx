@@ -3,6 +3,7 @@ import { api } from '../../api.js';
 import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { Icon } from '../../components/Icon.jsx';
+import { AiButton } from '../../components/AiAssist.jsx';
 import { Field, Modal, SearchBox } from '../../components/ui.jsx';
 import { useT } from '../../i18n.jsx';
 
@@ -158,7 +159,23 @@ function StatEditor({ stat, onClose }) {
       <Field label={t('library.stats.editor.name')}>
         <input value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t('library.stats.editor.name_placeholder')} maxLength={60} autoFocus />
       </Field>
-      <Field label={t('library.stats.editor.description')} hint={t('library.stats.editor.description_hint')}>
+      <Field
+        label={t('library.stats.editor.description')}
+        hint={t('library.stats.editor.description_hint')}
+        action={
+          <AiButton
+            field="stat_description"
+            label={t('library.ai.stat_description')}
+            value={form.description}
+            onApply={(text) => set({ description: text })}
+            context={{
+              name: form.name,
+              scope: t(form.scope === 'world' ? 'library.ai.scope_world' : 'library.ai.scope_character'),
+              range: Number.isFinite(min) && Number.isFinite(max) ? t('library.ai.range_text', { min, max }) : '',
+            }}
+          />
+        }
+      >
         <textarea rows={4} value={form.description} onChange={(e) => set({ description: e.target.value })} placeholder={t('library.stats.editor.description_placeholder')} />
       </Field>
       <Field label={t('library.stats.editor.scope')} hint={t(`library.stats.editor.scope_${form.scope}_help`)}>

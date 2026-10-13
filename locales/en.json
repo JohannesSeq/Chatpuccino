@@ -577,6 +577,12 @@
     "title": "Language"
   },
   "library": {
+    "ai": {
+      "range_text": "{min} to {max}",
+      "scope_character": "Per character",
+      "scope_world": "World-wide",
+      "stat_description": "Stat description"
+    },
     "back": "Back to Novel",
     "back_aria": "Back to the worlds list",
     "backgrounds": {
@@ -740,6 +746,12 @@
       "saved": "Saved",
       "scan_depth": "Scan depth (messages)",
       "title": "Activation"
+    },
+    "ai": {
+      "book_description": "Lorebook description",
+      "entry_content": "Entry content",
+      "entry_keys": "Keywords",
+      "entry_title": "Entry title"
     },
     "copy_name": "{name} (copy)",
     "delete_dialog": {
@@ -1164,13 +1176,22 @@
     },
     "assistant": {
       "context": {
+        "cast": "World cast",
         "description": "Description",
+        "entry_content": "Entry content",
+        "entry_keys": "Entry keywords",
+        "entry_title": "Entry title",
         "first_mes": "First message",
         "image_reading": "Appearance (image reading)",
+        "lorebook_description": "Lorebook description",
+        "lorebooks": "World lorebooks",
         "mes_example": "Dialogue examples",
         "name": "Name",
         "personality": "Personality",
+        "range": "Range",
         "scenario": "Scenario",
+        "scope": "Scope",
+        "stats": "World stats",
         "tags": "Tags"
       },
       "fields": {
@@ -1194,6 +1215,22 @@
           "guide": "Physical description of the character based on their image: apparent age, build, face, hair, eyes, skin, clothing and distinguishing features.",
           "label": "Image reading"
         },
+        "lorebook_description": {
+          "guide": "A short description of a lorebook: what world or topic it covers, what kind of entries it contains and which stories it is useful for. It is a note for its author (it is not sent to the model).",
+          "label": "Lorebook description"
+        },
+        "lorebook_entry": {
+          "guide": "The content of a lorebook entry: setting information (a place, object, faction, character, world rule…) written as concise, objective facts the model can use when its keywords come up. No dialogue and no instructions to the model.",
+          "label": "Entry content"
+        },
+        "lorebook_entry_keys": {
+          "guide": "Keywords that trigger this entry: 3 to 8 short terms or names someone might use to refer to the topic in conversation (synonyms, nicknames, variants). Return them separated by commas, on a single line.",
+          "label": "Keywords"
+        },
+        "lorebook_entry_title": {
+          "guide": "A short title (2 to 6 words) that identifies this lorebook entry for its author.",
+          "label": "Entry title"
+        },
         "mes_example": {
           "guide": "Dialogue examples that show the character's voice. Each example starts with a <START> line and alternates \"{{user}}: …\" and \"{{char}}: …\" lines.",
           "label": "Dialogue examples"
@@ -1214,9 +1251,17 @@
           "guide": "Scenario: the situation, place and context in which the interaction between {{char}} and {{user}} begins.",
           "label": "Scenario"
         },
+        "stat_description": {
+          "guide": "Description of a visual novel stat: what exactly it measures, what low and high values mean and how it should influence the behavior, tone and decisions of the characters (or the world). It is sent to the AI as a rule, so be clear and concrete.",
+          "label": "Stat description"
+        },
         "system_prompt": {
           "guide": "This card's own system prompt: instructions on how the model should behave and write when playing {{char}}.",
           "label": "System prompt"
+        },
+        "world_description": {
+          "guide": "The premise of a visual novel world: place, era, tone, starting situation, conflicts and setting rules. It is sent to the AI as the story's scenario; do not write dialogue or decide what the user does.",
+          "label": "World premise"
         }
       },
       "generate_error": "Error generating the text",
@@ -1503,6 +1548,9 @@
       "need_cast": "Add characters to the cast first",
       "none_left": "The whole cast is already on stage",
       "placeholder": "Add a character to the scene…"
+    },
+    "ai": {
+      "description": "World premise"
     },
     "background": {
       "create": "Upload backgrounds",

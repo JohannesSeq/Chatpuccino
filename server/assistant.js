@@ -186,9 +186,18 @@ export const FIELDS = [
   'post_history_instructions',
   'persona_description',
   'image_reading',
+  'world_description',
+  'lorebook_description',
+  'lorebook_entry',
+  'lorebook_entry_title',
+  'lorebook_entry_keys',
+  'stat_description',
 ];
 
-const CONTEXT_KEYS = ['name', 'tags', 'description', 'personality', 'scenario', 'first_mes', 'mes_example', 'image_reading'];
+const CONTEXT_KEYS = [
+  'name', 'tags', 'description', 'personality', 'scenario', 'first_mes', 'mes_example', 'image_reading',
+  'cast', 'stats', 'lorebooks', 'lorebook_description', 'entry_title', 'entry_keys', 'entry_content', 'scope', 'range',
+];
 
 const clip = (s, n) => {
   const text = String(s ?? '').trim();

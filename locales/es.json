@@ -577,6 +577,12 @@
     "title": "Idioma"
   },
   "library": {
+    "ai": {
+      "range_text": "{min} a {max}",
+      "scope_character": "Por personaje",
+      "scope_world": "Del mundo",
+      "stat_description": "Descripción de la estadística"
+    },
     "back": "Volver a Novela",
     "back_aria": "Volver a la lista de mundos",
     "backgrounds": {
@@ -740,6 +746,12 @@
       "saved": "Guardado",
       "scan_depth": "Profundidad de escaneo (mensajes)",
       "title": "Activación"
+    },
+    "ai": {
+      "book_description": "Descripción del lorebook",
+      "entry_content": "Contenido de la entrada",
+      "entry_keys": "Palabras clave",
+      "entry_title": "Título de la entrada"
     },
     "copy_name": "{name} (copia)",
     "delete_dialog": {
@@ -1164,13 +1176,22 @@
     },
     "assistant": {
       "context": {
+        "cast": "Reparto del mundo",
         "description": "Descripción",
+        "entry_content": "Contenido de la entrada",
+        "entry_keys": "Palabras clave de la entrada",
+        "entry_title": "Título de la entrada",
         "first_mes": "Primer mensaje",
         "image_reading": "Apariencia (lectura de imagen)",
+        "lorebook_description": "Descripción del lorebook",
+        "lorebooks": "Lorebooks del mundo",
         "mes_example": "Ejemplos de diálogo",
         "name": "Nombre",
         "personality": "Personalidad",
+        "range": "Rango",
         "scenario": "Escenario",
+        "scope": "Alcance",
+        "stats": "Estadísticas del mundo",
         "tags": "Etiquetas"
       },
       "fields": {
@@ -1194,6 +1215,22 @@
           "guide": "Descripción física del personaje a partir de su imagen: edad aparente, complexión, rostro, cabello, ojos, piel, vestimenta y rasgos distintivos.",
           "label": "Lectura de imagen"
         },
+        "lorebook_description": {
+          "guide": "Descripción breve de un lorebook: de qué trata el mundo o tema que recoge, qué tipo de entradas contiene y para qué historias sirve. Es una nota para su autor (no se envía al modelo).",
+          "label": "Descripción del lorebook"
+        },
+        "lorebook_entry": {
+          "guide": "Contenido de una entrada de lorebook: información de ambientación (lugar, objeto, facción, personaje, regla del mundo…) redactada como dato objetivo y conciso que el modelo pueda usar cuando salgan sus palabras clave. Sin diálogos ni instrucciones al modelo.",
+          "label": "Contenido de la entrada"
+        },
+        "lorebook_entry_keys": {
+          "guide": "Palabras clave que activan esta entrada: de 3 a 8 términos o nombres cortos con los que alguien podría referirse al tema en la conversación (sinónimos, apodos, variantes). Devuélvelas separadas por comas, una sola línea.",
+          "label": "Palabras clave"
+        },
+        "lorebook_entry_title": {
+          "guide": "Título breve (2 a 6 palabras) que identifique esta entrada de lorebook para su autor.",
+          "label": "Título de la entrada"
+        },
         "mes_example": {
           "guide": "Ejemplos de diálogo que muestran la voz del personaje. Cada ejemplo empieza con una línea <START> y alterna líneas «{{user}}: …» y «{{char}}: …».",
           "label": "Ejemplos de diálogo"
@@ -1214,9 +1251,17 @@
           "guide": "Escenario: la situación, el lugar y el contexto en el que empieza la interacción entre {{char}} y {{user}}.",
           "label": "Escenario"
         },
+        "stat_description": {
+          "guide": "Descripción de una estadística de una novela visual: qué mide exactamente, qué significan sus valores bajos y altos y cómo debe influir en el comportamiento, el tono y las decisiones de los personajes (o del mundo). Se envía a la IA como regla, así que sé claro y concreto.",
+          "label": "Descripción de la estadística"
+        },
         "system_prompt": {
           "guide": "Prompt de sistema propio de esta tarjeta: instrucciones sobre cómo debe comportarse y escribir el modelo al interpretar a {{char}}.",
           "label": "Prompt de sistema"
+        },
+        "world_description": {
+          "guide": "Premisa del mundo de una novela visual: lugar, época, tono, situación inicial, conflictos y reglas de ambientación. Se envía a la IA como escenario de la historia; no escribas diálogos ni decidas lo que hace el usuario.",
+          "label": "Premisa del mundo"
         }
       },
       "generate_error": "Error al generar el texto",
@@ -1503,6 +1548,9 @@
       "need_cast": "Añade antes personajes al reparto",
       "none_left": "Todo el reparto ya está en escena",
       "placeholder": "Añadir personaje a la escena…"
+    },
+    "ai": {
+      "description": "Premisa del mundo"
     },
     "background": {
       "create": "Subir fondos",

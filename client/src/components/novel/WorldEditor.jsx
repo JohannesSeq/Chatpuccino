@@ -6,6 +6,7 @@ import { useDialog } from '../../dialogs.jsx';
 import { currentLocale, useT } from '../../i18n.jsx';
 import { Icon } from '../Icon.jsx';
 import MultiPicker from '../MultiPicker.jsx';
+import { AiButton } from '../AiAssist.jsx';
 import { Field, Modal } from '../ui.jsx';
 import '../../styles/novel-list.css';
 
@@ -70,6 +71,21 @@ export default function WorldEditor({ world, onClose }) {
   const isEdit = Boolean(world?.id);
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const bg = form && backgrounds.find((b) => b.id === form.background);
+  // Contexto para el asistente de IA: reparto (con un resumen de cada personaje), estadísticas y lorebooks del mundo.
+  const aiContext = form && {
+    name: form.name,
+    cast: form.characters
+      .map((id) => characters.find((c) => c.id === id))
+      .filter(Boolean)
+      .map((c) => `${c.name}${c.description ? `: ${String(c.description).slice(0, 300)}` : ''}`)
+      .join('\n'),
+    stats: form.statIds
+      .map((id) => stats.find((s) => s.id === id))
+      .filter(Boolean)
+      .map((s) => `${s.name}${s.description ? `: ${s.description}` : ''}`)
+      .join('\n'),
+    lorebooks: form.lorebooks.join(', '),
+  };
 
   async function save() {
     setBusy(true);
@@ -150,7 +166,11 @@ export default function WorldEditor({ world, onClose }) {
           <input value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t('world_editor.name.placeholder')} autoFocus={!isEdit} />
         </Field>
 
-        <Field label={t('world_editor.description.label')} hint={t('world_editor.description.hint')}>
+        <Field
+          label={t('world_editor.description.label')}
+          hint={t('world_editor.description.hint')}
+          action={<AiButton field="world_description" label={t('world_editor.ai.description')} value={form.description} onApply={(text) => set({ description: text })} context={aiContext} />}
+        >
           <textarea value={form.description} onChange={(e) => set({ description: e.target.value })} placeholder={t('world_editor.description.placeholder')} rows={5} />
         </Field>
 

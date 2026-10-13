@@ -4,6 +4,7 @@ import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { downloadBlob } from '../../util.js';
 import { Icon } from '../../components/Icon.jsx';
+import { AiButton } from '../../components/AiAssist.jsx';
 import { Field, Menu, Modal, SearchBox } from '../../components/ui.jsx';
 import { useT } from '../../i18n.jsx';
 
@@ -196,7 +197,11 @@ function NewLorebookDialog({ taken, onClose, onCreated }) {
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('lorebooks.new_dialog.name_placeholder')} autoFocus autoComplete="off" />
           {error && <span className="field-error">{error}</span>}
         </Field>
-        <Field label={t('lorebooks.new_dialog.description')} hint={t('lorebooks.new_dialog.description_hint')}>
+        <Field
+          label={t('lorebooks.new_dialog.description')}
+          hint={t('lorebooks.new_dialog.description_hint')}
+          action={<AiButton field="lorebook_description" label={t('lorebooks.ai.book_description')} value={description} onApply={setDescription} context={{ name }} />}
+        >
           <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
         <button type="submit" hidden />
@@ -266,6 +271,7 @@ function BookEditor({ name, onClose }) {
   const [open, setOpen] = useState(null);
   const [filter, setFilter] = useState('');
   const [busy, setBusy] = useState(false);
+  const [keysVersion, setKeysVersion] = useState(0);
 
   React.useEffect(() => {
     api.lorebook(name).then((b) => {
@@ -283,6 +289,14 @@ function BookEditor({ name, onClose }) {
   const dirty = JSON.stringify(book) !== saved || title.trim() !== name;
   const q = filter.trim().toLowerCase();
   const visible = q ? entries.filter((e) => [e.comment, e.content, ...e.key, ...e.keysecondary].some((s) => String(s).toLowerCase().includes(q))) : entries;
+  // Contexto para el asistente de IA: el lorebook y el resto de la entrada (sin el campo que se está editando).
+  const entryContext = (e, omit) => ({
+    name: title,
+    lorebook_description: book.description || '',
+    entry_title: omit === 'title' ? '' : e.comment,
+    entry_keys: omit === 'keys' ? '' : e.key.join(', '),
+    entry_content: omit === 'content' ? '' : e.content,
+  });
 
   async function goBack() {
     if (dirty && !(await confirm({ title: t('lorebooks.editor.unsaved'), message: t('lorebooks.editor.unsaved_message'), confirmLabel: t('lorebooks.editor.leave'), danger: true }))) return;
@@ -357,7 +371,11 @@ function BookEditor({ name, onClose }) {
         <Field label={t('lorebooks.editor.name')}>
           <input value={title} onChange={(e) => setTitle(e.target.value)} />
         </Field>
-        <Field label={t('lorebooks.editor.description')} hint={t('lorebooks.editor.description_hint')}>
+        <Field
+          label={t('lorebooks.editor.description')}
+          hint={t('lorebooks.editor.description_hint')}
+          action={<AiButton field="lorebook_description" label={t('lorebooks.ai.book_description')} value={book.description || ''} onApply={(text) => setBook((b) => ({ ...b, description: text }))} context={{ name: title }} />}
+        >
           <textarea rows={2} value={book.description || ''} onChange={(e) => setBook((b) => ({ ...b, description: e.target.value }))} />
         </Field>
       </section>
@@ -383,16 +401,36 @@ function BookEditor({ name, onClose }) {
           </div>
           {open === e.uid && (
             <div className="entry-body">
-              <Field label={t('lorebooks.editor.comment')}>
+              <Field
+                label={t('lorebooks.editor.comment')}
+                action={<AiButton field="lorebook_entry_title" label={t('lorebooks.ai.entry_title')} value={e.comment} onApply={(text) => patch(e.uid, { comment: text.replace(/\s+/g, ' ').trim() })} context={entryContext(e, 'title')} />}
+              >
                 <input value={e.comment} onChange={(ev) => patch(e.uid, { comment: ev.target.value })} />
               </Field>
-              <Field label={t('lorebooks.editor.keys')}>
-                <KeysInput value={e.key} onChange={(key) => patch(e.uid, { key })} />
+              <Field
+                label={t('lorebooks.editor.keys')}
+                action={
+                  <AiButton
+                    field="lorebook_entry_keys"
+                    label={t('lorebooks.ai.entry_keys')}
+                    value={e.key.join(', ')}
+                    onApply={(text) => {
+                      patch(e.uid, { key: text.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) });
+                      setKeysVersion((n) => n + 1);
+                    }}
+                    context={entryContext(e, 'keys')}
+                  />
+                }
+              >
+                <KeysInput key={`k-${e.uid}-${keysVersion}`} value={e.key} onChange={(key) => patch(e.uid, { key })} />
               </Field>
               <Field label={t('lorebooks.editor.keys_secondary')}>
                 <KeysInput value={e.keysecondary} onChange={(keysecondary) => patch(e.uid, { keysecondary })} />
               </Field>
-              <Field label={t('lorebooks.editor.content')}>
+              <Field
+                label={t('lorebooks.editor.content')}
+                action={<AiButton field="lorebook_entry" label={t('lorebooks.ai.entry_content')} value={e.content} onApply={(text) => patch(e.uid, { content: text })} context={entryContext(e, 'content')} />}
+              >
                 <textarea rows={6} value={e.content} onChange={(ev) => patch(e.uid, { content: ev.target.value })} />
               </Field>
               <label className="check">
