@@ -1,6 +1,7 @@
 import { activateEntries, estimateTokens, getBookOrNull, normalizeBook } from './lore.js';
 import { getOrder } from './presets.js';
 import { HttpError } from './util.js';
+import { fillNames } from '../shared/names.js';
 import { t } from './i18n.js';
 
 export function applyMacros(text, ctx) {
@@ -141,9 +142,10 @@ export async function buildPrompt({ settings, preset, speaker, members, persona,
   if (dp?.prompt?.trim()) injections.push({ depth: dp.depth ?? 4, order: 100, role: dp.role || 'system', content: sub(dp.prompt) });
 
   const toMessage = (m) => {
-    if (m.is_user) return { role: 'user', content: isGroup ? `${m.name}: ${m.mes}` : String(m.mes) };
-    if (!isGroup || m.name === speaker.name) return { role: 'assistant', content: String(m.mes) };
-    return { role: 'user', content: `${m.name}: ${m.mes}` };
+    const mes = fillNames(String(m.mes), { user: userName, char: m.is_user ? speaker.name : m.name });
+    if (m.is_user) return { role: 'user', content: isGroup ? `${m.name}: ${mes}` : mes };
+    if (!isGroup || m.name === speaker.name) return { role: 'assistant', content: mes };
+    return { role: 'user', content: `${m.name}: ${mes}` };
   };
   let msgs = visible.map(toMessage);
 

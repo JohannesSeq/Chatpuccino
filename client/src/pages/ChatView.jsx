@@ -476,7 +476,7 @@ export default function ChatView() {
                       </div>
                     </div>
                   ) : (
-                    <div key={`${i}-${m.swipe_id ?? 0}`} className={`text ${swipeAnim?.index === i && swipeAnim.id === (m.swipe_id ?? 0) ? `swipe-${swipeAnim.dir}` : ''}`} dangerouslySetInnerHTML={{ __html: formatRP(m.mes) }} />
+                    <div key={`${i}-${m.swipe_id ?? 0}`} className={`text ${swipeAnim?.index === i && swipeAnim.id === (m.swipe_id ?? 0) ? `swipe-${swipeAnim.dir}` : ''}`} dangerouslySetInnerHTML={{ __html: formatRP(m.mes, { user: chat.persona.name, char: speaker?.name || (m.is_user ? members[0]?.name : m.name) }) }} />
                   )}
                   <time>{formatTime(m.send_date)}</time>
                 </Swipeable>
@@ -537,7 +537,7 @@ export default function ChatView() {
                     )}
                   </div>
                 )}
-                {streaming.text ? <div className="text" dangerouslySetInnerHTML={{ __html: formatRP(streaming.text) }} /> : <div className="typing"><i /><i /><i /></div>}
+                {streaming.text ? <div className="text" dangerouslySetInnerHTML={{ __html: formatRP(streaming.text, { user: chat.persona.name, char: streaming.name }) }} /> : <div className="typing"><i /><i /><i /></div>}
               </div>
             </div>
           </div>

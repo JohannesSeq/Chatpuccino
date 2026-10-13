@@ -1,5 +1,6 @@
 import { createElement, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { findCharacter, parseScript, streamVisible } from '../../../../shared/vn.js';
+import { fillNames } from '../../../../shared/names.js';
 import { formatRP } from '../../util.js';
 
 /* ---------- preferencias y media queries ---------- */
@@ -99,27 +100,30 @@ export function appendDelta(prev, d) {
   return prev + d;
 }
 
-/** Líneas de un guion: [{ speaker: charId|null, name, expression, text }]. */
-export function scriptLines(text, cast, streaming = false) {
+/** Líneas de un guion: [{ speaker: charId|null, name, expression, text }]. `names` ({ user, char }) rellena {{user}} y {{char}}. */
+export function scriptLines(text, cast, streaming = false, names = null) {
   const raw = streaming ? trimPartialTag(streamVisible(text)) : String(text ?? '');
   return parseScript(raw).map((l) => {
     const c = l.speaker ? findCharacter(cast, l.speaker) : null;
-    return { speaker: c?.id || null, name: c?.name || l.speaker || '', expression: l.expression || '', text: l.text, unknown: Boolean(l.speaker && !c) };
+    const name = c?.name || l.speaker || '';
+    const body = names ? fillNames(l.text, { user: names.user, char: name || names.char }) : l.text;
+    return { speaker: c?.id || null, name, expression: l.expression || '', text: body, unknown: Boolean(l.speaker && !c) };
   });
 }
 
 /** Una "beat" por mensaje: { index, kind, swipeId, lines }. */
-export function buildBeat(message, index, cast) {
+export function buildBeat(message, index, cast, names = null) {
   const swipeId = message.swipe_id ?? 0;
   if (message.is_user) {
-    return { index, kind: 'user', swipeId, lines: [{ speaker: null, name: message.name || '', expression: '', text: String(message.mes ?? '').trim(), isUser: true }] };
+    const text = String(message.mes ?? '').trim();
+    return { index, kind: 'user', swipeId, lines: [{ speaker: null, name: message.name || '', expression: '', text: names ? fillNames(text, names) : text, isUser: true }] };
   }
   const kind = message.is_system ? 'system' : 'assistant';
-  const lines = message.is_system ? [] : scriptLines(message.mes, cast);
+  const lines = message.is_system ? [] : scriptLines(message.mes, cast, false, names);
   return { index, kind, swipeId, lines: lines.length ? lines : [{ speaker: null, name: '', expression: '', text: String(message.mes ?? '').trim() }] };
 }
 
-export const buildBeats = (messages, cast) => messages.map((m, i) => buildBeat(m, i, cast));
+export const buildBeats = (messages, cast, names = null) => messages.map((m, i) => buildBeat(m, i, cast, names));
 
 /** Expresión que debe mostrar `charId` mientras se lee la línea `lineIndex` (la suya, o la última que usó antes en el mensaje). */
 export function expressionFor(lines, lineIndex, charId) {

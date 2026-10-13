@@ -122,13 +122,15 @@ function NovelViewInner({ worldId, onExit }) {
 
   /* ---------- lectura: beats y cursor ---------- */
 
-  const baseBeats = useMemo(() => buildBeats(messages, cast), [messages, cast]);
+  const names = useMemo(() => ({ user: personaName, char: cast[0]?.name || '' }), [personaName, cast]);
+
+  const baseBeats = useMemo(() => buildBeats(messages, cast, names), [messages, cast, names]);
   const beats = useMemo(() => {
     if (!streaming) return baseBeats;
-    const beat = { index: streaming.replaceIndex ?? messages.length, kind: 'assistant', swipeId: 0, streaming: true, lines: scriptLines(streaming.text, cast, true) };
+    const beat = { index: streaming.replaceIndex ?? messages.length, kind: 'assistant', swipeId: 0, streaming: true, lines: scriptLines(streaming.text, cast, true, names) };
     if (streaming.replaceIndex != null) return baseBeats.map((b, i) => (i === streaming.replaceIndex ? beat : b));
     return [...baseBeats, beat];
-  }, [baseBeats, streaming, messages.length, cast]);
+  }, [baseBeats, streaming, messages.length, cast, names]);
 
   const pos = useMemo(() => {
     if (!beats.length) return null;

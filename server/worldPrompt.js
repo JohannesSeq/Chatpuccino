@@ -3,6 +3,7 @@ import { DEFAULT_EXPRESSIONS } from '../shared/vn.js';
 import { currentLang, languages, t } from './i18n.js';
 import { activateEntries, estimateTokens } from './lore.js';
 import { applyMacros, collectLoreEntries, squash } from './prompt.js';
+import { fillNames } from '../shared/names.js';
 
 const cost = (content) => estimateTokens(content) + 4;
 const DESC_MAX = 200;
@@ -194,7 +195,7 @@ export async function buildSceneMessages({
   }
   const system = { role: 'system', content: sections.filter(Boolean).join('\n\n') };
 
-  let msgs = visible.map((m) => ({ role: m.is_user ? 'user' : 'assistant', content: String(m.mes) }));
+  let msgs = visible.map((m) => ({ role: m.is_user ? 'user' : 'assistant', content: fillNames(String(m.mes), macroCtx) }));
 
   const directive = [];
   if (impersonate) {

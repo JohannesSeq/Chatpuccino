@@ -1,12 +1,14 @@
 import { currentLocale, t } from './i18n.jsx';
+import { fillNames } from '../../shared/names.js';
 
 export function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // Formato típico de roleplay: *acciones* en cursiva, **negritas**, "diálogos" resaltados.
-export function formatRP(text) {
-  return escapeHtml(text)
+// `names` ({ user, char }) sustituye {{user}} y {{char}} por los nombres actuales.
+export function formatRP(text, names) {
+  return escapeHtml(names ? fillNames(String(text ?? ''), names) : text)
     .replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*\n]+?)\*/g, '<em>$1</em>')
     .replace(/&quot;(?:(?!&quot;)[^\n])+&quot;/g, '<span class="q">$&</span>')
