@@ -16,6 +16,7 @@ export const DIRS = {
 };
 
 export const SETTINGS_FILE = path.join(DATA, 'settings.json');
+export const ASSISTANT_FILE = path.join(DATA, 'assistant.jsonl');
 export const OPENROUTER_BASE = process.env.OPENROUTER_BASE || 'https://openrouter.ai/api/v1';
 
 export function ensureDirs() {

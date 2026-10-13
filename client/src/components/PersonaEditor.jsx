@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { useData } from '../data.jsx';
 import { useDialog } from '../dialogs.jsx';
 import { fileToPngDataUrl } from '../util.js';
+import { AiButton } from './AiAssist.jsx';
 import { Field, Modal, PersonaAvatar } from './ui.jsx';
 
 /** Crea (persona = null) o edita una persona. onClose(true) si hubo cambios. */
@@ -79,7 +80,11 @@ export default function PersonaEditor({ persona, onClose }) {
           <input value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
       </div>
-      <Field label="Descripción" hint="Cómo eres en la historia (apariencia, personalidad, trasfondo).">
+      <Field
+        label="Descripción"
+        hint="Cómo eres en la historia (apariencia, personalidad, trasfondo)."
+        action={<AiButton field="persona_description" label="Descripción de la persona" value={description} onApply={setDescription} context={{ name }} />}
+      >
         <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} />
       </Field>
       <label className="check">

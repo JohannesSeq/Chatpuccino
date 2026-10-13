@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { api } from '../../api.js';
+import { api, assistantDescribeImage } from '../../api.js';
 import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { useFileDrop } from '../../useFileDrop.js';
-import { fileToPngDataUrl, placeholderPngDataUrl } from '../../util.js';
+import { fileToPngDataUrl, imageToJpegDataUrl, placeholderPngDataUrl } from '../../util.js';
+import { AiButton } from '../../components/AiAssist.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import TagPicker from '../../components/TagPicker.jsx';
 import { CharAvatar, DropOverlay, Field, SearchBox } from '../../components/ui.jsx';
@@ -136,7 +137,10 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
   const fileRef = useRef(null);
+  const sourceFile = useRef(null);
+  const readAbort = useRef(null);
   const knownTags = useMemo(() => characters.flatMap((c) => c.tags || []), [characters]);
 
   async function applyFile(file) {
@@ -146,6 +150,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     }
     try {
       const png = await fileToPngDataUrl(file, 512, 768);
+      sourceFile.current = file;
       setImage(png);
       setPreview(png);
     } catch (err) {
@@ -160,6 +165,8 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     if (initialFile) applyFile(initialFile);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  React.useEffect(() => () => readAbort.current?.abort(), []);
 
   React.useEffect(() => {
     if (!id) return;
@@ -177,6 +184,40 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   const set = (k, v) => setData((d) => ({ ...d, [k]: v }));
   const setExt = (k, v) => setData((d) => ({ ...d, extensions: { ...d.extensions, [k]: v } }));
   const greetings = data.alternate_greetings;
+  const imageReading = data.extensions?.image_reading || '';
+  // Resto de la ficha: el asistente lo usa como contexto al generar o mejorar un campo.
+  const aiContext = { name: data.name, tags: data.tags, description: data.description, personality: data.personality, scenario: data.scenario, first_mes: data.first_mes, mes_example: data.mes_example, image_reading: imageReading };
+  const ai = (field, label, value, onApply) => <AiButton field={field} label={label} value={value} onApply={onApply} context={aiContext} />;
+
+  async function readImage() {
+    if (imageReading.trim() && !(await confirm({ title: 'Reemplazar lectura de imagen', message: 'Ya hay una lectura de imagen. Se reemplazará por una nueva.', confirmLabel: 'Leer de nuevo' }))) return;
+    const ac = new AbortController();
+    readAbort.current = ac;
+    setReading(true);
+    try {
+      const source = sourceFile.current || (await (await fetch(preview)).blob());
+      const dataUrl = await imageToJpegDataUrl(source, 1024);
+      setExt('image_reading', '');
+      let text = '';
+      const out = await assistantDescribeImage({ image: dataUrl, name: data.name }, ac.signal, (d) => {
+        text += d;
+        setExt('image_reading', text);
+      });
+      if (out?.text) setExt('image_reading', out.text);
+    } catch (e) {
+      if (e.name !== 'AbortError') toast(e.message, 'error');
+    } finally {
+      readAbort.current = null;
+      setReading(false);
+    }
+  }
+
+  function addReadingToDescription() {
+    const text = imageReading.trim();
+    if (!text || data.description.includes(text)) return;
+    set('description', data.description.trim() ? `${data.description.trimEnd()}\n\n${text}` : text);
+    toast('Añadido a la descripción');
+  }
 
   async function pickImage(e) {
     const file = e.target.files[0];
@@ -187,7 +228,9 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   async function save() {
     if (!data.name.trim()) return toast('El nombre es obligatorio', 'error');
     setBusy(true);
-    const payload = { ...data, name: data.name.trim() };
+    const extensions = { ...data.extensions };
+    if (!String(extensions.image_reading || '').trim()) delete extensions.image_reading;
+    const payload = { ...data, name: data.name.trim(), extensions };
     try {
       if (id) await api.updateCharacter(id, payload, image);
       else await api.createCharacter(payload, image || placeholderPngDataUrl(payload.name));
@@ -272,22 +315,45 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
             )}
           </div>
         </div>
+        <div className="image-reading">
+          <Field
+            label="Lectura de imagen"
+            hint="Descripción física del personaje a partir de su imagen. Requiere un modelo con visión (Ajustes → Asistente de personajes)."
+            action={ai('image_reading', 'Lectura de imagen', imageReading, (t) => setExt('image_reading', t))}
+          >
+            <textarea rows={4} value={imageReading} readOnly={reading} onChange={(e) => setExt('image_reading', e.target.value)} placeholder="Pulsa «Leer imagen» para que la IA describa el aspecto del personaje" />
+          </Field>
+          <div className="btn-row">
+            {reading ? (
+              <button className="btn small" onClick={() => readAbort.current?.abort()}>
+                <Icon name="stop" size={16} /> Detener
+              </button>
+            ) : (
+              <button className="btn small" onClick={readImage} disabled={!preview}>
+                <Icon name="image" size={16} /> Leer imagen
+              </button>
+            )}
+            <button className="btn small" onClick={addReadingToDescription} disabled={reading || !imageReading.trim()}>
+              Añadir a la descripción
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className="card">
-        <Field label="Descripción" hint="Quién es el personaje. Usa {{char}} y {{user}}.">
+        <Field label="Descripción" hint="Quién es el personaje. Usa {{char}} y {{user}}." action={ai('description', 'Descripción', data.description, (t) => set('description', t))}>
           <textarea rows={8} value={data.description} onChange={(e) => set('description', e.target.value)} />
         </Field>
-        <Field label="Personalidad">
+        <Field label="Personalidad" action={ai('personality', 'Personalidad', data.personality, (t) => set('personality', t))}>
           <textarea rows={3} value={data.personality} onChange={(e) => set('personality', e.target.value)} />
         </Field>
-        <Field label="Escenario">
+        <Field label="Escenario" action={ai('scenario', 'Escenario', data.scenario, (t) => set('scenario', t))}>
           <textarea rows={3} value={data.scenario} onChange={(e) => set('scenario', e.target.value)} />
         </Field>
-        <Field label="Primer mensaje">
+        <Field label="Primer mensaje" action={ai('first_mes', 'Primer mensaje', data.first_mes, (t) => set('first_mes', t))}>
           <textarea rows={5} value={data.first_mes} onChange={(e) => set('first_mes', e.target.value)} />
         </Field>
-        <Field label="Ejemplos de diálogo" hint="Separa cada ejemplo con <START>.">
+        <Field label="Ejemplos de diálogo" hint="Separa cada ejemplo con <START>." action={ai('mes_example', 'Ejemplos de diálogo', data.mes_example, (t) => set('mes_example', t))}>
           <textarea rows={5} value={data.mes_example} onChange={(e) => set('mes_example', e.target.value)} />
         </Field>
       </section>
@@ -297,9 +363,12 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
         {greetings.map((g, i) => (
           <div key={i} className="inline top">
             <textarea rows={3} value={g} onChange={(e) => set('alternate_greetings', greetings.map((x, k) => (k === i ? e.target.value : x)))} />
-            <button className="icon-btn" onClick={() => set('alternate_greetings', greetings.filter((_, k) => k !== i))} aria-label="Quitar">
-              <Icon name="trash" />
-            </button>
+            <div className="greeting-actions">
+              {ai('alternate_greeting', `Saludo alternativo ${i + 1}`, g, (t) => set('alternate_greetings', greetings.map((x, k) => (k === i ? t : x))))}
+              <button className="icon-btn" onClick={() => set('alternate_greetings', greetings.filter((_, k) => k !== i))} aria-label="Quitar">
+                <Icon name="trash" />
+              </button>
+            </div>
           </div>
         ))}
         <button className="btn small" onClick={() => set('alternate_greetings', [...greetings, ''])}>
@@ -332,13 +401,13 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
 
       <details className="card">
         <summary>Avanzado</summary>
-        <Field label="Prompt de sistema (reemplaza al global)">
+        <Field label="Prompt de sistema (reemplaza al global)" action={ai('system_prompt', 'Prompt de sistema', data.system_prompt, (t) => set('system_prompt', t))}>
           <textarea rows={4} value={data.system_prompt} onChange={(e) => set('system_prompt', e.target.value)} />
         </Field>
-        <Field label="Instrucciones posteriores al historial">
+        <Field label="Instrucciones posteriores al historial" action={ai('post_history_instructions', 'Instrucciones posteriores al historial', data.post_history_instructions, (t) => set('post_history_instructions', t))}>
           <textarea rows={3} value={data.post_history_instructions} onChange={(e) => set('post_history_instructions', e.target.value)} />
         </Field>
-        <Field label="Notas del creador">
+        <Field label="Notas del creador" action={ai('creator_notes', 'Notas del creador', data.creator_notes, (t) => set('creator_notes', t))}>
           <textarea rows={3} value={data.creator_notes} onChange={(e) => set('creator_notes', e.target.value)} />
         </Field>
         <div className="grid-2">

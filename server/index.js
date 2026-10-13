@@ -9,6 +9,7 @@ import settingsRoutes from './routes/settings.js';
 import connectionRoutes from './routes/connections.js';
 import presetRoutes from './routes/presets.js';
 import appearanceRoutes from './routes/appearance.js';
+import assistantRoutes from './routes/assistant.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
@@ -29,6 +30,7 @@ export function createApp() {
   app.use('/api/connections', connectionRoutes);
   app.use('/api/presets', presetRoutes);
   app.use('/api/appearance', appearanceRoutes);
+  app.use('/api/assistant', assistantRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);

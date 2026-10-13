@@ -6,7 +6,7 @@ import { useDialog } from '../../dialogs.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal, SearchBox } from '../../components/ui.jsx';
 
-const LOCAL_SERVERS = [
+export const LOCAL_SERVERS = [
   ['LM Studio', 'http://localhost:1234/v1'],
   ['Ollama', 'http://localhost:11434/v1'],
   ['KoboldCpp', 'http://localhost:5001/v1'],
@@ -24,6 +24,25 @@ export default function ConnectionTab() {
   async function activate(id) {
     try {
       await api.activateConnection(id);
+      await refresh('settings');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function selectModel(model) {
+    try {
+      await api.updateConnection(active.id, { model });
+      await refresh('settings');
+      toast('Modelo seleccionado');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function toggleFavorite(model) {
+    try {
+      await api.toggleFavorite(active.id, model);
       await refresh('settings');
     } catch (e) {
       toast(e.message, 'error');
@@ -67,7 +86,16 @@ export default function ConnectionTab() {
         </button>
       </section>
 
-      {active && <ModelPicker key={active.id} conn={active} />}
+      {active && (
+        <ModelPicker
+          key={active.id}
+          conn={active}
+          title={`Modelo — ${active.name}`}
+          loadModels={() => api.connectionModels(active.id)}
+          onSelect={selectModel}
+          onToggleFavorite={toggleFavorite}
+        />
+      )}
       <p className="muted">
         Los parámetros de generación y los prompts de sistema se configuran en la pestaña <Link to="/settings/presets">Presets</Link>.
       </p>
@@ -216,8 +244,7 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
   );
 }
 
-function ModelPicker({ conn }) {
-  const { refresh, toast } = useData();
+export function ModelPicker({ conn, title, loadModels, onSelect, onToggleFavorite }) {
   const [models, setModels] = useState(null);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -229,9 +256,9 @@ function ModelPicker({ conn }) {
   const load = () => {
     setError('');
     setModels(null);
-    api.connectionModels(conn.id).then(setModels).catch((e) => setError(e.message));
+    loadModels().then(setModels).catch((e) => setError(e.message));
   };
-  useEffect(load, [conn.id, conn.baseUrl, conn.hasKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [conn.id, conn.type, conn.baseUrl, conn.hasKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const favs = conn.favorites;
   const rows = useMemo(() => {
@@ -243,29 +270,13 @@ function ModelPicker({ conn }) {
     return list;
   }, [models, query, tab, freeOnly, favs]);
 
-  async function select(id) {
-    try {
-      await api.updateConnection(conn.id, { model: id });
-      await refresh('settings');
-      toast('Modelo seleccionado');
-    } catch (e) {
-      toast(e.message, 'error');
-    }
-  }
-
-  async function toggleFav(id) {
-    try {
-      await api.toggleFavorite(conn.id, id);
-      await refresh('settings');
-    } catch (e) {
-      toast(e.message, 'error');
-    }
-  }
+  const select = onSelect;
+  const toggleFav = onToggleFavorite;
 
   const isLocal = conn.type === 'local';
   return (
     <section className="card">
-      <h3>Modelo — {conn.name}</h3>
+      <h3>{title}</h3>
       <p>
         Actual: <strong>{conn.model || 'ninguno seleccionado'}</strong>
       </p>

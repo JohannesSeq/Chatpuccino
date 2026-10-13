@@ -172,7 +172,20 @@ export function SearchBox({ value, onChange, placeholder = 'Buscar' }) {
   );
 }
 
-export function Field({ label, hint, children }) {
+export function Field({ label, hint, children, action }) {
+  // Con `action` (p. ej. el botón del asistente) no puede ser un <label>: pulsar el texto activaría el primer botón.
+  if (action) {
+    return (
+      <div className="field">
+        <div className="field-head">
+          <span className="field-label">{label}</span>
+          {action}
+        </div>
+        {children}
+        {hint && <span className="field-hint">{hint}</span>}
+      </div>
+    );
+  }
   return (
     <label className="field">
       <span className="field-label">{label}</span>

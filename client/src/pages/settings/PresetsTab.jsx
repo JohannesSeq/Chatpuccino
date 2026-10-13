@@ -4,19 +4,7 @@ import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal } from '../../components/ui.jsx';
-
-const SAMPLERS = [
-  ['temperature', 'Temperatura', 0, 2, 0.05],
-  ['top_p', 'Top P', 0, 1, 0.01],
-  ['top_k', 'Top K (0 = desactivado)', 0, 200, 1],
-  ['top_a', 'Top A (0 = desactivado)', 0, 1, 0.01],
-  ['min_p', 'Min P (0 = desactivado)', 0, 1, 0.01],
-  ['frequency_penalty', 'Penalización de frecuencia', -2, 2, 0.05],
-  ['presence_penalty', 'Penalización de presencia', -2, 2, 0.05],
-  ['repetition_penalty', 'Penalización de repetición (1 = ninguna)', 0, 2, 0.05],
-  ['openai_max_tokens', 'Máx. tokens de respuesta', 16, 32768, 16],
-  ['openai_max_context', 'Contexto máximo (tokens)', 1024, 2000000, 512],
-];
+import { SAMPLERS } from '../../samplers.js';
 
 const MARKER_HELP = {
   charDescription: 'Descripción del personaje (de su tarjeta). En grupos incluye la de cada miembro.',

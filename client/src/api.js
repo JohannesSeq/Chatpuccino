@@ -62,6 +62,12 @@ export const api = {
   connectionModels: (id) => req('GET', `/connections/${enc(id)}/models`),
   testConnection: (body) => req('POST', '/connections/test', body),
 
+  assistant: () => req('GET', '/assistant'),
+  saveAssistant: (patch) => req('PUT', '/assistant', patch),
+  assistantModels: () => req('GET', '/assistant/models'),
+  toggleAssistantFavorite: (model) => req('POST', '/assistant/favorites', { model }),
+  testAssistant: (body) => req('POST', '/assistant/test', body),
+
   presets: () => req('GET', '/presets'),
   appearance: () => req('GET', '/appearance'),
   saveAppearance: (body) => req('PUT', '/appearance', body),
@@ -175,3 +181,9 @@ export const generate = (ref, body, signal, onDelta) => stream(`${chatUrl(ref)}/
 
 /** Pide al modelo un mensaje escrito como el usuario. Resuelve con { text }; no guarda nada en el chat. */
 export const impersonate = (ref, body, signal, onDelta) => stream(`${chatUrl(ref)}/impersonate`, body, signal, onDelta);
+
+/** Asistente de personajes: genera o mejora el texto de un campo. Resuelve con { text }. */
+export const assistantGenerate = (body, signal, onDelta) => stream('/assistant/generate', body, signal, onDelta);
+
+/** Asistente de personajes: describe la apariencia física de una imagen (data URL). Resuelve con { text }. */
+export const assistantDescribeImage = (body, signal, onDelta) => stream('/assistant/describe-image', body, signal, onDelta);

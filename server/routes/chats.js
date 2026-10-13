@@ -18,6 +18,8 @@ import { buildPrompt, stripSpeakerPrefix } from '../prompt.js';
 import { estimateTokens } from '../lore.js';
 import { getActivePreset } from '../presets.js';
 import { activeConnection, chatKey, getSettings, isReady, setPinned } from '../settings.js';
+import { samplingParams } from '../sampling.js';
+import { startSse } from '../sse.js';
 import { getGroup, getPersona, saveGroup } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
 
@@ -236,17 +238,6 @@ r.post('/:kind/:owner/:file/to-group', wrap(async (req, res) => {
   res.status(201).json({ kind: 'g', ownerId: group.id, file: newFile });
 }));
 
-function samplingParams(p, userName, stop = [`\n${userName}:`]) {
-  const body = { temperature: p.temperature, top_p: p.top_p, max_tokens: p.openai_max_tokens, stop };
-  if (p.top_k > 0) body.top_k = p.top_k;
-  if (p.top_a > 0) body.top_a = p.top_a;
-  if (p.min_p > 0) body.min_p = p.min_p;
-  if (p.frequency_penalty) body.frequency_penalty = p.frequency_penalty;
-  if (p.presence_penalty) body.presence_penalty = p.presence_penalty;
-  if (p.repetition_penalty && p.repetition_penalty !== 1) body.repetition_penalty = p.repetition_penalty;
-  return body;
-}
-
 // Reúne todo lo necesario para la siguiente respuesta: quién habla, el historial y el prompt final del preset activo.
 async function prepareGeneration({ kind, owner, file }, { speakerId, swipe, impersonate = false, draft = '' }) {
   const settings = await getSettings();
@@ -303,20 +294,6 @@ function requireReady(settings) {
     throw new HttpError(400, conn.model ? 'La conexión activa está incompleta (Ajustes → Conexión y modelo).' : 'Selecciona un modelo (Ajustes → Conexión y modelo).');
   }
   return conn;
-}
-
-function startSse(res) {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  });
-  const ac = new AbortController();
-  res.on('close', () => {
-    if (!res.writableEnded) ac.abort();
-  });
-  return { ac, send: (obj) => !res.writableEnded && res.write(`data: ${JSON.stringify(obj)}\n\n`) };
 }
 
 // Impersonar: el modelo escribe un mensaje como el usuario. Solo se devuelve el texto; no se guarda nada en el chat.

@@ -37,7 +37,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 | --- | --- |
 | 💬 **Estilo mensajería** | Chats con burbujas, marcas de hora, chats **fijados**, búsqueda y chats ilimitados por personaje; cada uno con su propia historia. |
 | 👥 **Grupos** | Varios personajes en la misma conversación, con respuesta inteligente (el mencionado o el siguiente por turnos), todos a la vez o manual; y puedes convertir un chat individual en grupo. |
-| 🎭 **Personajes** | Crea, edita e importa tarjetas PNG/JSON de SillyTavern. Arrastra una imagen para crear uno nuevo, organízalos con **etiquetas** (se eligen de un desplegable con las que ya usas o se crean con «+») y abre la tarjeta desde el chat con solo tocar su nombre. |
+| 🎭 **Personajes** | Crea, edita e importa tarjetas PNG/JSON de SillyTavern. Arrastra una imagen para crear uno nuevo, organízalos con **etiquetas** (se eligen de un desplegable con las que ya usas o se crean con «+») y abre la tarjeta desde el chat con solo tocar su nombre. Un **asistente de IA** (✨) genera, mejora, expande o reescribe cada bloque de texto y describe el aspecto del personaje leyendo su imagen. |
 | 🙋 **Personas** | Tu representación en la historia, intercambiable al vuelo desde la esquina de la lista de chats. |
 | 📚 **Lorebooks** | Editor de World Info compatible con SillyTavern para dar contexto adicional al modelo. |
 | 🎛️ **Presets y prompts** | Lista ordenada de prompts, parámetros de muestreo y formatos guardados en JSON, con inspector del prompt final. |
@@ -100,6 +100,25 @@ Estilo «Chat Completion» de SillyTavern (**Ajustes → Presets**). Cada preset
 
 Puedes crear, duplicar, renombrar, eliminar, importar y exportar presets (se leen los JSON de SillyTavern; solo se usa el orden global de prompts, no el de cada personaje). El preset activo se cambia también desde el menú del chat, donde **«Ver prompt que se enviará»** muestra el prompt final con tokens estimados. La tarjeta del personaje puede reemplazar el prompt principal y las instrucciones posteriores al historial (`{{original}}` conserva el del preset).
 
+## Asistente de personajes
+
+IA para ayudarte a crear personajes y personas, con su **propia configuración, independiente de la del roleplay** (**Ajustes → Asistente de personajes**):
+
+- **Conexión y modelo:** OpenRouter (con key y favoritos) o un servidor local compatible con OpenAI, igual que en *Conexión y modelo*, pero separada. Opcionalmente un **modelo con visión** para la lectura de imagen; si lo dejas vacío se usa el del asistente.
+- **Prompt de sistema** y **muestreo** (temperatura, Top P/K/A, Min P, penalizaciones y máximo de tokens, con los mismos rangos que los presets). También se edita la instrucción de lectura de imagen. Cada uno tiene su botón para restablecer los valores por defecto.
+- Todo se guarda en **`data/assistant.jsonl`** (una línea JSON por sección: `connection`, `prompts` y `sampling`). Como `data/` y `*.jsonl` están en `.gitignore`, la API key no se sube al repositorio.
+
+**Botón ✨ en cada bloque de texto** del creador de personajes (descripción, personalidad, escenario, primer mensaje, ejemplos de diálogo, cada saludo alternativo y los campos de *Avanzado*) y en la descripción de las personas. Abre una ventana donde eliges:
+
+- **Generar** (desde cero), **Mejorar**, **Expandir** o **Reescribir** (los tres últimos necesitan texto en el campo; con el campo vacío solo está *Generar*).
+- **Indicaciones** opcionales («más misteriosa», «tono oscuro»…).
+
+El texto se va escribiendo en vivo en una vista previa que puedes editar; solo se aplica al campo si pulsas **Usar este texto**. El asistente recibe como contexto el resto de la ficha (nombre, etiquetas y otros campos), pero nunca repite el campo que está editando.
+
+**Lectura de imagen:** cuadro adicional en el creador de personajes. **Leer imagen** envía la imagen del personaje al modelo con visión, que describe su aspecto físico. La descripción se guarda en la tarjeta como extensión (`extensions.image_reading`; otros programas la ignoran) y con **Añadir a la descripción** puedes pasarla a la descripción del personaje. También tiene su ✨ para mejorarla.
+
+Si el asistente no está configurado, la ventana lo indica y enlaza a su configuración.
+
 ## Importar chats
 
 Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y elige el personaje o grupo destino (se detecta por el nombre del personaje en el archivo). Cada archivo se añade como un chat nuevo.
@@ -144,6 +163,7 @@ Variables opcionales: `PORT`, `HOST` (por defecto `0.0.0.0`), `DATA_DIR` (por de
 | `personas/<id>.json` + `.png` | Personas (tu representación) |
 | `lorebooks/<nombre>.json` | Lorebooks en formato World Info de SillyTavern |
 | `presets/<nombre>.json` | Presets de generación y prompts (formato Chat Completion de SillyTavern) |
+| `assistant.jsonl` | Configuración del asistente de personajes: conexión (con API key), prompts y muestreo |
 | `settings.json` | Conexiones (API keys, modelos, favoritos) y parámetros |
 | `auth.json` | Usuario, hash de la contraseña y secreto de sesión |
 

@@ -6,12 +6,14 @@ import PersonasTab from './settings/PersonasTab.jsx';
 import LorebooksTab from './settings/LorebooksTab.jsx';
 import SecurityTab from './settings/SecurityTab.jsx';
 import PresetsTab from './settings/PresetsTab.jsx';
+import AssistantTab from './settings/AssistantTab.jsx';
 import AppearanceTab from './settings/AppearanceTab.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 
 const TABS = [
   { id: 'conexion', label: 'Conexión y modelo', C: ConnectionTab },
   { id: 'presets', label: 'Presets', C: PresetsTab },
+  { id: 'asistente', label: 'Asistente de personajes', C: AssistantTab },
   { id: 'apariencia', label: 'Apariencia', C: AppearanceTab },
   { id: 'personajes', label: 'Personajes', C: CharactersTab },
   { id: 'personas', label: 'Personas', C: PersonasTab },

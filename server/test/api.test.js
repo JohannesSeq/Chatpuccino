@@ -611,6 +611,93 @@ test('impersonar: genera un mensaje como el usuario sin tocar el chat', async ()
   assert.equal((await sse('/chats/c/Luna/noexiste/impersonate', {})).status, 404);
 });
 
+test('asistente de personajes: configuración en JSONL, generación por campo y lectura de imagen', async () => {
+  const def = (await call('GET', '/assistant')).json;
+  assert.equal(def.ready, false);
+  assert.equal(def.sampling.temperature, 0.8);
+  assert.ok(def.prompts.system.includes('roleplay'));
+  const early = await call('POST', '/assistant/generate', { field: 'description', mode: 'generate' });
+  assert.equal(early.status, 400);
+  assert.equal(early.json.code, 'ASSISTANT_NOT_READY');
+
+  const put = await call('PUT', '/assistant', {
+    connection: { type: 'openrouter', apiKey: 'sk-or-assistant-1234567890', model: 'asst/model', visionModel: 'asst/vision' },
+    prompts: { system: 'SISTEMA PROPIO' },
+    sampling: { temperature: 5, top_k: 40, openai_max_tokens: 321 },
+  });
+  assert.equal(put.status, 200);
+  assert.equal(put.json.ready, true);
+  assert.equal(put.json.connection.hasKey, true);
+  assert.ok(!JSON.stringify(put.json).includes('sk-or-assistant-1234567890'), 'la key no vuelve al navegador');
+  assert.equal(put.json.sampling.temperature, 2, 'el muestreo se limita a su rango');
+
+  // Todo se guarda en un .jsonl: una línea por sección
+  const lines = fs.readFileSync(path.join(tmp, 'assistant.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.deepEqual(lines.map((l) => l.section), ['connection', 'prompts', 'sampling']);
+  assert.equal(lines[0].model, 'asst/model');
+  assert.equal(lines[1].system, 'SISTEMA PROPIO');
+  assert.equal(lines[2].top_k, 40);
+
+  // Mejorar un campo: usa su propia conexión, prompt de sistema y muestreo
+  const gen = await sse('/assistant/generate', {
+    field: 'description',
+    mode: 'improve',
+    text: 'Una maga.',
+    instructions: 'más misteriosa',
+    context: { name: 'Luna', tags: ['maga'], personality: 'Serena', description: 'NO DEBE REPETIRSE' },
+  });
+  assert.equal(gen.events.at(-1).done, true);
+  assert.equal(gen.events.at(-1).text, 'Hola mundo!');
+  const body = requests.at(-1);
+  assert.equal(body.model, 'asst/model');
+  assert.equal(body.messages[0].content, 'SISTEMA PROPIO');
+  const user = body.messages[1].content;
+  for (const s of ['Mejora el texto actual', 'Una maga.', 'más misteriosa', 'Luna', 'Serena']) assert.ok(user.includes(s), `incluye «${s}»`);
+  assert.ok(!user.includes('NO DEBE REPETIRSE'), 'el campo editado no se repite como contexto');
+  assert.equal(body.temperature, 2);
+  assert.equal(body.top_k, 40);
+  assert.equal(body.max_tokens, 321);
+  assert.equal(body.stop, undefined);
+  assert.equal(lastAuth, 'Bearer sk-or-assistant-1234567890');
+
+  // Generar desde cero no envía texto actual; mejorar sin texto es un error
+  await sse('/assistant/generate', { field: 'first_mes', mode: 'generate', context: { name: 'Kai' } });
+  const scratch = requests.at(-1).messages[1].content;
+  assert.ok(scratch.includes('desde cero') && !scratch.includes('Texto actual del campo'));
+  assert.equal((await call('POST', '/assistant/generate', { field: 'scenario', mode: 'expand', text: '  ' })).status, 400);
+  assert.equal((await call('POST', '/assistant/generate', { field: 'nope', mode: 'generate' })).status, 400);
+
+  // Lectura de imagen: modelo de visión y mensaje multimodal
+  const tiny = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const img = await sse('/assistant/describe-image', { image: tiny, name: 'Luna' });
+  assert.equal(img.events.at(-1).done, true);
+  const vb = requests.at(-1);
+  assert.equal(vb.model, 'asst/vision');
+  const parts = vb.messages[1].content;
+  assert.ok(parts[0].text.includes('apariencia física'));
+  assert.equal(parts[1].image_url.url, tiny);
+  assert.equal((await call('POST', '/assistant/describe-image', { image: 'http://x/y.png' })).status, 400);
+
+  // Favoritos, lista de modelos y prueba de conexión
+  assert.deepEqual((await call('POST', '/assistant/favorites', { model: 'a/free' })).json.favorites, ['a/free']);
+  assert.deepEqual((await call('POST', '/assistant/favorites', { model: 'a/free' })).json.favorites, []);
+  assert.equal((await call('GET', '/assistant/models')).json[0].id, 'a/free');
+  assert.ok((await call('POST', '/assistant/test', {})).json.message.includes('test-key'), 'usa la key guardada si no se escribe otra');
+
+  // Es independiente de la conexión del roleplay
+  const rp = (await call('GET', '/settings')).json;
+  assert.ok(rp.connections.every((c) => c.model !== 'asst/model'));
+
+  // Sin modelo de visión se usa el principal; quitar la key deja de estar listo
+  await call('PUT', '/assistant', { connection: { visionModel: '' } });
+  await sse('/assistant/describe-image', { image: tiny });
+  assert.equal(requests.at(-1).model, 'asst/model');
+  assert.equal((await call('PUT', '/assistant', { connection: { apiKey: '__clear__' } })).json.ready, false);
+
+  const anon = await fetch(`${base}/assistant`);
+  assert.equal(anon.status, 401);
+});
+
 test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo desde la imagen)', async () => {
   await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
   const plain = await fetch(`${base}/characters/import`, { method: 'POST', headers: { 'Content-Type': 'image/png', Cookie: cookie }, body: placeholderPng('x', 8, 8) });
