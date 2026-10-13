@@ -1,4 +1,5 @@
 import zlib from 'node:zlib';
+import { t } from './i18n.js';
 
 const SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
@@ -23,7 +24,7 @@ export function isPng(buf) {
 }
 
 export function readChunks(buf) {
-  if (!isPng(buf)) throw new Error('El archivo no es un PNG válido');
+  if (!isPng(buf)) throw new Error(t('server.cards.file_not_png'));
   const chunks = [];
   let pos = 8;
   while (pos + 12 <= buf.length) {

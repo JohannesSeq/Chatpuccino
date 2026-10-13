@@ -1,5 +1,6 @@
 import { OPENROUTER_BASE } from './config.js';
 import { HttpError } from './util.js';
+import { t } from './i18n.js';
 
 const OR_HEADERS = { 'HTTP-Referer': 'http://localhost:3001', 'X-Title': 'Chatpuccino' };
 
@@ -20,20 +21,20 @@ async function request(conn, path, init = {}) {
   } catch (e) {
     if (e.name === 'AbortError' || e.name === 'TimeoutError') {
       if (init.signal && !init.signal.reason?.name) throw e;
-      throw new HttpError(504, `${where(conn)} no respondió a tiempo`);
+      throw new HttpError(504, t('server.providers.timeout', { where: where(conn) }));
     }
-    throw new HttpError(502, `No se pudo conectar con ${where(conn)}: ${e.cause?.code || e.message}`);
+    throw new HttpError(502, t('server.providers.connect_failed', { where: where(conn), reason: e.cause?.code || e.message }));
   }
 }
 
 export function normalizeBaseUrl(raw) {
   let u = String(raw || '').trim();
-  if (!u) throw new HttpError(400, 'Indica la URL del servidor local');
+  if (!u) throw new HttpError(400, t('server.providers.local_url_required'));
   if (!/^https?:\/\//i.test(u)) u = `http://${u}`;
   try {
     return new URL(u).toString().replace(/\/+$/, '');
   } catch {
-    throw new HttpError(400, 'La URL del servidor no es válida');
+    throw new HttpError(400, t('server.providers.invalid_url'));
   }
 }
 
@@ -48,8 +49,8 @@ export async function listModels(conn) {
   const isOr = conn.type === 'openrouter';
   if (isOr && orCache.data && orCache.base === baseOf(conn) && Date.now() - orCache.at < 10 * 60 * 1000) return orCache.data;
   const res = await request(conn, '/models', { signal: AbortSignal.timeout(15000) });
-  if (res.status === 401 || res.status === 403) throw new HttpError(401, `${where(conn)} rechazó las credenciales`);
-  if (!res.ok) throw new HttpError(502, `${where(conn)} respondió ${res.status} al listar modelos`);
+  if (res.status === 401 || res.status === 403) throw new HttpError(401, t('server.providers.credentials_rejected', { where: where(conn) }));
+  if (!res.ok) throw new HttpError(502, t('server.providers.list_models_failed', { where: where(conn), status: res.status }));
   const json = await res.json().catch(() => null);
   const list = Array.isArray(json?.data) ? json.data : Array.isArray(json?.models) ? json.models : Array.isArray(json) ? json : [];
   const data = list
@@ -72,14 +73,14 @@ export async function listModels(conn) {
 export async function checkConnection(conn) {
   if (conn.type === 'local') {
     const models = await listModels(conn);
-    return { ok: true, message: `Conectado a ${baseOf(conn)}: ${models.length} modelo(s) disponibles` };
+    return { ok: true, message: t('server.providers.connected', { url: baseOf(conn), count: models.length }) };
   }
-  if (!conn.apiKey) throw new HttpError(400, 'No hay API key para probar');
+  if (!conn.apiKey) throw new HttpError(400, t('server.providers.no_api_key'));
   const res = await request(conn, '/auth/key', { signal: AbortSignal.timeout(15000) });
-  if (res.status === 401 || res.status === 403) throw new HttpError(401, 'La API key no es válida');
-  if (!res.ok) throw new HttpError(502, `OpenRouter respondió ${res.status}`);
+  if (res.status === 401 || res.status === 403) throw new HttpError(401, t('server.providers.invalid_key'));
+  if (!res.ok) throw new HttpError(502, t('server.providers.openrouter_status', { status: res.status }));
   const info = (await res.json().catch(() => ({}))).data || {};
-  return { ok: true, message: `Key válida${info.label ? ` (${info.label})` : ''}` };
+  return { ok: true, message: info.label ? t('server.providers.key_valid_label', { label: info.label }) : t('server.providers.key_valid') };
 }
 
 async function errorFromResponse(conn, res) {
@@ -111,7 +112,7 @@ export async function streamChat({ conn, body, signal, onDelta }) {
     } catch {
       return;
     }
-    if (json.error) throw new HttpError(502, `${where(conn)}: ${json.error.message || 'error durante la generación'}`);
+    if (json.error) throw new HttpError(502, `${where(conn)}: ${json.error.message || t('server.providers.generation_error')}`);
     const delta = json.choices?.[0]?.delta?.content;
     if (delta) {
       text += delta;

@@ -1,13 +1,14 @@
-// [clave, etiqueta, mínimo, máximo, paso] de los parámetros de muestreo (presets y asistente de personajes).
+// [clave, mínimo, máximo, paso] de los parámetros de muestreo (presets y asistente de personajes).
+// El nombre de cada parámetro se traduce con la clave `samplers.<clave>`.
 export const SAMPLERS = [
-  ['temperature', 'Temperatura', 0, 2, 0.05],
-  ['top_p', 'Top P', 0, 1, 0.01],
-  ['top_k', 'Top K (0 = desactivado)', 0, 200, 1],
-  ['top_a', 'Top A (0 = desactivado)', 0, 1, 0.01],
-  ['min_p', 'Min P (0 = desactivado)', 0, 1, 0.01],
-  ['frequency_penalty', 'Penalización de frecuencia', -2, 2, 0.05],
-  ['presence_penalty', 'Penalización de presencia', -2, 2, 0.05],
-  ['repetition_penalty', 'Penalización de repetición (1 = ninguna)', 0, 2, 0.05],
-  ['openai_max_tokens', 'Máx. tokens de respuesta', 16, 32768, 16],
-  ['openai_max_context', 'Contexto máximo (tokens)', 1024, 2000000, 512],
+  ['temperature', 0, 2, 0.05],
+  ['top_p', 0, 1, 0.01],
+  ['top_k', 0, 200, 1],
+  ['top_a', 0, 1, 0.01],
+  ['min_p', 0, 1, 0.01],
+  ['frequency_penalty', -2, 2, 0.05],
+  ['presence_penalty', -2, 2, 0.05],
+  ['repetition_penalty', 0, 2, 0.05],
+  ['openai_max_tokens', 16, 32768, 16],
+  ['openai_max_context', 1024, 2000000, 512],
 ];

@@ -5,6 +5,7 @@ import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal, SearchBox } from '../../components/ui.jsx';
+import { useT } from '../../i18n.jsx';
 
 export const LOCAL_SERVERS = [
   ['LM Studio', 'http://localhost:1234/v1'],
@@ -14,9 +15,10 @@ export const LOCAL_SERVERS = [
   ['text-generation-webui', 'http://127.0.0.1:5000/v1'],
 ];
 
-const price = (perToken) => (perToken === 0 ? 'gratis' : `$${(perToken * 1e6).toFixed(2)}/M`);
+const price = (perToken, t) => (perToken === 0 ? t('connection.picker.price_free') : `$${(perToken * 1e6).toFixed(2)}/M`);
 
 export default function ConnectionTab() {
+  const { t } = useT();
   const { settings, refresh, toast } = useData();
   const [editing, setEditing] = useState(null);
   const active = settings.connections.find((c) => c.id === settings.activeConnection);
@@ -34,7 +36,7 @@ export default function ConnectionTab() {
     try {
       await api.updateConnection(active.id, { model });
       await refresh('settings');
-      toast('Modelo seleccionado');
+      toast(t('connection.model_selected'));
     } catch (e) {
       toast(e.message, 'error');
     }
@@ -52,8 +54,8 @@ export default function ConnectionTab() {
   return (
     <div className="stack">
       <section className="card">
-        <h3>Conexiones</h3>
-        <p className="muted">Puedes tener varias: cuentas de OpenRouter o servidores locales compatibles con la API de OpenAI (LM Studio, Ollama, KoboldCpp…). Se usa la conexión activa.</p>
+        <h3>{t('connection.title')}</h3>
+        <p className="muted">{t('connection.intro')}</p>
         <ul className="rows">
           {settings.connections.map((c) => {
             const isActive = c.id === active?.id;
@@ -62,27 +64,27 @@ export default function ConnectionTab() {
                 <button className="row-main" onClick={() => setEditing(c)}>
                   <div className="row-text">
                     <strong>
-                      {c.name} <span className="tag">{c.type === 'local' ? 'Local' : 'OpenRouter'}</span>
+                      {c.name} <span className="tag">{c.type === 'local' ? t('connection.type_local') : 'OpenRouter'}</span>
                     </strong>
                     <div className="row-sub">
-                      {c.type === 'local' ? c.baseUrl : c.hasKey ? `Key ${c.keyPreview}` : 'Sin API key'} · {c.model || 'sin modelo'}
+                      {c.type === 'local' ? c.baseUrl : c.hasKey ? t('connection.key_preview', { preview: c.keyPreview }) : t('connection.no_key')} · {c.model || t('connection.no_model')}
                     </div>
                   </div>
                 </button>
                 {isActive ? (
-                  <span className="tag ok-tag">Activa</span>
+                  <span className="tag ok-tag">{t('connection.active')}</span>
                 ) : (
                   <button className="btn small" onClick={() => activate(c.id)}>
-                    Usar
+                    {t('common.use')}
                   </button>
                 )}
               </li>
             );
           })}
-          {!settings.connections.length && <li className="empty small">No hay conexiones. Añade una para poder chatear.</li>}
+          {!settings.connections.length && <li className="empty small">{t('connection.empty')}</li>}
         </ul>
         <button className="btn" onClick={() => setEditing('new')}>
-          <Icon name="plus" size={18} /> Añadir conexión
+          <Icon name="plus" size={18} /> {t('connection.add')}
         </button>
       </section>
 
@@ -90,14 +92,16 @@ export default function ConnectionTab() {
         <ModelPicker
           key={active.id}
           conn={active}
-          title={`Modelo — ${active.name}`}
+          title={t('connection.model_title', { name: active.name })}
           loadModels={() => api.connectionModels(active.id)}
           onSelect={selectModel}
           onToggleFavorite={toggleFavorite}
         />
       )}
       <p className="muted">
-        Los parámetros de generación y los prompts de sistema se configuran en la pestaña <Link to="/settings/presets">Presets</Link>.
+        {t('connection.presets_hint_before')}
+        <Link to="/settings/presets">{t('settings.tabs.presets')}</Link>
+        {t('connection.presets_hint_after')}
       </p>
 
       {editing && (
@@ -115,6 +119,7 @@ export default function ConnectionTab() {
 }
 
 function ConnectionEditor({ conn, isFirst, onClose }) {
+  const { t } = useT();
   const { toast } = useData();
   const { confirm } = useDialog();
   const [type, setType] = useState(conn?.type || 'openrouter');
@@ -158,7 +163,7 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
   async function clearKey() {
     try {
       await api.updateConnection(conn.id, { apiKey: '__clear__' });
-      toast('API key eliminada');
+      toast(t('connection.key_removed'));
       onClose(true);
     } catch (e) {
       toast(e.message, 'error');
@@ -166,7 +171,7 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
   }
 
   async function remove() {
-    if (!(await confirm({ title: 'Eliminar conexión', message: `Se eliminará la conexión «${conn.name}», incluida su API key y sus favoritos.`, confirmLabel: 'Eliminar', danger: true }))) return;
+    if (!(await confirm({ title: t('connection.editor.delete_title'), message: t('connection.editor.delete_message', { name: conn.name }), confirmLabel: t('common.delete'), danger: true }))) return;
     try {
       await api.deleteConnection(conn.id);
       onClose(true);
@@ -177,21 +182,21 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
 
   return (
     <Modal
-      title={conn ? 'Editar conexión' : 'Nueva conexión'}
+      title={conn ? t('connection.editor.edit_title') : t('connection.editor.new_title')}
       onClose={() => onClose(false)}
       footer={
         <>
           {conn && (
             <button className="btn danger" onClick={remove}>
-              Eliminar
+              {t('common.delete')}
             </button>
           )}
           <span className="spacer" />
           <button className="btn" disabled={busy} onClick={test}>
-            Probar
+            {t('common.test')}
           </button>
           <button className="btn primary" disabled={busy || (isLocal && !baseUrl.trim()) || (!conn && !isLocal && !apiKey.trim())} onClick={save}>
-            Guardar
+            {t('common.save')}
           </button>
         </>
       }
@@ -202,16 +207,16 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
             OpenRouter
           </button>
           <button className={isLocal ? 'active' : ''} onClick={() => setType('local')}>
-            Servidor local
+            {t('connection.local_server')}
           </button>
         </div>
       )}
-      <Field label="Nombre">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={isLocal ? 'Mi servidor local' : 'OpenRouter'} />
+      <Field label={t('connection.editor.name')}>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={isLocal ? t('connection.editor.name_placeholder_local') : 'OpenRouter'} />
       </Field>
       {isLocal && (
         <>
-          <Field label="URL del servidor" hint="Se abre desde la máquina donde corre Chatpuccino, no desde tu navegador. Debe terminar en /v1.">
+          <Field label={t('connection.url_label')} hint={t('connection.url_hint')}>
             <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="http://localhost:1234/v1" autoCapitalize="none" />
           </Field>
           <div className="chips wrap">
@@ -224,19 +229,19 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
         </>
       )}
       <Field
-        label={isLocal ? 'API key (opcional)' : conn?.hasKey ? `API key guardada: ${conn.keyPreview}` : 'API key'}
-        hint={isLocal ? 'Solo si tu servidor la exige.' : conn?.hasKey ? 'Déjalo vacío para conservar la actual.' : 'Consíguela en openrouter.ai/keys. Se guarda en el servidor y no vuelve al navegador.'}
+        label={isLocal ? t('connection.api_key_optional') : conn?.hasKey ? t('connection.api_key_saved', { preview: conn.keyPreview }) : t('connection.api_key')}
+        hint={isLocal ? t('connection.api_key_hint_local') : conn?.hasKey ? t('connection.api_key_hint_keep') : t('connection.api_key_hint_new')}
       >
         <input type="password" autoComplete="off" placeholder={isLocal ? '' : 'sk-or-v1-…'} value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
       </Field>
       {conn?.hasKey && (
         <button className="btn small danger" onClick={clearKey}>
-          Quitar API key guardada
+          {t('connection.clear_key')}
         </button>
       )}
       {!conn && !isFirst && (
         <label className="check">
-          <input type="checkbox" checked={useIt} onChange={(e) => setUseIt(e.target.checked)} /> Usar esta conexión ahora
+          <input type="checkbox" checked={useIt} onChange={(e) => setUseIt(e.target.checked)} /> {t('connection.editor.use_now')}
         </label>
       )}
       {status && <p className={status.ok ? 'ok' : 'err'}>{status.text}</p>}
@@ -245,6 +250,7 @@ function ConnectionEditor({ conn, isFirst, onClose }) {
 }
 
 export function ModelPicker({ conn, title, loadModels, onSelect, onToggleFavorite }) {
+  const { t } = useT();
   const [models, setModels] = useState(null);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -278,25 +284,25 @@ export function ModelPicker({ conn, title, loadModels, onSelect, onToggleFavorit
     <section className="card">
       <h3>{title}</h3>
       <p>
-        Actual: <strong>{conn.model || 'ninguno seleccionado'}</strong>
+        {t('connection.picker.current')} <strong>{conn.model || t('connection.picker.none_selected')}</strong>
       </p>
       <div className="tabs">
         <button className={tab === 'all' ? 'active' : ''} onClick={() => setTab('all')}>
-          Todos{models ? ` (${models.length})` : ''}
+          {models ? t('connection.picker.tab_all_count', { count: models.length }) : t('connection.picker.tab_all')}
         </button>
         <button className={tab === 'fav' ? 'active' : ''} onClick={() => setTab('fav')}>
-          ★ Favoritos ({favs.length})
+          {t('connection.picker.tab_favorites', { count: favs.length })}
         </button>
       </div>
       {error && (
         <p className="err">
           {error}{' '}
           <button className="btn small" onClick={load}>
-            Reintentar
+            {t('common.retry')}
           </button>
         </p>
       )}
-      {!error && !models && tab === 'all' && <p className="muted">Cargando modelos…</p>}
+      {!error && !models && tab === 'all' && <p className="muted">{t('connection.picker.loading')}</p>}
       {(models || tab === 'fav') && (
         <>
           <SearchBox
@@ -305,17 +311,17 @@ export function ModelPicker({ conn, title, loadModels, onSelect, onToggleFavorit
               setQuery(v);
               setLimit(60);
             }}
-            placeholder="Buscar modelo"
+            placeholder={t('connection.picker.search')}
           />
           {!isLocal && (
             <label className="check">
-              <input type="checkbox" checked={freeOnly} onChange={(e) => setFreeOnly(e.target.checked)} /> Solo gratuitos
+              <input type="checkbox" checked={freeOnly} onChange={(e) => setFreeOnly(e.target.checked)} /> {t('connection.picker.free_only')}
             </label>
           )}
           <ul className="rows model-list">
             {rows.slice(0, limit).map((m) => (
               <li key={m.id} className={`row ${conn.model === m.id ? 'active' : ''}`}>
-                <button className={`icon-btn star ${favs.includes(m.id) ? 'on' : ''}`} onClick={() => toggleFav(m.id)} aria-label={favs.includes(m.id) ? 'Quitar de favoritos' : 'Añadir a favoritos'}>
+                <button className={`icon-btn star ${favs.includes(m.id) ? 'on' : ''}`} onClick={() => toggleFav(m.id)} aria-label={favs.includes(m.id) ? t('connection.picker.remove_favorite') : t('connection.picker.add_favorite')}>
                   <Icon name={favs.includes(m.id) ? 'star' : 'starOutline'} />
                 </button>
                 <button className="row-main" onClick={() => select(m.id)}>
@@ -323,26 +329,26 @@ export function ModelPicker({ conn, title, loadModels, onSelect, onToggleFavorit
                     <strong>{m.name}</strong>
                     <div className="row-sub">
                       {m.id}
-                      {m.unknown ? ' · no está en la lista' : ''}
-                      {m.context ? ` · ${Math.round(m.context / 1000)}K ctx` : ''}
-                      {!isLocal && !m.unknown ? ` · ${price(m.promptPrice)} entrada · ${price(m.completionPrice)} salida` : ''}
+                      {m.unknown ? ` · ${t('connection.picker.not_listed')}` : ''}
+                      {m.context ? ` · ${t('connection.picker.context', { size: Math.round(m.context / 1000) })}` : ''}
+                      {!isLocal && !m.unknown ? ` · ${t('connection.picker.price_line', { input: price(m.promptPrice, t), output: price(m.completionPrice, t) })}` : ''}
                     </div>
                   </div>
                 </button>
               </li>
             ))}
-            {!rows.length && <li className="empty small">{tab === 'fav' && !favs.length ? 'Marca modelos con la estrella para tenerlos aquí.' : 'Sin resultados'}</li>}
+            {!rows.length && <li className="empty small">{tab === 'fav' && !favs.length ? t('connection.picker.empty_favorites') : t('connection.picker.no_results')}</li>}
           </ul>
           {rows.length > limit && (
             <button className="btn" onClick={() => setLimit((l) => l + 100)}>
-              Mostrar más ({rows.length - limit})
+              {t('connection.picker.show_more', { count: rows.length - limit })}
             </button>
           )}
         </>
       )}
-      <Field label="O escribe el ID del modelo" hint={isLocal ? 'Útil si tu servidor no lista sus modelos.' : 'Por ejemplo: anthropic/claude-3.5-sonnet'}>
+      <Field label={t('connection.picker.manual_label')} hint={isLocal ? t('connection.picker.manual_hint_local') : t('connection.picker.manual_hint_example')}>
         <div className="inline">
-          <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="id-del-modelo" autoCapitalize="none" />
+          <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder={t('connection.picker.manual_placeholder')} autoCapitalize="none" />
           <button
             className="btn"
             disabled={!manual.trim()}
@@ -351,7 +357,7 @@ export function ModelPicker({ conn, title, loadModels, onSelect, onToggleFavorit
               setManual('');
             }}
           >
-            Usar
+            {t('common.use')}
           </button>
         </div>
       </Field>

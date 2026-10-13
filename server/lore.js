@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import { DIRS } from './config.js';
 import { HttpError, resolveIn, safeName, uniqueName, writeJson, readJson, exists } from './util.js';
+import { t } from './i18n.js';
 
 export const estimateTokens = (s) => Math.ceil((s || '').length / 3.5);
 
@@ -87,7 +88,7 @@ function normalizeEntry(raw, uid) {
 
 // Acepta World Info de SillyTavern (entries como objeto o arreglo) o character_book V2.
 export function normalizeBook(raw) {
-  if (!raw || typeof raw !== 'object') throw new HttpError(400, 'Lorebook inválido');
+  if (!raw || typeof raw !== 'object') throw new HttpError(400, t('server.lore.invalid'));
   const list = Array.isArray(raw.entries) ? raw.entries : Object.values(raw.entries || {});
   const entries = {};
   list.forEach((entry, i) => {
@@ -200,7 +201,7 @@ export async function listBooks() {
 
 export async function getBook(name) {
   const book = await readJson(bookPath(name));
-  if (!book) throw new HttpError(404, 'Lorebook no encontrado');
+  if (!book) throw new HttpError(404, t('server.lore.not_found'));
   return normalizeBook(book);
 }
 
@@ -223,15 +224,15 @@ export async function createBook(name, raw = { entries: {} }) {
 }
 
 export async function deleteBook(name) {
-  if (!(await exists(bookPath(name)))) throw new HttpError(404, 'Lorebook no encontrado');
+  if (!(await exists(bookPath(name)))) throw new HttpError(404, t('server.lore.not_found'));
   await fs.unlink(bookPath(name));
 }
 
 export async function renameBook(name, newName) {
   const target = safeName(newName, '');
-  if (!target) throw new HttpError(400, 'Nombre inválido');
+  if (!target) throw new HttpError(400, t('server.common.invalid_name'));
   if (target === name) return name;
-  if (await exists(bookPath(target))) throw new HttpError(409, 'Ya existe un lorebook con ese nombre');
+  if (await exists(bookPath(target))) throw new HttpError(409, t('server.lore.name_taken'));
   await fs.rename(bookPath(name), bookPath(target));
   return target;
 }

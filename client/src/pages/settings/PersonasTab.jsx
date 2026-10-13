@@ -3,17 +3,19 @@ import { useData } from '../../data.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import PersonaEditor from '../../components/PersonaEditor.jsx';
 import { PersonaAvatar } from '../../components/ui.jsx';
+import { useT } from '../../i18n.jsx';
 
 export default function PersonasTab() {
+  const { t } = useT();
   const { personas, settings, refresh } = useData();
   const [editing, setEditing] = useState(null);
 
   return (
     <div className="stack">
-      <p className="muted">Una persona es tu representación en el roleplay: su nombre reemplaza a {'{{user}}'} y su descripción se envía al modelo.</p>
+      <p className="muted">{t('personas.intro')}</p>
       <div className="btn-row">
         <button className="btn primary" onClick={() => setEditing('new')}>
-          <Icon name="plus" size={18} /> Nueva persona
+          <Icon name="plus" size={18} /> {t('personas.new')}
         </button>
       </div>
       <ul className="rows">
@@ -23,14 +25,14 @@ export default function PersonasTab() {
               <PersonaAvatar persona={p} />
               <div className="row-text">
                 <strong>
-                  {p.name} {settings.defaultPersona === p.id && <span className="tag">predeterminada</span>}
+                  {p.name} {settings.defaultPersona === p.id && <span className="tag">{t('personas.default_tag')}</span>}
                 </strong>
-                <div className="row-sub">{p.description || 'Sin descripción'}</div>
+                <div className="row-sub">{p.description || t('personas.no_description')}</div>
               </div>
             </button>
           </li>
         ))}
-        {!personas.length && <li className="empty small">Aún no hay personas. Sin ninguna, te llamarán «Usuario».</li>}
+        {!personas.length && <li className="empty small">{t('personas.empty')}</li>}
       </ul>
       {editing && (
         <PersonaEditor

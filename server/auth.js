@@ -3,6 +3,7 @@ import path from 'node:path';
 import { Router } from 'express';
 import { DATA } from './config.js';
 import { HttpError, readJson, withLock, wrap, writeJson } from './util.js';
+import { t } from './i18n.js';
 
 const FILE = path.join(DATA, 'auth.json');
 const COOKIE = 'chatpuccino_session';
@@ -108,7 +109,7 @@ function checkThrottle(ip) {
   const a = attempts.get(ip);
   if (a && a.until > Date.now()) {
     const wait = Math.ceil((a.until - Date.now()) / 1000);
-    const err = new HttpError(429, `Demasiados intentos. Espera ${wait} s e inténtalo de nuevo.`);
+    const err = new HttpError(429, t('server.auth.too_many_attempts', { wait }));
     err.retryAfter = wait;
     throw err;
   }
@@ -128,7 +129,7 @@ export function resetThrottle() {
 export const requireAuth = wrap(async (req, _res, next) => {
   const auth = await loadAuth();
   if (!auth.enabled || verifyToken(auth, readCookie(req))) return next();
-  throw new HttpError(401, 'Inicia sesión para continuar');
+  throw new HttpError(401, t('server.auth.login_required'));
 });
 
 const router = Router();
@@ -148,7 +149,7 @@ router.post('/login', wrap(async (req, res) => {
   const passOk = typeof password === 'string' && checkPassword(password, auth.user);
   if (!userOk || !passOk) {
     recordFailure(ip);
-    throw new HttpError(401, 'Usuario o contraseña incorrectos');
+    throw new HttpError(401, t('server.auth.bad_credentials'));
   }
   attempts.delete(ip);
   setSession(req, res, auth);
@@ -167,7 +168,7 @@ async function confirmCurrent(req) {
   const current = req.body?.current;
   if (typeof current !== 'string' || !checkPassword(current, auth.user)) {
     recordFailure(req.ip);
-    throw new HttpError(403, 'La contraseña actual no es correcta');
+    throw new HttpError(403, t('server.auth.wrong_current_password'));
   }
 }
 
@@ -179,12 +180,12 @@ router.post('/account', wrap(async (req, res) => {
   const auth = await mutateAuth((a) => {
     if (typeof username === 'string' && username.trim() && username.trim() !== a.user.username) {
       const u = username.trim();
-      if (!/^[\p{L}\p{N}_.-]{3,32}$/u.test(u)) throw new HttpError(400, 'El usuario debe tener entre 3 y 32 caracteres (letras, números, . _ -)');
+      if (!/^[\p{L}\p{N}_.-]{3,32}$/u.test(u)) throw new HttpError(400, t('server.auth.invalid_username'));
       a.user.username = u;
     }
     if (typeof password === 'string' && password) {
-      if (password.length < MIN_PASSWORD) throw new HttpError(400, `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres`);
-      if (password === DEFAULT_PASSWORD) throw new HttpError(400, 'Elige una contraseña distinta a la predeterminada');
+      if (password.length < MIN_PASSWORD) throw new HttpError(400, t('server.auth.password_too_short', { min: MIN_PASSWORD }));
+      if (password === DEFAULT_PASSWORD) throw new HttpError(400, t('server.auth.password_is_default'));
       Object.assign(a.user, hashPassword(password), { defaultPassword: false });
     }
     a.user.version += 1;

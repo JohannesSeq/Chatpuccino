@@ -1,12 +1,14 @@
+import { currentLang, t } from './i18n.jsx';
+
 const enc = encodeURIComponent;
 
 // Cualquier 401 (salvo en el login) avisa a la app para volver a la pantalla de acceso.
 async function apiFetch(url, init) {
   let res;
   try {
-    res = await fetch(url, init);
+    res = await fetch(url, { ...init, headers: { ...init?.headers, 'X-Lang': currentLang() } });
   } catch {
-    throw new Error('No se pudo conectar con el servidor');
+    throw new Error(t('api.connect_error'));
   }
   if (res.status === 401 && !url.startsWith('/api/auth/login')) window.dispatchEvent(new Event('auth:expired'));
   return res;
@@ -20,7 +22,7 @@ async function req(method, url, body) {
   });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
+  if (!res.ok) throw new Error(data?.error || t('api.http_error', { status: res.status }));
   return data;
 }
 
@@ -71,7 +73,7 @@ export const api = {
   presets: () => req('GET', '/presets'),
   appearance: () => req('GET', '/appearance'),
   saveAppearance: (body) => req('PUT', '/appearance', body),
-  uploadWallpaper: async (blob) => upload('/api/appearance/wallpaper', { 'Content-Type': 'application/octet-stream' }, await blob.arrayBuffer(), 'Fondo'),
+  uploadWallpaper: async (blob) => upload('/api/appearance/wallpaper', { 'Content-Type': 'application/octet-stream' }, await blob.arrayBuffer(), t('api.wallpaper_label')),
   deleteWallpaper: () => req('DELETE', '/appearance/wallpaper'),
   preset: (name) => req('GET', `/presets/${enc(name)}`),
   createPreset: (name, preset) => req('POST', '/presets', { name, preset }),
@@ -94,7 +96,7 @@ export const api = {
     try {
       json = JSON.parse(await file.text());
     } catch {
-      throw new Error(`${file.name}: no es un JSON válido`);
+      throw new Error(t('api.invalid_json', { name: file.name }));
     }
     return upload('/api/characters/import', { 'Content-Type': 'application/json' }, JSON.stringify(json), file.name);
   },
@@ -150,7 +152,9 @@ async function stream(path, body, signal, onDelta) {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new Error(data?.error || `Error ${res.status}`);
+    const err = new Error(data?.error || t('api.http_error', { status: res.status }));
+    err.code = data?.code;
+    throw err;
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();

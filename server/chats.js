@@ -3,9 +3,10 @@ import path from 'node:path';
 import { DIRS } from './config.js';
 import { HttpError, resolveIn, safeName, uniqueName, withLock, writeFileAtomic, nowIso, stamp } from './util.js';
 import { applyMacros } from './prompt.js';
+import { languages, t, tIn } from './i18n.js';
 
 export function chatDir(kind, owner) {
-  if (kind !== 'c' && kind !== 'g') throw new HttpError(400, 'Tipo de chat inválido');
+  if (kind !== 'c' && kind !== 'g') throw new HttpError(400, t('server.chats.invalid_kind'));
   return resolveIn(kind === 'c' ? DIRS.chats : DIRS.groupChats, owner);
 }
 
@@ -28,7 +29,7 @@ export function parseChat(raw) {
     if (i === 0 && o.mes === undefined && (o.chat_metadata !== undefined || o.user_name !== undefined)) meta = o;
     else if (o.mes !== undefined) messages.push(o);
   });
-  meta = meta || { user_name: 'Usuario', character_name: '', create_date: '', chat_metadata: {} };
+  meta = meta || { user_name: t('server.common.default_user_name'), character_name: '', create_date: '', chat_metadata: {} };
   meta.chat_metadata = meta.chat_metadata && typeof meta.chat_metadata === 'object' ? meta.chat_metadata : {};
   return { meta, messages };
 }
@@ -43,7 +44,7 @@ export async function readChat(kind, owner, file) {
     raw = await fs.readFile(chatPath(kind, owner, file), 'utf8');
   } catch (e) {
     if (e instanceof HttpError) throw e;
-    throw new HttpError(404, 'Chat no encontrado');
+    throw new HttpError(404, t('server.chats.not_found'));
   }
   return parseChat(raw);
 }
@@ -79,7 +80,7 @@ export function makeMessage({ name, isUser, mes, characterId, model }) {
 export async function createChat({ kind, ownerId, ownerName, persona, speaker, speakerId }) {
   const dir = chatDir(kind, ownerId);
   await fs.mkdir(dir, { recursive: true });
-  const userName = persona?.name || 'Usuario';
+  const userName = persona?.name || t('server.common.default_user_name');
   const file = await uniqueName(dir, safeName(`${ownerName} - ${stamp()}`), '.jsonl');
   const meta = {
     user_name: userName,
@@ -109,7 +110,7 @@ function normalizeImported(m, ownerName) {
   const isUser = Boolean(m.is_user);
   return {
     ...m,
-    name: String(m.name || (isUser ? 'Usuario' : ownerName)),
+    name: String(m.name || (isUser ? t('server.common.default_user_name') : ownerName)),
     is_user: isUser,
     is_system: Boolean(m.is_system),
     send_date: m.send_date ?? nowIso(),
@@ -123,15 +124,15 @@ function normalizeImported(m, ownerName) {
 
 export async function importChat({ kind, ownerId, ownerName, raw, filename }) {
   const { meta, messages } = parseChat(raw);
-  if (!messages.length) throw new HttpError(422, 'El archivo no contiene mensajes de chat (¿es un .jsonl válido?)');
+  if (!messages.length) throw new HttpError(422, t('server.chats.import_no_messages'));
   meta.character_name = meta.character_name || ownerName;
-  meta.user_name = meta.user_name || messages.find((m) => m.is_user)?.name || 'Usuario';
+  meta.user_name = meta.user_name || messages.find((m) => m.is_user)?.name || t('server.common.default_user_name');
   // La persona de otra instalación no existe aquí; se usará la predeterminada.
   delete meta.chat_metadata.persona;
 
   const dir = chatDir(kind, ownerId);
   await fs.mkdir(dir, { recursive: true });
-  const base = safeName(String(filename).replace(/\.jsonl?$/i, ''), `${ownerName} - importado`);
+  const base = safeName(String(filename).replace(/\.jsonl?$/i, ''), `${ownerName} - ${t('server.chats.imported_suffix')}`);
   const file = await uniqueName(dir, base, '.jsonl');
   await writeFileAtomic(path.join(dir, `${file}.jsonl`), serializeChat({ meta, messages: messages.map((m) => normalizeImported(m, ownerName)) }));
   return file;
@@ -187,11 +188,18 @@ export async function listAllChats() {
   return out.sort((a, b) => b.mtime - a.mtime);
 }
 
+// Sufijos « (rama)» / « (copia)» de cualquier idioma, para no acumularlos al volver a ramificar.
+function cloneSuffixPattern() {
+  const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const words = languages().flatMap(({ code }) => [tIn(code, 'server.chats.branch_suffix'), tIn(code, 'server.chats.copy_suffix')]);
+  return new RegExp(` \\((${[...new Set(words)].map(escape).join('|')})\\)$`);
+}
+
 // Copia el chat hasta el mensaje `index` (inclusive) como un chat nuevo enlazado al original.
 async function cloneChat({ kind, owner, file, chat, count, title, suffix, link }) {
   const dir = chatDir(kind, owner);
   const meta = structuredClone(chat.meta);
-  const base = String(meta.chat_metadata.title || meta.create_date || file).replace(/ \((rama|copia)\)$/, '');
+  const base = String(meta.chat_metadata.title || meta.create_date || file).replace(cloneSuffixPattern(), '');
   meta.create_date = stamp();
   if (link) meta.chat_metadata.main_chat = file;
   else delete meta.chat_metadata.main_chat;
@@ -203,12 +211,12 @@ async function cloneChat({ kind, owner, file, chat, count, title, suffix, link }
 
 // Copia el chat hasta el mensaje `index` (inclusive) como un chat nuevo enlazado al original.
 export function branchChat({ kind, owner, file, chat, index, title }) {
-  return cloneChat({ kind, owner, file, chat, count: index + 1, title, suffix: 'rama', link: true });
+  return cloneChat({ kind, owner, file, chat, count: index + 1, title, suffix: t('server.chats.branch_suffix'), link: true });
 }
 
 // Duplica el chat completo como un chat independiente.
 export function copyChat({ kind, owner, file, chat, title }) {
-  return cloneChat({ kind, owner, file, chat, count: chat.messages.length, title, suffix: 'copia', link: false });
+  return cloneChat({ kind, owner, file, chat, count: chat.messages.length, title, suffix: t('server.chats.copy_suffix'), link: false });
 }
 
 // Escribe un chat individual dentro de la carpeta de un grupo, marcando quién dijo cada mensaje.
@@ -230,7 +238,7 @@ export async function deleteChat(kind, owner, file) {
     await fs.unlink(chatPath(kind, owner, file));
   } catch (e) {
     if (e instanceof HttpError) throw e;
-    throw new HttpError(404, 'Chat no encontrado');
+    throw new HttpError(404, t('server.chats.not_found'));
   }
 }
 

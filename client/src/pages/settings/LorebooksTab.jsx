@@ -5,8 +5,10 @@ import { useDialog } from '../../dialogs.jsx';
 import { downloadBlob } from '../../util.js';
 import { Icon } from '../../components/Icon.jsx';
 import { Field, Menu, Modal, SearchBox } from '../../components/ui.jsx';
+import { useT } from '../../i18n.jsx';
 
 export default function LorebooksTab() {
+  const { t } = useT();
   const { lorebooks, settings, refresh, toast } = useData();
   const { confirm, prompt } = useDialog();
   const [editing, setEditing] = useState(null);
@@ -23,11 +25,11 @@ export default function LorebooksTab() {
 
   async function rename(name) {
     const next = await prompt({
-      title: 'Renombrar lorebook',
-      label: 'Nuevo nombre',
+      title: t('lorebooks.rename_dialog.title'),
+      label: t('lorebooks.rename_dialog.label'),
       defaultValue: name,
-      confirmLabel: 'Renombrar',
-      validate: (v) => (taken(v, name) ? 'Ya existe un lorebook con ese nombre' : ''),
+      confirmLabel: t('common.rename'),
+      validate: (v) => (taken(v, name) ? t('lorebooks.name_taken') : ''),
     });
     if (!next || next === name) return;
     try {
@@ -41,9 +43,9 @@ export default function LorebooksTab() {
   async function duplicate(name) {
     try {
       const book = await api.lorebook(name);
-      await api.createLorebook(`${name} (copia)`, book);
+      await api.createLorebook(t('lorebooks.copy_name', { name }), book);
       await refresh('lorebooks');
-      toast('Lorebook duplicado');
+      toast(t('lorebooks.duplicated'));
     } catch (e) {
       toast(e.message, 'error');
     }
@@ -58,7 +60,7 @@ export default function LorebooksTab() {
   }
 
   async function remove(name) {
-    const ok = await confirm({ title: 'Eliminar lorebook', message: `Se eliminará «${name}» con todas sus entradas. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true });
+    const ok = await confirm({ title: t('lorebooks.delete_dialog.title'), message: t('lorebooks.delete_dialog.message', { name }), confirmLabel: t('common.delete'), danger: true });
     if (!ok) return;
     try {
       await api.deleteLorebook(name);
@@ -96,13 +98,13 @@ export default function LorebooksTab() {
 
   return (
     <div className="stack">
-      <p className="muted">Los lorebooks activos aquí se aplican a todos los chats. También puedes vincular uno a un personaje desde su ficha. Compatibles con World Info de SillyTavern.</p>
+      <p className="muted">{t('lorebooks.intro')}</p>
       <div className="btn-row">
         <button className="btn primary" onClick={() => setCreating(true)}>
-          <Icon name="plus" size={18} /> Nuevo lorebook
+          <Icon name="plus" size={18} /> {t('lorebooks.new')}
         </button>
         <button className="btn" onClick={() => fileRef.current.click()}>
-          Importar JSON
+          {t('lorebooks.import_json')}
         </button>
         <input ref={fileRef} type="file" accept=".json,application/json" multiple hidden onChange={onImport} />
       </div>
@@ -113,27 +115,27 @@ export default function LorebooksTab() {
               <div className="row-text">
                 <strong>{b.name}</strong>
                 <div className="row-sub">
-                  {b.entryCount} {b.entryCount === 1 ? 'entrada' : 'entradas'}
+                  {t('lorebooks.entry_count', { count: b.entryCount })}
                   {b.description ? ` · ${b.description}` : ''}
                 </div>
               </div>
             </button>
-            <label className="switch" title="Activo en todos los chats">
+            <label className="switch" title={t('lorebooks.global_title')}>
               <input type="checkbox" checked={settings.activeLorebooks.includes(b.name)} onChange={() => toggleActive(b.name)} />
-              <span>Global</span>
+              <span>{t('lorebooks.global')}</span>
             </label>
             <Menu
               items={[
-                { label: 'Editar', onClick: () => setEditing(b.name) },
-                { label: 'Renombrar', onClick: () => rename(b.name) },
-                { label: 'Duplicar', onClick: () => duplicate(b.name) },
-                { label: 'Exportar JSON', onClick: () => exportBook(b.name) },
-                { label: 'Eliminar', danger: true, onClick: () => remove(b.name) },
+                { label: t('common.edit'), onClick: () => setEditing(b.name) },
+                { label: t('common.rename'), onClick: () => rename(b.name) },
+                { label: t('common.duplicate'), onClick: () => duplicate(b.name) },
+                { label: t('lorebooks.export_json'), onClick: () => exportBook(b.name) },
+                { label: t('common.delete'), danger: true, onClick: () => remove(b.name) },
               ]}
             />
           </li>
         ))}
-        {!lorebooks.length && <li className="empty small">No hay lorebooks. Crea uno nuevo o importa un JSON de SillyTavern.</li>}
+        {!lorebooks.length && <li className="empty small">{t('lorebooks.empty')}</li>}
       </ul>
       <GlobalLoreSettings settings={settings} onSaved={() => refresh('settings')} toast={toast} />
       {creating && (
@@ -152,12 +154,13 @@ export default function LorebooksTab() {
 }
 
 function NewLorebookDialog({ taken, onClose, onCreated }) {
+  const { t } = useT();
   const { toast } = useData();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [busy, setBusy] = useState(false);
   const trimmed = name.trim();
-  const error = trimmed && taken(trimmed) ? 'Ya existe un lorebook con ese nombre' : '';
+  const error = trimmed && taken(trimmed) ? t('lorebooks.name_taken') : '';
 
   async function submit(e) {
     e.preventDefault();
@@ -174,26 +177,26 @@ function NewLorebookDialog({ taken, onClose, onCreated }) {
 
   return (
     <Modal
-      title="Nuevo lorebook"
+      title={t('lorebooks.new')}
       onClose={onClose}
       footer={
         <>
           <span className="spacer" />
           <button className="btn" type="button" onClick={onClose}>
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button className="btn primary" disabled={!trimmed || Boolean(error) || busy} onClick={submit}>
-            Crear y editar
+            {t('lorebooks.new_dialog.create_edit')}
           </button>
         </>
       }
     >
       <form onSubmit={submit}>
-        <Field label="Nombre">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Mundo de Eldoria" autoFocus autoComplete="off" />
+        <Field label={t('lorebooks.new_dialog.name')}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('lorebooks.new_dialog.name_placeholder')} autoFocus autoComplete="off" />
           {error && <span className="field-error">{error}</span>}
         </Field>
-        <Field label="Descripción (opcional)" hint="Solo para ti: de qué trata este lorebook.">
+        <Field label={t('lorebooks.new_dialog.description')} hint={t('lorebooks.new_dialog.description_hint')}>
           <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
         <button type="submit" hidden />
@@ -203,12 +206,13 @@ function NewLorebookDialog({ taken, onClose, onCreated }) {
 }
 
 function GlobalLoreSettings({ settings, onSaved, toast }) {
+  const { t } = useT();
   const [scanDepth, setScanDepth] = useState(settings.scanDepth);
   const [loreBudget, setLoreBudget] = useState(settings.loreBudget);
   async function save() {
     try {
       await api.saveSettings({ scanDepth, loreBudget });
-      toast('Guardado');
+      toast(t('lorebooks.activation.saved'));
       onSaved();
     } catch (e) {
       toast(e.message, 'error');
@@ -216,26 +220,26 @@ function GlobalLoreSettings({ settings, onSaved, toast }) {
   }
   return (
     <section className="card">
-      <h3>Activación</h3>
+      <h3>{t('lorebooks.activation.title')}</h3>
       <div className="grid-2">
-        <Field label="Profundidad de escaneo (mensajes)">
+        <Field label={t('lorebooks.activation.scan_depth')}>
           <input type="number" min={1} value={scanDepth} onChange={(e) => setScanDepth(e.target.value)} />
         </Field>
-        <Field label="Presupuesto (tokens)">
+        <Field label={t('lorebooks.activation.budget')}>
           <input type="number" min={0} step={128} value={loreBudget} onChange={(e) => setLoreBudget(e.target.value)} />
         </Field>
       </div>
       <button className="btn" onClick={save}>
-        Guardar
+        {t('common.save')}
       </button>
     </section>
   );
 }
 
 const POSITIONS = [
-  [0, 'Antes de la descripción del personaje'],
-  [1, 'Después de la descripción del personaje'],
-  [4, 'A profundidad N en el chat'],
+  [0, 'before_char'],
+  [1, 'after_char'],
+  [4, 'at_depth'],
 ];
 
 function KeysInput({ value, onChange, placeholder }) {
@@ -253,6 +257,7 @@ function KeysInput({ value, onChange, placeholder }) {
 }
 
 function BookEditor({ name, onClose }) {
+  const { t } = useT();
   const { toast } = useData();
   const { confirm } = useDialog();
   const [book, setBook] = useState(null);
@@ -273,14 +278,14 @@ function BookEditor({ name, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name]);
 
-  if (!book) return <p className="muted">Cargando…</p>;
+  if (!book) return <p className="muted">{t('common.loading')}</p>;
   const entries = Object.values(book.entries).sort((a, b) => a.uid - b.uid);
   const dirty = JSON.stringify(book) !== saved || title.trim() !== name;
   const q = filter.trim().toLowerCase();
   const visible = q ? entries.filter((e) => [e.comment, e.content, ...e.key, ...e.keysecondary].some((s) => String(s).toLowerCase().includes(q))) : entries;
 
   async function goBack() {
-    if (dirty && !(await confirm({ title: 'Cambios sin guardar', message: 'Este lorebook tiene cambios sin guardar. Si sales se perderán.', confirmLabel: 'Salir sin guardar', danger: true }))) return;
+    if (dirty && !(await confirm({ title: t('lorebooks.editor.unsaved'), message: t('lorebooks.editor.unsaved_message'), confirmLabel: t('lorebooks.editor.leave'), danger: true }))) return;
     onClose();
   }
 
@@ -312,7 +317,7 @@ function BookEditor({ name, onClose }) {
       let current = name;
       if (title.trim() && title.trim() !== name) current = (await api.renameLorebook(name, title.trim())).name;
       await api.saveLorebook(current, book);
-      toast('Lorebook guardado');
+      toast(t('lorebooks.editor.saved'));
       onClose();
     } catch (e) {
       toast(e.message, 'error');
@@ -321,7 +326,7 @@ function BookEditor({ name, onClose }) {
   }
 
   async function remove() {
-    if (!(await confirm({ title: 'Eliminar lorebook', message: `Se eliminará «${name}» con todas sus entradas. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
+    if (!(await confirm({ title: t('lorebooks.delete_dialog.title'), message: t('lorebooks.delete_dialog.message', { name }), confirmLabel: t('common.delete'), danger: true }))) return;
     try {
       await api.deleteLorebook(name);
       onClose();
@@ -334,128 +339,126 @@ function BookEditor({ name, onClose }) {
     <div className="stack editor">
       <div className="btn-row">
         <button className="btn" onClick={goBack}>
-          <Icon name="back" size={18} /> Volver
+          <Icon name="back" size={18} /> {t('common.back')}
         </button>
         <span className="spacer" />
         <button className="btn" onClick={() => downloadBlob(`${name}.json`, JSON.stringify(book, null, 2))}>
-          Exportar
+          {t('common.export')}
         </button>
         <button className="btn danger" onClick={remove}>
-          Eliminar
+          {t('common.delete')}
         </button>
         <button className="btn primary" disabled={busy || !dirty} onClick={save}>
-          Guardar
+          {t('common.save')}
         </button>
       </div>
-      {dirty && <p className="warn">Cambios sin guardar</p>}
+      {dirty && <p className="warn">{t('lorebooks.editor.unsaved')}</p>}
       <section className="card">
-        <Field label="Nombre">
+        <Field label={t('lorebooks.editor.name')}>
           <input value={title} onChange={(e) => setTitle(e.target.value)} />
         </Field>
-        <Field label="Descripción" hint="Solo para ti.">
+        <Field label={t('lorebooks.editor.description')} hint={t('lorebooks.editor.description_hint')}>
           <textarea rows={2} value={book.description || ''} onChange={(e) => setBook((b) => ({ ...b, description: e.target.value }))} />
         </Field>
       </section>
       <div className="btn-row">
         <button className="btn primary" onClick={addEntry}>
-          <Icon name="plus" size={18} /> Añadir entrada
+          <Icon name="plus" size={18} /> {t('lorebooks.editor.add_entry')}
         </button>
-        <span className="muted">
-          {entries.length} {entries.length === 1 ? 'entrada' : 'entradas'}
-        </span>
+        <span className="muted">{t('lorebooks.entry_count', { count: entries.length })}</span>
       </div>
-      {entries.length > 4 && <SearchBox value={filter} onChange={setFilter} placeholder="Buscar en las entradas" />}
-      {q && !visible.length && <p className="muted">Ninguna entrada coincide.</p>}
+      {entries.length > 4 && <SearchBox value={filter} onChange={setFilter} placeholder={t('lorebooks.editor.search_placeholder')} />}
+      {q && !visible.length && <p className="muted">{t('lorebooks.editor.no_match')}</p>}
       {visible.map((e) => (
         <section key={e.uid} className={`card entry ${e.disable ? 'disabled' : ''}`}>
           <div className="entry-head" onClick={() => setOpen(open === e.uid ? null : e.uid)}>
             <div className="grow">
-              <strong>{e.comment || e.key.join(', ') || (e.constant ? 'Siempre activa' : `Entrada ${e.uid}`)}</strong>
-              <small className="muted">{e.constant ? 'constante' : e.key.join(', ') || 'sin claves'}</small>
+              <strong>{e.comment || e.key.join(', ') || (e.constant ? t('lorebooks.editor.always_active') : t('lorebooks.editor.entry_n', { uid: e.uid }))}</strong>
+              <small className="muted">{e.constant ? t('lorebooks.editor.constant_tag') : e.key.join(', ') || t('lorebooks.editor.no_keys')}</small>
             </div>
             <label className="switch" onClick={(ev) => ev.stopPropagation()}>
               <input type="checkbox" checked={!e.disable} onChange={(ev) => patch(e.uid, { disable: !ev.target.checked })} />
-              <span>Activa</span>
+              <span>{t('lorebooks.editor.active')}</span>
             </label>
           </div>
           {open === e.uid && (
             <div className="entry-body">
-              <Field label="Título / comentario (solo para ti)">
+              <Field label={t('lorebooks.editor.comment')}>
                 <input value={e.comment} onChange={(ev) => patch(e.uid, { comment: ev.target.value })} />
               </Field>
-              <Field label="Claves (separadas por coma; admite /regex/i)">
+              <Field label={t('lorebooks.editor.keys')}>
                 <KeysInput value={e.key} onChange={(key) => patch(e.uid, { key })} />
               </Field>
-              <Field label="Claves secundarias (opcional)">
+              <Field label={t('lorebooks.editor.keys_secondary')}>
                 <KeysInput value={e.keysecondary} onChange={(keysecondary) => patch(e.uid, { keysecondary })} />
               </Field>
-              <Field label="Contenido">
+              <Field label={t('lorebooks.editor.content')}>
                 <textarea rows={6} value={e.content} onChange={(ev) => patch(e.uid, { content: ev.target.value })} />
               </Field>
               <label className="check">
-                <input type="checkbox" checked={e.constant} onChange={(ev) => patch(e.uid, { constant: ev.target.checked })} /> Constante (siempre incluida)
+                <input type="checkbox" checked={e.constant} onChange={(ev) => patch(e.uid, { constant: ev.target.checked })} /> {t('lorebooks.editor.constant')}
               </label>
               <div className="grid-2">
-                <Field label="Posición">
+                <Field label={t('lorebooks.editor.position')}>
                   <select value={POSITIONS.some(([v]) => v === e.position) ? e.position : 0} onChange={(ev) => patch(e.uid, { position: Number(ev.target.value) })}>
-                    {POSITIONS.map(([v, l]) => (
+                    {POSITIONS.map(([v, k]) => (
                       <option key={v} value={v}>
-                        {l}
+                        {t(`lorebooks.positions.${k}`)}
                       </option>
                     ))}
                   </select>
                 </Field>
                 {e.position === 4 && (
                   <>
-                    <Field label="Profundidad">
+                    <Field label={t('lorebooks.editor.depth')}>
                       <input type="number" min={0} value={e.depth} onChange={(ev) => patch(e.uid, { depth: Number(ev.target.value) })} />
                     </Field>
-                    <Field label="Rol">
+                    <Field label={t('lorebooks.editor.role')}>
                       <select value={e.role ?? 0} onChange={(ev) => patch(e.uid, { role: Number(ev.target.value) })}>
-                        <option value={0}>Sistema</option>
-                        <option value={1}>Usuario</option>
-                        <option value={2}>Asistente</option>
+                        <option value={0}>{t('lorebooks.editor.role_system')}</option>
+                        <option value={1}>{t('lorebooks.editor.role_user')}</option>
+                        <option value={2}>{t('lorebooks.editor.role_assistant')}</option>
                       </select>
                     </Field>
                   </>
                 )}
-                <Field label="Orden (mayor = más prioridad)">
+                <Field label={t('lorebooks.editor.order')}>
                   <input type="number" value={e.order} onChange={(ev) => patch(e.uid, { order: Number(ev.target.value) })} />
                 </Field>
-                <Field label="Probabilidad (%)">
+                <Field label={t('lorebooks.editor.probability')}>
                   <input type="number" min={0} max={100} value={e.probability} onChange={(ev) => patch(e.uid, { probability: Number(ev.target.value) })} />
                 </Field>
-                <Field label="Lógica de claves secundarias">
+                <Field label={t('lorebooks.editor.logic')}>
                   <select value={e.selectiveLogic} onChange={(ev) => patch(e.uid, { selectiveLogic: Number(ev.target.value), selective: true })}>
-                    <option value={0}>Y cualquiera</option>
-                    <option value={3}>Y todas</option>
-                    <option value={2}>Ninguna</option>
-                    <option value={1}>No todas</option>
+                    <option value={0}>{t('lorebooks.editor.logic_and_any')}</option>
+                    <option value={3}>{t('lorebooks.editor.logic_and_all')}</option>
+                    <option value={2}>{t('lorebooks.editor.logic_not_any')}</option>
+                    <option value={1}>{t('lorebooks.editor.logic_not_all')}</option>
                   </select>
                 </Field>
               </div>
               <div className="checks">
                 <label className="check">
-                  <input type="checkbox" checked={e.caseSensitive === true} onChange={(ev) => patch(e.uid, { caseSensitive: ev.target.checked ? true : null })} /> Distinguir mayúsculas
+                  <input type="checkbox" checked={e.caseSensitive === true} onChange={(ev) => patch(e.uid, { caseSensitive: ev.target.checked ? true : null })} /> {t('lorebooks.editor.case_sensitive')}
                 </label>
                 <label className="check">
-                  <input type="checkbox" checked={e.matchWholeWords === true} onChange={(ev) => patch(e.uid, { matchWholeWords: ev.target.checked ? true : null })} /> Palabras completas
+                  <input type="checkbox" checked={e.matchWholeWords === true} onChange={(ev) => patch(e.uid, { matchWholeWords: ev.target.checked ? true : null })} /> {t('lorebooks.editor.whole_words')}
                 </label>
                 <label className="check">
-                  <input type="checkbox" checked={e.excludeRecursion} onChange={(ev) => patch(e.uid, { excludeRecursion: ev.target.checked })} /> No activar por recursión
+                  <input type="checkbox" checked={e.excludeRecursion} onChange={(ev) => patch(e.uid, { excludeRecursion: ev.target.checked })} /> {t('lorebooks.editor.exclude_recursion')}
                 </label>
                 <label className="check">
-                  <input type="checkbox" checked={e.preventRecursion} onChange={(ev) => patch(e.uid, { preventRecursion: ev.target.checked })} /> Evitar recursión
+                  <input type="checkbox" checked={e.preventRecursion} onChange={(ev) => patch(e.uid, { preventRecursion: ev.target.checked })} /> {t('lorebooks.editor.prevent_recursion')}
                 </label>
               </div>
               <button className="btn small danger" onClick={() => removeEntry(e.uid)}>
-                <Icon name="trash" size={16} /> Eliminar entrada
+                <Icon name="trash" size={16} /> {t('lorebooks.editor.delete_entry')}
               </button>
             </div>
           )}
         </section>
       ))}
-      {!entries.length && <p className="muted">Este lorebook aún no tiene entradas.</p>}
+      {!entries.length && <p className="muted">{t('lorebooks.editor.no_entries')}</p>}
     </div>
   );
 }

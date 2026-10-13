@@ -2,21 +2,19 @@ import fs from 'node:fs/promises';
 import { ASSISTANT_FILE } from './config.js';
 import { normalizeBaseUrl } from './providers.js';
 import { HttpError, withLock, writeFileAtomic } from './util.js';
+import { languages, t, tIn } from './i18n.js';
 
 // Configuración del Asistente de personajes. Se guarda en data/assistant.jsonl: una línea JSON por sección
 // ({"section":"connection"}, {"section":"prompts"}, {"section":"sampling"}).
 
-export const DEFAULT_PROMPTS = {
-  system:
-    'Eres un asistente de escritura para creadores de personajes de roleplay (tarjetas de personaje al estilo de SillyTavern). ' +
-    'Redactas y mejoras descripciones, personalidades, escenarios, saludos y ejemplos de diálogo de forma clara, evocadora y útil para que un modelo de lenguaje interprete bien al personaje. ' +
-    'Respeta los hechos ya establecidos, no introduzcas contradicciones y usa los marcadores {{char}} y {{user}} en lugar de nombres propios cuando sea natural. ' +
-    'Escribe en el mismo idioma que el texto o las indicaciones del usuario (español por defecto). ' +
-    'Responde únicamente con el texto pedido: sin preámbulos, sin explicaciones y sin encerrarlo entre comillas ni bloques de código.',
-  image:
-    'Describe con detalle la apariencia física del personaje que aparece en la imagen: edad aparente, complexión, rostro, cabello, ojos, piel, vestimenta, accesorios, postura y rasgos distintivos. ' +
-    'Describe solo lo que se ve; no inventes personalidad, nombre ni historia. Escribe en español, en tercera persona y en prosa (uno o dos párrafos), sin encabezados ni listas.',
-};
+// Los textos por defecto dependen del idioma de la interfaz (locales: server.assistant.prompts.*).
+const PROMPT_KEYS = { system: 'server.assistant.prompts.system', image: 'server.assistant.prompts.image' };
+
+/** Prompts por defecto en el idioma de la petición en curso. */
+export const defaultPrompts = () => ({ system: t(PROMPT_KEYS.system), image: t(PROMPT_KEYS.image) });
+
+// Un prompt guardado igual al de fábrica de cualquier idioma cuenta como «sin personalizar».
+const isDefaultPrompt = (name, value) => languages().some(({ code }) => tIn(code, PROMPT_KEYS[name]) === value);
 
 export const SAMPLING_DEFAULTS = {
   temperature: 0.8,
@@ -63,10 +61,12 @@ function normalizeConnection(c = {}) {
   };
 }
 
-const normalizePrompts = (p = {}) => ({
-  system: typeof p.system === 'string' ? p.system.slice(0, MAX_PROMPT) : DEFAULT_PROMPTS.system,
-  image: typeof p.image === 'string' ? p.image.slice(0, MAX_PROMPT) : DEFAULT_PROMPTS.image,
-});
+function normalizePrompt(name, value) {
+  if (typeof value !== 'string' || isDefaultPrompt(name, value)) return t(PROMPT_KEYS[name]);
+  return value.slice(0, MAX_PROMPT);
+}
+
+const normalizePrompts = (p = {}) => ({ system: normalizePrompt('system', p.system), image: normalizePrompt('image', p.image) });
 
 function normalizeSampling(s = {}) {
   const out = {};
@@ -124,8 +124,8 @@ export function assistantConn(cfg, { vision = false } = {}) {
 export function requireAssistant(cfg, opts) {
   if (isAssistantReady(cfg, opts)) return assistantConn(cfg, opts);
   const c = cfg.connection;
-  const hint = c.type === 'local' ? (c.baseUrl ? 'el modelo' : 'la URL del servidor local') : c.apiKey ? 'el modelo' : 'la API key';
-  throw new HttpError(400, `Configura ${hint} del Asistente de personajes (Ajustes → Asistente de personajes).`, 'ASSISTANT_NOT_READY');
+  const hint = t(c.type === 'local' ? (c.baseUrl ? 'server.settings.hint_model' : 'server.settings.hint_local_url') : c.apiKey ? 'server.settings.hint_model' : 'server.settings.hint_api_key');
+  throw new HttpError(400, t('server.assistant.not_ready', { hint }), 'ASSISTANT_NOT_READY');
 }
 
 export function publicAssistant(cfg) {
@@ -134,7 +134,7 @@ export function publicAssistant(cfg) {
     connection: { ...conn, hasKey: Boolean(apiKey), keyPreview: apiKey ? `${apiKey.slice(0, 7)}…${apiKey.slice(-4)}` : '' },
     prompts: cfg.prompts,
     sampling: cfg.sampling,
-    defaults: { prompts: DEFAULT_PROMPTS, sampling: SAMPLING_DEFAULTS },
+    defaults: { prompts: defaultPrompts(), sampling: SAMPLING_DEFAULTS },
     ready: isAssistantReady(cfg),
     visionReady: isAssistantReady(cfg, { vision: true }),
   };
@@ -172,71 +172,60 @@ export function toggleAssistantFavorite(model) {
 
 export const MODES = ['generate', 'improve', 'expand', 'rewrite'];
 
-const MODE_TASK = {
-  generate: 'Escribe este campo desde cero a partir del contexto disponible y de las indicaciones.',
-  improve: 'Mejora el texto actual: corrige la redacción, la claridad y la coherencia y enriquécelo ligeramente, sin cambiar los hechos ni el tono general.',
-  expand: 'Expande el texto actual: añade más detalle y profundidad manteniendo todo lo que ya dice (no elimines información) y el mismo estilo.',
-  rewrite: 'Reescribe el texto actual con otras palabras y mejor estilo, conservando íntegros su significado y sus datos.',
-};
+// Campos que se pueden generar; su nombre y descripción (para que el modelo sepa qué debe producir) están en
+// server.assistant.fields.<campo>.label/guide y se piden al traducir, no al cargar el módulo.
+export const FIELDS = [
+  'description',
+  'personality',
+  'scenario',
+  'first_mes',
+  'alternate_greeting',
+  'mes_example',
+  'creator_notes',
+  'system_prompt',
+  'post_history_instructions',
+  'persona_description',
+  'image_reading',
+];
 
-// Qué es cada campo, para que el modelo sepa qué debe producir.
-export const FIELDS = {
-  description: ['Descripción', 'Descripción del personaje: quién es, su apariencia, trasfondo, rasgos y cómo se relaciona con los demás. Escrita en tercera persona, usando {{char}}.'],
-  personality: ['Personalidad', 'Resumen conciso de la personalidad: rasgos, manías, forma de hablar y valores. Puede ser una lista breve de rasgos.'],
-  scenario: ['Escenario', 'Escenario: la situación, el lugar y el contexto en el que empieza la interacción entre {{char}} y {{user}}.'],
-  first_mes: ['Primer mensaje', 'Primer mensaje que {{char}} envía al empezar el chat. Debe estar en personaje, invitar a responder y no hablar ni actuar por {{user}}. Acciones entre *asteriscos* y diálogos entre comillas.'],
-  alternate_greeting: ['Saludo alternativo', 'Un saludo alternativo para empezar el chat, distinto en situación o tono al primer mensaje pero igualmente en personaje. No hables ni actúes por {{user}}. Acciones entre *asteriscos* y diálogos entre comillas.'],
-  mes_example: ['Ejemplos de diálogo', 'Ejemplos de diálogo que muestran la voz del personaje. Cada ejemplo empieza con una línea <START> y alterna líneas «{{user}}: …» y «{{char}}: …».'],
-  creator_notes: ['Notas del creador', 'Notas para quien use la tarjeta (no se envían al modelo): de qué trata el personaje, recomendaciones de uso y ajustes sugeridos.'],
-  system_prompt: ['Prompt de sistema', 'Prompt de sistema propio de esta tarjeta: instrucciones sobre cómo debe comportarse y escribir el modelo al interpretar a {{char}}.'],
-  post_history_instructions: ['Instrucciones posteriores al historial', 'Instrucciones breves que se envían después del historial del chat para reforzar el estilo o las reglas de {{char}}.'],
-  persona_description: ['Descripción de la persona', 'Descripción de la persona del usuario (su representación en el roleplay): apariencia, personalidad y trasfondo, usando {{user}}.'],
-  image_reading: ['Lectura de imagen', 'Descripción física del personaje a partir de su imagen: edad aparente, complexión, rostro, cabello, ojos, piel, vestimenta y rasgos distintivos.'],
-};
-
-const CONTEXT_LABELS = {
-  name: 'Nombre',
-  tags: 'Etiquetas',
-  description: 'Descripción',
-  personality: 'Personalidad',
-  scenario: 'Escenario',
-  first_mes: 'Primer mensaje',
-  mes_example: 'Ejemplos de diálogo',
-  image_reading: 'Apariencia (lectura de imagen)',
-};
+const CONTEXT_KEYS = ['name', 'tags', 'description', 'personality', 'scenario', 'first_mes', 'mes_example', 'image_reading'];
 
 const clip = (s, n) => {
-  const t = String(s ?? '').trim();
-  return t.length > n ? `${t.slice(0, n)}…` : t;
+  const text = String(s ?? '').trim();
+  return text.length > n ? `${text.slice(0, n)}…` : text;
 };
 
 /** Mensajes para generar o mejorar un campo de una tarjeta o persona. */
 export function buildFieldMessages({ prompts, field, mode, text, instructions, context }) {
-  const [label, guide] = FIELDS[field];
+  const label = t(`server.assistant.fields.${field}.label`);
+  const guide = t(`server.assistant.fields.${field}.guide`);
   const ctx = [];
-  for (const [key, title] of Object.entries(CONTEXT_LABELS)) {
+  for (const key of CONTEXT_KEYS) {
     if (key === field) continue;
     const v = Array.isArray(context?.[key]) ? context[key].join(', ') : context?.[key];
     const value = clip(v, 4000);
-    if (value) ctx.push(`## ${title}\n${value}`);
+    if (value) ctx.push(`## ${t(`server.assistant.context.${key}`)}\n${value}`);
   }
   const parts = [
-    `Tarea: ${MODE_TASK[mode]}`,
-    `Campo: ${label}. ${guide}`,
-    ctx.length ? `Contexto del resto de la ficha (solo como referencia):\n\n${ctx.join('\n\n')}` : '',
-    mode === 'generate' ? '' : `Texto actual del campo:\n<<<\n${clip(text, 20000)}\n>>>`,
-    instructions?.trim() ? `Indicaciones adicionales del usuario: ${clip(instructions, 2000)}` : '',
-    'Devuelve únicamente el texto final del campo.',
+    t('server.assistant.msg.task', { task: t(`server.assistant.modes.${mode}`) }),
+    t('server.assistant.msg.field', { label, guide }),
+    ctx.length ? t('server.assistant.msg.context', { context: ctx.join('\n\n') }) : '',
+    mode === 'generate' ? '' : t('server.assistant.msg.current_text', { text: clip(text, 20000) }),
+    instructions?.trim() ? t('server.assistant.msg.instructions', { instructions: clip(instructions, 2000) }) : '',
+    t('server.assistant.msg.final'),
   ].filter(Boolean);
   return [
     { role: 'system', content: prompts.system },
     { role: 'user', content: parts.join('\n\n') },
   ];
 }
-
 /** Mensajes para leer una imagen (formato multimodal de la API de OpenAI). */
 export function buildImageMessages({ prompts, image, name, instructions }) {
-  const text = [prompts.image, name ? `Nombre del personaje (solo como referencia): ${clip(name, 200)}` : '', instructions?.trim() ? `Indicaciones adicionales: ${clip(instructions, 2000)}` : '']
+  const text = [
+    prompts.image,
+    name ? t('server.assistant.msg.image_name', { name: clip(name, 200) }) : '',
+    instructions?.trim() ? t('server.assistant.msg.image_instructions', { instructions: clip(instructions, 2000) }) : '',
+  ]
     .filter(Boolean)
     .join('\n\n');
   return [
@@ -247,8 +236,8 @@ export function buildImageMessages({ prompts, image, name, instructions }) {
 
 // Algunos modelos envuelven la respuesta en un bloque de código aunque se les pida que no.
 export function cleanOutput(text) {
-  let t = String(text ?? '').trim();
-  const fenced = /^```[a-z]*\n([\s\S]*?)\n?```$/i.exec(t);
-  if (fenced) t = fenced[1].trim();
-  return t;
+  let out = String(text ?? '').trim();
+  const fenced = /^```[a-z]*\n([\s\S]*?)\n?```$/i.exec(out);
+  if (fenced) out = fenced[1].trim();
+  return out;
 }

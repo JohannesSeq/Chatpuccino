@@ -1,0 +1,1092 @@
+{
+  "_meta": {
+    "code": "es",
+    "dateLocale": "es",
+    "name": "Español"
+  },
+  "ai_assist": {
+    "button_aria": "Asistente de IA: {label}",
+    "button_title": "Asistente de IA: generar o mejorar este texto",
+    "empty_field": "El campo está vacío: usa «Generar»",
+    "generate_from_card": "Escribirá el texto a partir de lo que ya hay en la ficha.",
+    "generate_replace": "Escribirá un texto nuevo ignorando el actual.",
+    "go_settings": "Ir a la configuración",
+    "hints": {
+      "expand": "Añade más detalle sin quitar nada",
+      "generate": "Escribe el texto desde cero",
+      "improve": "Corrige y enriquece el texto actual",
+      "rewrite": "Dice lo mismo con otras palabras y mejor estilo"
+    },
+    "instructions_label": "Indicaciones (opcional)",
+    "instructions_placeholder": "Ej.: más misteriosa, tono oscuro, que mencione su pasado en la torre…",
+    "modal_title": "Asistente: {label}",
+    "modes": {
+      "expand": "Expandir",
+      "generate": "Generar",
+      "improve": "Mejorar",
+      "rewrite": "Reescribir"
+    },
+    "modes_aria": "Qué hacer",
+    "regenerate": "Regenerar",
+    "result_label": "Resultado (puedes editarlo antes de usarlo)",
+    "use_text": "Usar este texto",
+    "writing": "Escribiendo…"
+  },
+  "api": {
+    "connect_error": "No se pudo conectar con el servidor",
+    "http_error": "Error {status}",
+    "invalid_json": "{name}: no es un JSON válido",
+    "wallpaper_label": "Fondo"
+  },
+  "app": {
+    "nav": {
+      "chats": "Chats",
+      "settings": "Ajustes"
+    }
+  },
+  "appearance": {
+    "bubbles": {
+      "blur": "Desenfoque detrás de las burbujas",
+      "hint": "Con opacidad baja se nota mejor el fondo de pantalla; el desenfoque ayuda a leer el texto encima de imágenes con detalle.",
+      "mine_opacity": "Opacidad de tus burbujas",
+      "radius": "Redondeo",
+      "theirs_opacity": "Opacidad de las burbujas del personaje",
+      "title": "Burbujas de mensaje"
+    },
+    "colors": {
+      "fields": {
+        "accent": {
+          "hint": "Botones, enlaces y elementos activos.",
+          "label": "Color de acento"
+        },
+        "chat": {
+          "hint": "Se ve detrás de los mensajes (si no hay imagen de fondo).",
+          "label": "Fondo del chat"
+        },
+        "mine": {
+          "hint": "Los mensajes que envías.",
+          "label": "Tus burbujas"
+        },
+        "theirs": {
+          "hint": "Las respuestas de los personajes.",
+          "label": "Burbujas del personaje"
+        }
+      },
+      "mode_dark": "oscuro",
+      "mode_hint": "Colores del modo {mode}. Cada modo guarda los suyos: cambia de modo arriba para editar el otro.",
+      "mode_light": "claro",
+      "text_note": "El color del texto dentro de las burbujas se ajusta solo para que siempre se lea bien.",
+      "title": "Colores"
+    },
+    "fonts": {
+      "custom": "Otra fuente instalada…",
+      "handwritten": "Manuscrita",
+      "humanist": "Humanista",
+      "mono": "Monoespaciada",
+      "rounded": "Redondeada",
+      "serif": "Serif (lectura)",
+      "system": "Sistema"
+    },
+    "mode": {
+      "dark": "Oscuro",
+      "light": "Claro",
+      "system": "Automático",
+      "system_hint": "«Automático» sigue el modo claro u oscuro de tu dispositivo.",
+      "title": "Modo"
+    },
+    "palettes": {
+      "cafe": "Café",
+      "classic": "Clásico",
+      "forest": "Bosque",
+      "ocean": "Océano",
+      "rose": "Rosa",
+      "violet": "Púrpura"
+    },
+    "preview": {
+      "sample_me": "Hola, vengo a pedirte ayuda con un hechizo. *Sonríe.*",
+      "sample_them": "*Levanta la vista del libro.* \"Oh, no esperaba visitas\", dice con calma.",
+      "title": "Vista previa"
+    },
+    "reset_all": "Restablecer todo",
+    "reset_message": "Vuelven los valores por defecto (modo, colores, fuentes, tamaños y burbujas). La imagen de fondo no se borra.",
+    "reset_title": "Restablecer apariencia",
+    "text": {
+      "font_name": "Nombre de la fuente",
+      "font_name_hint": "Debe estar instalada en el dispositivo desde el que usas la app. Puedes poner varias separadas por coma.",
+      "font_placeholder": "Por ejemplo: Fira Sans",
+      "msg_font": "Fuente de los mensajes",
+      "msg_size": "Tamaño de los mensajes",
+      "title": "Texto",
+      "ui_font": "Fuente de la interfaz",
+      "ui_size": "Tamaño de la interfaz"
+    },
+    "wallpaper": {
+      "blur": "Desenfoque del fondo",
+      "change": "Cambiar imagen",
+      "choose": "Elegir imagen",
+      "current_alt": "Fondo actual",
+      "darken": "Oscurecer el fondo",
+      "hint": "Se muestra detrás de los mensajes en todos los chats.",
+      "lighten": "Aclarar el fondo",
+      "none": "Sin imagen",
+      "process_error": "No se pudo procesar la imagen",
+      "title": "Fondo de pantalla",
+      "updated": "Fondo actualizado"
+    }
+  },
+  "assistant": {
+    "connection": {
+      "save": "Guardar conexión",
+      "saved": "Conexión del asistente guardada",
+      "title": "Conexión"
+    },
+    "intro_after": ".",
+    "intro_before": "El asistente es la IA que te ayuda a crear personajes y personas: genera, mejora, expande o reescribe cada bloque de texto (botón ✨) y lee la imagen del personaje para describir su aspecto. Tiene su propia conexión, prompt y muestreo, independientes de los del roleplay. Todo se guarda en ",
+    "missing_key": "Falta configurar la API key",
+    "missing_model": "Falta configurar el modelo",
+    "missing_url": "Falta configurar la URL del servidor",
+    "model_selected": "Modelo seleccionado",
+    "model_title": "Modelo del asistente",
+    "prompts": {
+      "image_hint": "Qué debe describir el modelo al leer la imagen de un personaje.",
+      "image_label": "Instrucción de lectura de imagen",
+      "saved": "Prompts y muestreo guardados",
+      "system_hint": "Se envía en cada petición del asistente (generar, mejorar, expandir, reescribir y lectura de imagen).",
+      "system_label": "Prompt de sistema",
+      "title": "Prompts"
+    },
+    "ready": "Listo",
+    "sampling": {
+      "defaults": "Valores por defecto",
+      "title": "Muestreo"
+    },
+    "save_all": "Guardar prompts y muestreo",
+    "status": "Estado:",
+    "title": "Configuración de Asistente de personajes",
+    "unsaved": "Hay cambios sin guardar",
+    "vision": {
+      "fallback": "Se usará el modelo del asistente",
+      "hint": "Debe aceptar imágenes. Si lo dejas vacío, la lectura de imagen usa el modelo del asistente (que entonces debe tener visión).",
+      "label": "Modelo con visión (opcional)",
+      "saved": "Modelo de visión guardado",
+      "title": "Lectura de imagen"
+    }
+  },
+  "auth": {
+    "password": "Contraseña",
+    "submit": "Entrar",
+    "subtitle": "Inicia sesión para continuar",
+    "username": "Usuario"
+  },
+  "characters": {
+    "drop": {
+      "avatar_title": "Suelta la imagen para usarla como avatar",
+      "hint": "Tarjetas PNG o JSON de SillyTavern se importan; una imagen normal abre un personaje nuevo con esa imagen.",
+      "title": "Suelta para crear o importar personajes"
+    },
+    "editor": {
+      "added_to_description": "Añadido a la descripción",
+      "advanced": "Avanzado",
+      "ai_labels": {
+        "alternate_greeting": "Saludo alternativo {number}",
+        "system_prompt": "Prompt de sistema"
+      },
+      "change_image": "Cambiar imagen",
+      "delete_message": "Se eliminará a {name} y todos sus chats. No se puede deshacer.",
+      "delete_title": "Eliminar personaje",
+      "export_json": "Exportar JSON",
+      "export_png": "Exportar PNG",
+      "fields": {
+        "creator": "Creador",
+        "creator_notes": "Notas del creador",
+        "description": "Descripción",
+        "dialogue_examples": "Ejemplos de diálogo",
+        "first_message": "Primer mensaje",
+        "image_reading": "Lectura de imagen",
+        "name": "Nombre",
+        "personality": "Personalidad",
+        "post_history": "Instrucciones posteriores al historial",
+        "scenario": "Escenario",
+        "system_prompt": "Prompt de sistema (reemplaza al global)",
+        "tags": "Etiquetas",
+        "version": "Versión"
+      },
+      "greetings": {
+        "add": "Añadir saludo",
+        "title": "Saludos alternativos"
+      },
+      "hints": {
+        "description": "Quién es el personaje. Usa {{char}} y {{user}}.",
+        "dialogue_examples": "Separa cada ejemplo con <START>.",
+        "image_reading": "Descripción física del personaje a partir de su imagen. Requiere un modelo con visión (Ajustes → Asistente de personajes).",
+        "lorebook": "Siempre activo en los chats de este personaje."
+      },
+      "image_hint": "Toca o arrastra una imagen aquí",
+      "lorebook": {
+        "embedded_one": "Esta tarjeta incluye un lorebook embebido ({count} entrada) que se usa automáticamente.",
+        "embedded_other": "Esta tarjeta incluye un lorebook embebido ({count} entradas) que se usa automáticamente.",
+        "extract": "Extraer a lorebook",
+        "extracted": "Lorebook \"{name}\" creado. Guarda el personaje para vincularlo.",
+        "linked": "Lorebook vinculado",
+        "missing": "{name} (no existe)",
+        "title": "Lorebook"
+      },
+      "name_required": "El nombre es obligatorio",
+      "no_image": "Sin imagen",
+      "not_image": "Ese archivo no es una imagen",
+      "reading": {
+        "add_to_description": "Añadir a la descripción",
+        "placeholder": "Pulsa «Leer imagen» para que la IA describa el aspecto del personaje",
+        "read": "Leer imagen",
+        "replace_confirm": "Leer de nuevo",
+        "replace_message": "Ya hay una lectura de imagen. Se reemplazará por una nueva.",
+        "replace_title": "Reemplazar lectura de imagen"
+      },
+      "remaining_one": "Quedan {count} imagen más por convertir en personaje. «Volver» las descarta todas.",
+      "remaining_other": "Quedan {count} imágenes más por convertir en personaje. «Volver» las descarta todas.",
+      "saved": "Personaje guardado"
+    },
+    "import": {
+      "imported": "{count} personaje(s) importado(s)",
+      "unsupported_format": "{name}: formato no admitido"
+    },
+    "list": {
+      "empty": "Todavía no hay personajes. Importa tarjetas PNG de SillyTavern o crea una nueva.",
+      "import_button": "Importar (PNG / JSON / imagen)",
+      "new": "Nuevo personaje",
+      "no_description": "Sin descripción",
+      "no_results": "Sin resultados.",
+      "search_placeholder": "Buscar personajes o etiquetas",
+      "tip": "Tip: arrastra aquí tarjetas de personaje o cualquier imagen para crear uno nuevo."
+    }
+  },
+  "chat": {
+    "banner": {
+      "go_to_settings": "Ir a Ajustes",
+      "setup_missing": "Falta configurar {hint} de la conexión activa."
+    },
+    "branch": {
+      "confirm": "Crear rama",
+      "default_name": "{base} (rama)",
+      "label": "Nombre de la rama",
+      "message": "Se creará una copia del chat con los mensajes hasta este punto (inclusive). El chat original no cambia.",
+      "title": "Ramificar chat"
+    },
+    "card_modal": {
+      "title": "Tarjeta de personaje"
+    },
+    "composer": {
+      "generate_reply": "Generar respuesta",
+      "impersonate": "Impersonar",
+      "impersonate_hint": "Impersonar: la IA escribe un mensaje por ti (lo que ya hayas escrito sirve de inicio)",
+      "impersonating": "Escribiendo por ti…",
+      "placeholder": "Escribe un mensaje",
+      "reply_as": "Hacer que responda {name}",
+      "send": "Enviar"
+    },
+    "convert": {
+      "add_characters": "Añadir personajes ({count})",
+      "default_name": "{name} y amigos",
+      "description": "Se crea un grupo con {name} y los personajes que elijas, y esta conversación pasa a ser un chat del grupo con todo su historial.",
+      "done": "Chat convertido en grupo",
+      "group_name": "Nombre del grupo",
+      "keep_original": "Conservar también el chat original con {name}",
+      "no_others": "No hay otros personajes. Crea o importa más en Ajustes → Personajes.",
+      "reply_all": "Todos, uno tras otro",
+      "reply_manual": "Manual: yo elijo quién responde",
+      "reply_smart": "Inteligente: el mencionado, o el siguiente por turnos",
+      "submit": "Convertir",
+      "title": "Convertir en grupo",
+      "who_replies": "Quién responde"
+    },
+    "copy": {
+      "confirm": "Crear copia",
+      "default_name": "{base} (copia)",
+      "label": "Nombre de la copia",
+      "message": "Se duplicará la conversación completa como un chat independiente. Este chat no cambia.",
+      "title": "Copiar chat"
+    },
+    "delete": {
+      "message": "Se borrará toda la conversación. No se puede deshacer.",
+      "title": "Eliminar chat"
+    },
+    "header": {
+      "typing": "{name} está escribiendo…",
+      "view_card": "Ver tarjeta del personaje",
+      "you": "Tú: {name}"
+    },
+    "inspector": {
+      "if_replies": "Si responde…",
+      "summary": "Preset «{preset}» · ~{total} tokens + hasta {max} de respuesta",
+      "title": "Prompt que se enviará",
+      "tokens": "~{count} tokens"
+    },
+    "loading": "Cargando chat…",
+    "menu": {
+      "convert_to_group": "Convertir en grupo…",
+      "copy": "Copiar chat",
+      "delete": "Eliminar chat",
+      "edit_group": "Editar grupo",
+      "export": "Exportar chat (.jsonl)",
+      "model": "Modelo: {name}",
+      "model_none": "sin elegir",
+      "persona": "Persona: {name}",
+      "pin": "Fijar chat",
+      "preset": "Preset: {name}",
+      "rename": "Renombrar chat",
+      "unpin": "Quitar de fijados",
+      "view_prompt": "Ver prompt que se enviará"
+    },
+    "messages": {
+      "branch": "Ramificar",
+      "branch_hint": "Crear una copia del chat hasta este mensaje",
+      "delete": "Borrar",
+      "delete_message": "Este mensaje se eliminará del chat.",
+      "delete_title": "Borrar mensaje"
+    },
+    "model_sheet": {
+      "all_models": "Ver todos los modelos",
+      "connection": "Conexión",
+      "empty_favorites": "Marca modelos con la estrella en Ajustes → Conexión y modelo para verlos aquí.",
+      "favorite": "★ Favorito",
+      "favorites_of": "Favoritos de {name}",
+      "in_use": "En uso",
+      "no_connections": "No hay conexiones configuradas.",
+      "title": "Modelo",
+      "type_local": "local"
+    },
+    "persona_sheet": {
+      "empty": "Crea personas en Ajustes → Personas.",
+      "no_description": "Sin descripción",
+      "title": "Persona de este chat"
+    },
+    "preset_sheet": {
+      "edit": "Editar presets",
+      "in_use": "En uso",
+      "title": "Preset de generación"
+    },
+    "rename": {
+      "label": "Nombre del chat",
+      "placeholder": "Sin nombre",
+      "title": "Renombrar chat"
+    },
+    "swipes": {
+      "delete_message": "Se eliminará la variante {current} de {total}. El mensaje conserva las demás.",
+      "delete_this": "Eliminar esta variante",
+      "delete_title": "Eliminar variante",
+      "next": "Siguiente",
+      "previous": "Anterior",
+      "regenerate": "Regenerar",
+      "regenerate_hint": "Generar otra respuesta"
+    },
+    "toasts": {
+      "branch_created": "Rama creada: ahora estás en la copia",
+      "copied": "Copiado",
+      "copy_created": "Copia creada",
+      "pinned": "Chat fijado",
+      "unpinned": "Chat desfijado"
+    }
+  },
+  "chats": {
+    "copy": {
+      "confirm": "Crear copia",
+      "default_title": "{base} (copia)",
+      "done": "Copia creada",
+      "label": "Nombre de la copia",
+      "message": "Se duplicará la conversación completa con {name}. El original no cambia."
+    },
+    "delete": {
+      "message": "Se borrará esta conversación con {name}. No se puede deshacer."
+    },
+    "empty_no_results": "Sin resultados",
+    "empty_none": "Aún no tienes chats. Toca + para empezar uno.",
+    "empty_select": "Selecciona un chat o inicia uno nuevo",
+    "import": {
+      "button_title": "Importar chat (.jsonl)",
+      "choose": "Elegir…",
+      "description": "Archivos .jsonl de SillyTavern (o exportados desde aquí). Se añaden como chats nuevos; no se mezclan con los existentes.",
+      "done": "{count} chat(s) importado(s)",
+      "files": "Archivo(s)",
+      "title": "Importar chat",
+      "to_character": "Importar al personaje",
+      "to_group": "Importar al grupo"
+    },
+    "kind": {
+      "character": "Personaje",
+      "group": "Grupo"
+    },
+    "last_message": {
+      "none": "Sin mensajes",
+      "you": "Tú"
+    },
+    "menu": {
+      "copy": "Copiar chat",
+      "delete": "Eliminar chat",
+      "pin": "Fijar chat",
+      "rename": "Renombrar chat",
+      "unpin": "Quitar de fijados"
+    },
+    "new": {
+      "create_group": "Crear grupo",
+      "no_characters": "No hay personajes. Créalos o impórtalos en Ajustes → Personajes.",
+      "no_description": "Sin descripción",
+      "no_groups": "Aún no hay grupos.",
+      "no_persona": "Usuario (sin persona)",
+      "search_character": "Buscar personaje",
+      "speak_as": "Hablar como",
+      "title": "Nuevo chat"
+    },
+    "new_chat": "Nuevo chat",
+    "persona": {
+      "edit": "Editar «{name}»",
+      "header_new": "Persona para los chats nuevos",
+      "header_open": "Persona activa (este chat y los nuevos)",
+      "label": "Persona activa",
+      "new": "Nueva persona…",
+      "none": "Aún no tienes personas",
+      "now_you_are": "Ahora eres {name}",
+      "user": "Usuario"
+    },
+    "rename": {
+      "label": "Chat con {name}",
+      "placeholder": "Sin nombre"
+    },
+    "search_placeholder": "Buscar chats",
+    "section": {
+      "chats": "Chats",
+      "pinned": "Fijados"
+    },
+    "title": "Chats"
+  },
+  "common": {
+    "accept": "Aceptar",
+    "add": "Añadir",
+    "back": "Volver",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "copy": "Copiar",
+    "create": "Crear",
+    "default": "Predeterminada",
+    "delete": "Eliminar",
+    "duplicate": "Duplicar",
+    "edit": "Editar",
+    "export": "Exportar",
+    "import": "Importar",
+    "loading": "Cargando…",
+    "more_options": "Más opciones",
+    "new": "Nuevo",
+    "no": "No",
+    "none": "Ninguno",
+    "remove": "Quitar",
+    "rename": "Renombrar",
+    "reset": "Restablecer",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "search": "Buscar",
+    "stop": "Detener",
+    "test": "Probar",
+    "today": "Hoy",
+    "use": "Usar",
+    "yes": "Sí",
+    "yesterday": "Ayer"
+  },
+  "connection": {
+    "active": "Activa",
+    "add": "Añadir conexión",
+    "api_key": "API key",
+    "api_key_hint_keep": "Déjalo vacío para conservar la actual.",
+    "api_key_hint_local": "Solo si tu servidor la exige.",
+    "api_key_hint_new": "Consíguela en openrouter.ai/keys. Se guarda en el servidor y no vuelve al navegador.",
+    "api_key_optional": "API key (opcional)",
+    "api_key_saved": "API key guardada: {preview}",
+    "clear_key": "Quitar API key guardada",
+    "editor": {
+      "delete_message": "Se eliminará la conexión «{name}», incluida su API key y sus favoritos.",
+      "delete_title": "Eliminar conexión",
+      "edit_title": "Editar conexión",
+      "name": "Nombre",
+      "name_placeholder_local": "Mi servidor local",
+      "new_title": "Nueva conexión",
+      "use_now": "Usar esta conexión ahora"
+    },
+    "empty": "No hay conexiones. Añade una para poder chatear.",
+    "intro": "Puedes tener varias: cuentas de OpenRouter o servidores locales compatibles con la API de OpenAI (LM Studio, Ollama, KoboldCpp…). Se usa la conexión activa.",
+    "key_preview": "Key {preview}",
+    "key_removed": "API key eliminada",
+    "local_server": "Servidor local",
+    "model_selected": "Modelo seleccionado",
+    "model_title": "Modelo — {name}",
+    "no_key": "Sin API key",
+    "no_model": "sin modelo",
+    "picker": {
+      "add_favorite": "Añadir a favoritos",
+      "context": "{size}K ctx",
+      "current": "Actual:",
+      "empty_favorites": "Marca modelos con la estrella para tenerlos aquí.",
+      "free_only": "Solo gratuitos",
+      "loading": "Cargando modelos…",
+      "manual_hint_example": "Por ejemplo: anthropic/claude-3.5-sonnet",
+      "manual_hint_local": "Útil si tu servidor no lista sus modelos.",
+      "manual_label": "O escribe el ID del modelo",
+      "manual_placeholder": "id-del-modelo",
+      "no_results": "Sin resultados",
+      "none_selected": "ninguno seleccionado",
+      "not_listed": "no está en la lista",
+      "price_free": "gratis",
+      "price_line": "{input} entrada · {output} salida",
+      "remove_favorite": "Quitar de favoritos",
+      "search": "Buscar modelo",
+      "show_more": "Mostrar más ({count})",
+      "tab_all": "Todos",
+      "tab_all_count": "Todos ({count})",
+      "tab_favorites": "★ Favoritos ({count})"
+    },
+    "presets_hint_after": ".",
+    "presets_hint_before": "Los parámetros de generación y los prompts de sistema se configuran en la pestaña ",
+    "title": "Conexiones",
+    "type_local": "Local",
+    "url_hint": "Se abre desde la máquina donde corre Chatpuccino, no desde tu navegador. Debe terminar en /v1.",
+    "url_label": "URL del servidor"
+  },
+  "dialogs": {
+    "value_required": "Escribe un valor"
+  },
+  "groups": {
+    "delete_message": "Se eliminará el grupo «{name}» y todos sus chats. No se puede deshacer.",
+    "delete_title": "Eliminar grupo",
+    "edit_title": "Editar grupo",
+    "members": "Miembros ({count}) — mínimo 2",
+    "name": "Nombre del grupo",
+    "new_title": "Nuevo grupo",
+    "no_characters": "Primero crea o importa personajes en Ajustes.",
+    "reply_mode": {
+      "all": "Todos, uno tras otro",
+      "label": "Quién responde",
+      "manual": "Manual: yo elijo quién responde",
+      "smart": "Inteligente: el mencionado, o el siguiente por turnos"
+    }
+  },
+  "language": {
+    "auto": "Automático (idioma del navegador)",
+    "description": "Idioma de la interfaz. Se guarda con tu apariencia, así que se ve igual en todos tus dispositivos.",
+    "export": "Exportar este idioma (JSON)",
+    "export_hint": "Descarga el archivo del idioma actual para usarlo como plantilla de una traducción. Para añadir un idioma, copia el archivo en la carpeta «locales» del proyecto, tradúcelo y vuelve a compilar la app.",
+    "label": "Idioma",
+    "title": "Idioma"
+  },
+  "lorebooks": {
+    "activation": {
+      "budget": "Presupuesto (tokens)",
+      "saved": "Guardado",
+      "scan_depth": "Profundidad de escaneo (mensajes)",
+      "title": "Activación"
+    },
+    "copy_name": "{name} (copia)",
+    "delete_dialog": {
+      "message": "Se eliminará «{name}» con todas sus entradas. No se puede deshacer.",
+      "title": "Eliminar lorebook"
+    },
+    "duplicated": "Lorebook duplicado",
+    "editor": {
+      "active": "Activa",
+      "add_entry": "Añadir entrada",
+      "always_active": "Siempre activa",
+      "case_sensitive": "Distinguir mayúsculas",
+      "comment": "Título / comentario (solo para ti)",
+      "constant": "Constante (siempre incluida)",
+      "constant_tag": "constante",
+      "content": "Contenido",
+      "delete_entry": "Eliminar entrada",
+      "depth": "Profundidad",
+      "description": "Descripción",
+      "description_hint": "Solo para ti.",
+      "entry_n": "Entrada {uid}",
+      "exclude_recursion": "No activar por recursión",
+      "keys": "Claves (separadas por coma; admite /regex/i)",
+      "keys_secondary": "Claves secundarias (opcional)",
+      "leave": "Salir sin guardar",
+      "logic": "Lógica de claves secundarias",
+      "logic_and_all": "Y todas",
+      "logic_and_any": "Y cualquiera",
+      "logic_not_all": "No todas",
+      "logic_not_any": "Ninguna",
+      "name": "Nombre",
+      "no_entries": "Este lorebook aún no tiene entradas.",
+      "no_keys": "sin claves",
+      "no_match": "Ninguna entrada coincide.",
+      "order": "Orden (mayor = más prioridad)",
+      "position": "Posición",
+      "prevent_recursion": "Evitar recursión",
+      "probability": "Probabilidad (%)",
+      "role": "Rol",
+      "role_assistant": "Asistente",
+      "role_system": "Sistema",
+      "role_user": "Usuario",
+      "saved": "Lorebook guardado",
+      "search_placeholder": "Buscar en las entradas",
+      "unsaved": "Cambios sin guardar",
+      "unsaved_message": "Este lorebook tiene cambios sin guardar. Si sales se perderán.",
+      "whole_words": "Palabras completas"
+    },
+    "empty": "No hay lorebooks. Crea uno nuevo o importa un JSON de SillyTavern.",
+    "entry_count_one": "{count} entrada",
+    "entry_count_other": "{count} entradas",
+    "export_json": "Exportar JSON",
+    "global": "Global",
+    "global_title": "Activo en todos los chats",
+    "import_json": "Importar JSON",
+    "intro": "Los lorebooks activos aquí se aplican a todos los chats. También puedes vincular uno a un personaje desde su ficha. Compatibles con World Info de SillyTavern.",
+    "name_taken": "Ya existe un lorebook con ese nombre",
+    "new": "Nuevo lorebook",
+    "new_dialog": {
+      "create_edit": "Crear y editar",
+      "description": "Descripción (opcional)",
+      "description_hint": "Solo para ti: de qué trata este lorebook.",
+      "name": "Nombre",
+      "name_placeholder": "Mundo de Eldoria"
+    },
+    "positions": {
+      "after_char": "Después de la descripción del personaje",
+      "at_depth": "A profundidad N en el chat",
+      "before_char": "Antes de la descripción del personaje"
+    },
+    "rename_dialog": {
+      "label": "Nuevo nombre",
+      "title": "Renombrar lorebook"
+    }
+  },
+  "password_banner": {
+    "link": "Cámbiala en Ajustes → Seguridad",
+    "message": "Usas la contraseña predeterminada."
+  },
+  "personas": {
+    "default_tag": "predeterminada",
+    "editor": {
+      "change_image": "Cambiar imagen",
+      "delete_message": "Se eliminará la persona «{name}».",
+      "delete_title": "Eliminar persona",
+      "description": "Descripción",
+      "description_ai": "Descripción de la persona",
+      "description_hint": "Cómo eres en la historia (apariencia, personalidad, trasfondo).",
+      "edit_title": "Editar persona",
+      "name": "Nombre",
+      "new_title": "Nueva persona",
+      "use_default": "Usar por defecto en chats nuevos"
+    },
+    "empty": "Aún no hay personas. Sin ninguna, te llamarán «Usuario».",
+    "intro": "Una persona es tu representación en el roleplay: su nombre reemplaza a {{user}} y su descripción se envía al modelo.",
+    "new": "Nueva persona",
+    "no_description": "Sin descripción"
+  },
+  "presets": {
+    "active_label": "Preset en uso",
+    "aux": {
+      "squash": "Unir mensajes de sistema consecutivos en uno (más compatible con la mayoría de modelos)",
+      "title": "Mensajes auxiliares y formatos"
+    },
+    "created": "Preset «{name}» creado",
+    "delete_dialog": {
+      "message": "Se eliminará el preset «{name}». No se puede deshacer.",
+      "title": "Eliminar preset"
+    },
+    "discard": {
+      "confirm": "Descartar cambios",
+      "message": "Este preset tiene cambios sin guardar. Si continúas se perderán."
+    },
+    "editor": {
+      "apply": "Aplicar",
+      "content": "Contenido",
+      "content_hint": "Admite {{char}}, {{user}}, {{group}}, {{date}}, {{time}} y {{random:a,b}}.",
+      "delete_message": "Se quitará «{name}» de este preset (al guardar).",
+      "delete_title": "Eliminar prompt",
+      "depth": "Profundidad",
+      "depth_hint": "0 = tras el último mensaje, 1 = antes del último…",
+      "fallback_title": "Prompt",
+      "forbid_overrides": "Impedir que la tarjeta del personaje lo reemplace",
+      "name": "Nombre",
+      "new_title": "Nuevo prompt",
+      "order": "Orden",
+      "order_hint": "Si varios coinciden, menor va antes.",
+      "position": "Posición",
+      "position_chat": "En el chat (a cierta profundidad del historial)",
+      "position_relative": "Relativa (según el orden de la lista)",
+      "role": "Rol",
+      "role_assistant": "Asistente",
+      "role_system": "Sistema",
+      "role_user": "Usuario",
+      "save_name": "Guardar nombre"
+    },
+    "export_dialog": {
+      "confirm": "Exportar igualmente",
+      "message": "Se exportará la versión guardada del preset, sin tus cambios actuales."
+    },
+    "export_json": "Exportar JSON",
+    "formats": {
+      "group_nudge_prompt": {
+        "hint": "Se añade tras el historial. {{char}} = quien responde.",
+        "label": "Aviso final en grupos"
+      },
+      "impersonation_prompt": {
+        "hint": "Instrucción que se envía al pedir un mensaje en tu nombre con el botón ✨ del chat. {{user}} = tu persona.",
+        "label": "Impersonar (escribir por ti)"
+      },
+      "new_chat_prompt": {
+        "hint": "Se inserta justo antes del historial.",
+        "label": "Inicio de chat"
+      },
+      "new_example_chat_prompt": {
+        "label": "Antes de cada ejemplo de diálogo"
+      },
+      "new_group_chat_prompt": {
+        "hint": "{{group}} = nombres de los miembros.",
+        "label": "Inicio de chat de grupo"
+      },
+      "personality_format": {
+        "hint": "{{personality}} = texto de la personalidad.",
+        "label": "Formato de la personalidad"
+      },
+      "scenario_format": {
+        "hint": "{{scenario}} = texto del escenario.",
+        "label": "Formato del escenario"
+      },
+      "wi_format": {
+        "hint": "{0} = contenido de las entradas activadas.",
+        "label": "Formato de lorebook"
+      }
+    },
+    "import_json": "Importar JSON",
+    "imported": "Preset importado",
+    "intro": "Un preset guarda los parámetros de generación y la lista ordenada de prompts que se envía al modelo. Es el mismo formato de «Chat Completion» de SillyTavern: puedes importar y exportar los de allí.",
+    "markers": {
+      "charDescription": "Descripción del personaje (de su tarjeta). En grupos incluye la de cada miembro.",
+      "charPersonality": "Personalidad del personaje, con el formato definido abajo.",
+      "chatHistory": "Los mensajes del chat. Los prompts que quedan debajo se envían después del historial.",
+      "default": "Bloque automático.",
+      "dialogueExamples": "Ejemplos de diálogo de la tarjeta.",
+      "personaDescription": "Descripción de tu persona.",
+      "readonly": "Su contenido no se edita aquí.",
+      "scenario": "Escenario de la tarjeta, con el formato definido abajo.",
+      "worldInfoAfter": "Entradas de lorebook configuradas «después del personaje».",
+      "worldInfoBefore": "Entradas de lorebook configuradas «antes del personaje»."
+    },
+    "name_label": "Nombre del preset",
+    "name_taken": "Ya existe un preset con ese nombre",
+    "new_dialog": {
+      "message": "Parte de los valores por defecto.",
+      "placeholder": "Mi preset",
+      "title": "Nuevo preset"
+    },
+    "prompts": {
+      "add": "Añadir prompt",
+      "auto": "automático",
+      "disabled": "Desactivado",
+      "empty": "vacío",
+      "enabled": "Activo",
+      "in_chat": "en el chat · prof. {depth}",
+      "intro": "Se envían en este orden, de arriba abajo. Desactiva los que no quieras y reordénalos con las flechas. «Historial» es donde van los mensajes del chat. Total de prompts activos: ~{tokens} tokens (sin contar el contenido automático).",
+      "move_down": "Bajar",
+      "move_up": "Subir",
+      "title": "Prompts",
+      "tokens": "~{tokens} tokens"
+    },
+    "rename_dialog": {
+      "label": "Nuevo nombre",
+      "title": "Renombrar preset"
+    },
+    "role_tag": {
+      "assistant": "asistente",
+      "system": "sistema",
+      "user": "usuario"
+    },
+    "sampling": {
+      "title": "Muestreo"
+    },
+    "save_as": "Guardar como…",
+    "save_as_dialog": {
+      "default_name": "{name} (copia)",
+      "message": "Se crea un preset nuevo con el contenido actual (incluidos los cambios sin guardar) y pasa a ser el activo."
+    },
+    "saved": "Preset guardado",
+    "title": "Preset",
+    "unsaved": "Cambios sin guardar"
+  },
+  "samplers": {
+    "frequency_penalty": "Penalización de frecuencia",
+    "min_p": "Min P (0 = desactivado)",
+    "openai_max_context": "Contexto máximo (tokens)",
+    "openai_max_tokens": "Máx. tokens de respuesta",
+    "presence_penalty": "Penalización de presencia",
+    "repetition_penalty": "Penalización de repetición (1 = ninguna)",
+    "temperature": "Temperatura",
+    "top_a": "Top A (0 = desactivado)",
+    "top_k": "Top K (0 = desactivado)",
+    "top_p": "Top P"
+  },
+  "security": {
+    "account": {
+      "current_password": "Contraseña actual",
+      "logged_as_after": ". Para cambiar el usuario o la contraseña confirma tu contraseña actual.",
+      "logged_as_before": "Sesión iniciada como ",
+      "mismatch": "Las contraseñas no coinciden.",
+      "new_password": "Nueva contraseña",
+      "new_password_hint": "Mínimo 6 caracteres. Déjala vacía para conservar la actual.",
+      "repeat_password": "Repetir nueva contraseña",
+      "save": "Guardar cambios",
+      "title": "Cuenta",
+      "updated": "Cuenta actualizada. Se cerró la sesión en los demás dispositivos.",
+      "username": "Usuario"
+    },
+    "require": {
+      "confirm_password": "Confirma tu contraseña",
+      "disable": "Desactivar inicio de sesión",
+      "disabled": "Inicio de sesión desactivado",
+      "enable": "Activar inicio de sesión",
+      "enabled": "Inicio de sesión activado",
+      "off_note": "El inicio de sesión está desactivado: cualquiera con acceso a la red del servidor puede usar la app y ver tu API key guardada.",
+      "on_note": "Ahora mismo cualquiera que llegue al servidor necesita usuario y contraseña. Desactívalo solo si lo usas en un equipo de confianza.",
+      "title": "Requerir inicio de sesión"
+    },
+    "sessions": {
+      "logout": "Cerrar sesión",
+      "logout_all": "Cerrar sesión en todos los dispositivos",
+      "note": "Las sesiones duran 30 días. Tras 5 intentos fallidos seguidos, el acceso se bloquea unos segundos (cada vez más).",
+      "revoke_confirm": "Cerrar sesiones",
+      "revoke_message": "Se cerrará la sesión en todos los dispositivos, excepto este.",
+      "revoke_title": "Cerrar sesiones",
+      "revoked": "Sesiones cerradas",
+      "title": "Sesiones"
+    }
+  },
+  "server": {
+    "appearance": {
+      "no_wallpaper": "No hay fondo de pantalla",
+      "send_octet_stream": "Envía la imagen como application/octet-stream",
+      "wallpaper_format": "El fondo debe ser una imagen PNG, JPG, WebP o GIF"
+    },
+    "assistant": {
+      "context": {
+        "description": "Descripción",
+        "first_mes": "Primer mensaje",
+        "image_reading": "Apariencia (lectura de imagen)",
+        "mes_example": "Ejemplos de diálogo",
+        "name": "Nombre",
+        "personality": "Personalidad",
+        "scenario": "Escenario",
+        "tags": "Etiquetas"
+      },
+      "fields": {
+        "alternate_greeting": {
+          "guide": "Un saludo alternativo para empezar el chat, distinto en situación o tono al primer mensaje pero igualmente en personaje. No hables ni actúes por {{user}}. Acciones entre *asteriscos* y diálogos entre comillas.",
+          "label": "Saludo alternativo"
+        },
+        "creator_notes": {
+          "guide": "Notas para quien use la tarjeta (no se envían al modelo): de qué trata el personaje, recomendaciones de uso y ajustes sugeridos.",
+          "label": "Notas del creador"
+        },
+        "description": {
+          "guide": "Descripción del personaje: quién es, su apariencia, trasfondo, rasgos y cómo se relaciona con los demás. Escrita en tercera persona, usando {{char}}.",
+          "label": "Descripción"
+        },
+        "first_mes": {
+          "guide": "Primer mensaje que {{char}} envía al empezar el chat. Debe estar en personaje, invitar a responder y no hablar ni actuar por {{user}}. Acciones entre *asteriscos* y diálogos entre comillas.",
+          "label": "Primer mensaje"
+        },
+        "image_reading": {
+          "guide": "Descripción física del personaje a partir de su imagen: edad aparente, complexión, rostro, cabello, ojos, piel, vestimenta y rasgos distintivos.",
+          "label": "Lectura de imagen"
+        },
+        "mes_example": {
+          "guide": "Ejemplos de diálogo que muestran la voz del personaje. Cada ejemplo empieza con una línea <START> y alterna líneas «{{user}}: …» y «{{char}}: …».",
+          "label": "Ejemplos de diálogo"
+        },
+        "persona_description": {
+          "guide": "Descripción de la persona del usuario (su representación en el roleplay): apariencia, personalidad y trasfondo, usando {{user}}.",
+          "label": "Descripción de la persona"
+        },
+        "personality": {
+          "guide": "Resumen conciso de la personalidad: rasgos, manías, forma de hablar y valores. Puede ser una lista breve de rasgos.",
+          "label": "Personalidad"
+        },
+        "post_history_instructions": {
+          "guide": "Instrucciones breves que se envían después del historial del chat para reforzar el estilo o las reglas de {{char}}.",
+          "label": "Instrucciones posteriores al historial"
+        },
+        "scenario": {
+          "guide": "Escenario: la situación, el lugar y el contexto en el que empieza la interacción entre {{char}} y {{user}}.",
+          "label": "Escenario"
+        },
+        "system_prompt": {
+          "guide": "Prompt de sistema propio de esta tarjeta: instrucciones sobre cómo debe comportarse y escribir el modelo al interpretar a {{char}}.",
+          "label": "Prompt de sistema"
+        }
+      },
+      "generate_error": "Error al generar el texto",
+      "image_too_large": "La imagen es demasiado grande.",
+      "invalid_field": "Campo no válido",
+      "invalid_image": "La imagen debe ser PNG, JPEG, WebP o GIF (data URL).",
+      "invalid_mode": "Modo no válido",
+      "local_url_required": "Indica la URL del servidor local del asistente.",
+      "modes": {
+        "expand": "Expande el texto actual: añade más detalle y profundidad manteniendo todo lo que ya dice (no elimines información) y el mismo estilo.",
+        "generate": "Escribe este campo desde cero a partir del contexto disponible y de las indicaciones.",
+        "improve": "Mejora el texto actual: corrige la redacción, la claridad y la coherencia y enriquécelo ligeramente, sin cambiar los hechos ni el tono general.",
+        "rewrite": "Reescribe el texto actual con otras palabras y mejor estilo, conservando íntegros su significado y sus datos."
+      },
+      "msg": {
+        "context": "Contexto del resto de la ficha (solo como referencia):\n\n{context}",
+        "current_text": "Texto actual del campo:\n<<<\n{text}\n>>>",
+        "field": "Campo: {label}. {guide}",
+        "final": "Devuelve únicamente el texto final del campo.",
+        "image_instructions": "Indicaciones adicionales: {instructions}",
+        "image_name": "Nombre del personaje (solo como referencia): {name}",
+        "instructions": "Indicaciones adicionales del usuario: {instructions}",
+        "task": "Tarea: {task}"
+      },
+      "no_text_to_improve": "No hay texto que mejorar: usa «Generar».",
+      "not_ready": "Configura {hint} del Asistente de personajes (Ajustes → Asistente de personajes).",
+      "prompts": {
+        "image": "Describe con detalle la apariencia física del personaje que aparece en la imagen: edad aparente, complexión, rostro, cabello, ojos, piel, vestimenta, accesorios, postura y rasgos distintivos. Describe solo lo que se ve; no inventes personalidad, nombre ni historia. Escribe en español, en tercera persona y en prosa (uno o dos párrafos), sin encabezados ni listas.",
+        "system": "Eres un asistente de escritura para creadores de personajes de roleplay (tarjetas de personaje al estilo de SillyTavern). Redactas y mejoras descripciones, personalidades, escenarios, saludos y ejemplos de diálogo de forma clara, evocadora y útil para que un modelo de lenguaje interprete bien al personaje. Respeta los hechos ya establecidos, no introduzcas contradicciones y usa los marcadores {{char}} y {{user}} en lugar de nombres propios cuando sea natural. Escribe en el mismo idioma que el texto o las indicaciones del usuario (español por defecto). Responde únicamente con el texto pedido: sin preámbulos, sin explicaciones y sin encerrarlo entre comillas ni bloques de código."
+      }
+    },
+    "auth": {
+      "bad_credentials": "Usuario o contraseña incorrectos",
+      "invalid_username": "El usuario debe tener entre 3 y 32 caracteres (letras, números, . _ -)",
+      "login_required": "Inicia sesión para continuar",
+      "password_is_default": "Elige una contraseña distinta a la predeterminada",
+      "password_too_short": "La contraseña debe tener al menos {min} caracteres",
+      "too_many_attempts": "Demasiados intentos. Espera {wait} s e inténtalo de nuevo.",
+      "wrong_current_password": "La contraseña actual no es correcta"
+    },
+    "cards": {
+      "file_not_png": "El archivo no es un PNG válido",
+      "image_not_png": "La imagen no es un PNG válido",
+      "invalid_file": "Archivo de personaje inválido",
+      "name_required": "El personaje necesita un nombre",
+      "not_found": "Personaje no encontrado",
+      "png_corrupt": "Los metadatos del PNG están corruptos",
+      "png_no_card_data": "El PNG no contiene datos de personaje (chara/ccv3)",
+      "png_no_data": "El PNG no contiene datos de personaje"
+    },
+    "chats": {
+      "branch_suffix": "rama",
+      "connection_incomplete": "La conexión activa está incompleta (Ajustes → Conexión y modelo).",
+      "copy_suffix": "copia",
+      "empty_message": "El mensaje está vacío",
+      "generate_error": "Error al generar la respuesta",
+      "impersonate_error": "Error al generar el mensaje",
+      "import_no_messages": "El archivo no contiene mensajes de chat (¿es un .jsonl válido?)",
+      "imported_suffix": "importado",
+      "invalid_kind": "Tipo de chat inválido",
+      "invalid_message": "Mensaje inválido",
+      "invalid_speaker": "Personaje que responde no válido",
+      "invalid_swipe": "Swipe inválido",
+      "invalid_variant": "Variante inválida",
+      "message_gone": "El mensaje ya no existe",
+      "message_not_found": "Mensaje no encontrado",
+      "no_group_members": "Ningún miembro del grupo existe ya",
+      "not_found": "Chat no encontrado",
+      "nothing_to_regenerate": "No hay una respuesta que regenerar",
+      "only_individual_to_group": "Solo los chats individuales se pueden convertir en grupo",
+      "only_variant": "Es la única variante: elimina el mensaje completo.",
+      "select_model": "Selecciona un modelo (Ajustes → Conexión y modelo).",
+      "send_octet_stream": "Envía el archivo como application/octet-stream",
+      "setup_connection": "Configura una conexión (Ajustes → Conexión y modelo)."
+    },
+    "common": {
+      "default_user_name": "Usuario",
+      "empty_response": "El modelo devolvió una respuesta vacía.",
+      "image_must_be_png": "La imagen debe ser PNG (data URL).",
+      "internal_error": "Error interno",
+      "invalid_name": "Nombre inválido",
+      "route_not_found": "Ruta no encontrada"
+    },
+    "connections": {
+      "default_local_name": "Servidor local",
+      "default_name": "Conexión",
+      "model_required": "Falta el modelo",
+      "not_found": "Conexión no encontrada"
+    },
+    "groups": {
+      "min_members": "Un grupo necesita al menos 2 personajes",
+      "name_required": "El grupo necesita un nombre",
+      "not_found": "Grupo no encontrado"
+    },
+    "library": {
+      "no_avatar": "Sin avatar"
+    },
+    "lore": {
+      "default_name": "Nuevo lorebook",
+      "invalid": "Lorebook inválido",
+      "name_taken": "Ya existe un lorebook con ese nombre",
+      "not_found": "Lorebook no encontrado"
+    },
+    "personas": {
+      "name_required": "La persona necesita un nombre",
+      "not_found": "Persona no encontrada"
+    },
+    "presets": {
+      "default_name": "Nuevo preset",
+      "imported_name": "Preset importado",
+      "invalid": "Preset inválido",
+      "keep_one": "Debe quedar al menos un preset",
+      "name_taken": "Ya existe un preset con ese nombre",
+      "no_prompt": "El preset activo no genera ningún prompt: activa al menos uno en Ajustes → Presets.",
+      "not_a_preset": "El archivo no parece un preset de SillyTavern (faltan \"prompts\" o parámetros de muestreo).",
+      "not_found": "Preset no encontrado"
+    },
+    "providers": {
+      "connect_failed": "No se pudo conectar con {where}: {reason}",
+      "connected": "Conectado a {url}: {count} modelo(s) disponibles",
+      "credentials_rejected": "{where} rechazó las credenciales",
+      "generation_error": "error durante la generación",
+      "invalid_key": "La API key no es válida",
+      "invalid_url": "La URL del servidor no es válida",
+      "key_valid": "Key válida",
+      "key_valid_label": "Key válida ({label})",
+      "list_models_failed": "{where} respondió {status} al listar modelos",
+      "local_url_required": "Indica la URL del servidor local",
+      "no_api_key": "No hay API key para probar",
+      "openrouter_status": "OpenRouter respondió {status}",
+      "timeout": "{where} no respondió a tiempo"
+    },
+    "settings": {
+      "hint_api_key": "la API key",
+      "hint_connection": "una conexión",
+      "hint_local_url": "la URL del servidor local",
+      "hint_model": "el modelo"
+    }
+  },
+  "settings": {
+    "tabs": {
+      "appearance": "Apariencia",
+      "assistant": "Asistente de personajes",
+      "characters": "Personajes",
+      "connection": "Conexión y modelo",
+      "lorebooks": "Lorebooks",
+      "personas": "Personas",
+      "presets": "Presets",
+      "security": "Seguridad"
+    },
+    "title": "Ajustes"
+  },
+  "tags": {
+    "all_used": "Ya usas todas las etiquetas",
+    "choose": "Elegir etiqueta…",
+    "choose_aria": "Elegir una etiqueta existente",
+    "create": "Crear etiqueta nueva",
+    "new_placeholder": "Nueva etiqueta",
+    "none_yet": "Aún no hay etiquetas",
+    "remove_aria": "Quitar la etiqueta {name}"
+  },
+  "ui": {
+    "avatar": {
+      "view_image_aria": "Ver imagen de {name}",
+      "view_image_title": "Ver imagen completa"
+    }
+  },
+  "util": {
+    "image_read_error": "No se pudo leer la imagen"
+  }
+}

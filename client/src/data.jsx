@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api.js';
+import { useT } from './i18n.jsx';
 import { applyAppearance, cacheAppearance, loadCachedAppearance, withDefaults } from './theme.js';
 
 const Ctx = createContext(null);
@@ -20,12 +21,14 @@ export function DataProvider({ children }) {
   const [ready, setReady] = useState(false);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
+  const { setPreference } = useT();
 
   // La apariencia guardada en el servidor manda; la copia local solo evita el parpadeo al abrir.
   useEffect(() => {
     applyAppearance(state.appearance);
     cacheAppearance(state.appearance);
-  }, [state.appearance]);
+    setPreference(state.appearance.language);
+  }, [state.appearance, setPreference]);
 
   const toast = useCallback((message, kind = 'info') => {
     const id = ++toastId.current;

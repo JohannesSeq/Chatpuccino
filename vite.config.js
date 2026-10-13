@@ -8,6 +8,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // /locales (idiomas compartidos con el servidor) está fuera de la carpeta `client`.
+    fs: { allow: ['..'] },
     proxy: { '/api': 'http://localhost:3001' },
   },
 });

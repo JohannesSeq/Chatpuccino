@@ -1,3 +1,5 @@
+import { currentLocale, t } from './i18n.jsx';
+
 export function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -14,16 +16,16 @@ export function formatRP(text) {
 export function formatTime(iso) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatListDate(ms) {
   const d = new Date(ms);
   const now = new Date();
-  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' });
   const yesterday = new Date(now.getTime() - 86400000);
-  if (d.toDateString() === yesterday.toDateString()) return 'Ayer';
-  return d.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
+  if (d.toDateString() === yesterday.toDateString()) return t('common.yesterday');
+  return d.toLocaleDateString(currentLocale(), { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
 export function loadImage(file) {
@@ -36,7 +38,7 @@ export function loadImage(file) {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('No se pudo leer la imagen'));
+      reject(new Error(t('util.image_read_error')));
     };
     img.src = url;
   });

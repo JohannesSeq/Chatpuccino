@@ -15,6 +15,7 @@ const BASE = {
 
 export const DEFAULT_APPEARANCE = {
   mode: 'dark',
+  language: 'auto',
   colors: {
     dark: { accent: null, mine: null, theirs: null, chat: null },
     light: { accent: null, mine: null, theirs: null, chat: null },
@@ -40,22 +41,14 @@ export const FONT_STACKS = {
   handwritten: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive",
 };
 
-export const FONT_OPTIONS = [
-  ['system', 'Sistema'],
-  ['humanist', 'Humanista'],
-  ['rounded', 'Redondeada'],
-  ['serif', 'Serif (lectura)'],
-  ['mono', 'Monoespaciada'],
-  ['handwritten', 'Manuscrita'],
-  ['custom', 'Otra fuente instalada…'],
-];
+// Los nombres visibles se traducen en la interfaz (appearance.fonts.<id>).
+export const FONT_OPTIONS = ['system', 'humanist', 'rounded', 'serif', 'mono', 'handwritten', 'custom'];
 
-// Paletas rápidas: definen los cuatro colores en ambos modos.
+// Paletas rápidas: definen los cuatro colores en ambos modos (nombre visible: appearance.palettes.<id>).
 export const PALETTES = [
-  { id: 'classic', name: 'Clásico', colors: { dark: { accent: null, mine: null, theirs: null, chat: null }, light: { accent: null, mine: null, theirs: null, chat: null } } },
+  { id: 'classic', colors: { dark: { accent: null, mine: null, theirs: null, chat: null }, light: { accent: null, mine: null, theirs: null, chat: null } } },
   {
     id: 'cafe',
-    name: 'Café',
     colors: {
       dark: { accent: '#d99a5b', mine: '#6b4226', theirs: '#2b2420', chat: '#16110e' },
       light: { accent: '#a8642a', mine: '#f1dcc4', theirs: '#ffffff', chat: '#f5ece1' },
@@ -63,7 +56,6 @@ export const PALETTES = [
   },
   {
     id: 'ocean',
-    name: 'Océano',
     colors: {
       dark: { accent: '#3b9cff', mine: '#0f4c81', theirs: '#1b2a3a', chat: '#0a121c' },
       light: { accent: '#1c6fd1', mine: '#cfe6ff', theirs: '#ffffff', chat: '#e6eef7' },
@@ -71,7 +63,6 @@ export const PALETTES = [
   },
   {
     id: 'rose',
-    name: 'Rosa',
     colors: {
       dark: { accent: '#ff6fa5', mine: '#7a1f4a', theirs: '#2e2030', chat: '#170f18' },
       light: { accent: '#d6336c', mine: '#ffd9e6', theirs: '#ffffff', chat: '#fbeff3' },
@@ -79,7 +70,6 @@ export const PALETTES = [
   },
   {
     id: 'forest',
-    name: 'Bosque',
     colors: {
       dark: { accent: '#7bc67e', mine: '#2f5d34', theirs: '#232b22', chat: '#0f150f' },
       light: { accent: '#3f8f46', mine: '#dcefd2', theirs: '#ffffff', chat: '#eef3e8' },
@@ -87,7 +77,6 @@ export const PALETTES = [
   },
   {
     id: 'violet',
-    name: 'Púrpura',
     colors: {
       dark: { accent: '#a78bfa', mine: '#4c2f8a', theirs: '#29243a', chat: '#120f1c' },
       light: { accent: '#6d4bd8', mine: '#e4dcff', theirs: '#ffffff', chat: '#f1eefb' },

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { avatarUrl } from '../api.js';
+import { useT } from '../i18n.jsx';
 import { Icon } from './Icon.jsx';
 
 function hue(name) {
@@ -30,6 +31,7 @@ export const CharAvatar = ({ character, name, size }) => (
 export const PersonaAvatar = ({ persona, size }) => <Avatar src={persona ? avatarUrl.persona(persona) : null} name={persona?.name} size={size} />;
 
 export function Lightbox({ src, name, onClose }) {
+  const { t } = useT();
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -37,7 +39,7 @@ export function Lightbox({ src, name, onClose }) {
   }, [onClose]);
   return createPortal(
     <div className="lightbox" role="dialog" aria-label={name} onClick={onClose}>
-      <button className="icon-btn lightbox-close" onClick={onClose} aria-label="Cerrar">
+      <button className="icon-btn lightbox-close"       onClick={onClose} aria-label={t('common.close')}>
         <Icon name="close" size={26} />
       </button>
       <img src={src} alt={name} onClick={(e) => e.stopPropagation()} />
@@ -49,12 +51,13 @@ export function Lightbox({ src, name, onClose }) {
 
 // Avatar de personaje que al tocarlo muestra la imagen completa.
 export function ViewableAvatar({ character, name, size }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const avatar = <CharAvatar character={character} name={name} size={size} />;
   if (!character) return avatar;
   return (
     <>
-      <button className="avatar-btn zoomable" onClick={() => setOpen(true)} aria-label={`Ver imagen de ${character.name}`} title="Ver imagen completa">
+      <button className="avatar-btn zoomable" onClick={() => setOpen(true)} aria-label={t('ui.avatar.view_image_aria', { name: character.name })} title={t('ui.avatar.view_image_title')}>
         {avatar}
       </button>
       {open && <Lightbox src={avatarUrl.character(character)} name={character.name} onClose={() => setOpen(false)} />}
@@ -74,6 +77,7 @@ export function GroupAvatar({ members, size = 48 }) {
 }
 
 export function Modal({ title, onClose, children, footer, wide }) {
+  const { t } = useT();
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -84,7 +88,7 @@ export function Modal({ title, onClose, children, footer, wide }) {
       <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-label={title}>
         <header className="sheet-head">
           <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
+          <button className="icon-btn"           onClick={onClose} aria-label={t('common.close')}>
             <Icon name="close" />
           </button>
         </header>
@@ -95,7 +99,8 @@ export function Modal({ title, onClose, children, footer, wide }) {
   );
 }
 
-export function Menu({ items, trigger, label = 'Más opciones', className = '', up = false }) {
+export function Menu({ items, trigger, label, className = '', up = false }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -117,7 +122,7 @@ export function Menu({ items, trigger, label = 'Más opciones', className = '', 
   );
   return (
     <div className={`menu ${className}`} ref={ref}>
-      <button className={trigger ? 'menu-trigger' : 'icon-btn'} onClick={() => setOpen((o) => !o)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+      <button className={trigger ? 'menu-trigger' : 'icon-btn'} onClick={() => setOpen((o) => !o)} aria-label={label || t('common.more_options')} aria-haspopup="menu" aria-expanded={open}>
         {trigger || <Icon name="dots" />}
       </button>
       {open && (
@@ -163,11 +168,12 @@ export function DropOverlay({ title, hint }) {
   );
 }
 
-export function SearchBox({ value, onChange, placeholder = 'Buscar' }) {
+export function SearchBox({ value, onChange, placeholder }) {
+  const { t } = useT();
   return (
     <label className="search">
       <Icon name="search" size={18} />
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? t('common.search')} />
     </label>
   );
 }

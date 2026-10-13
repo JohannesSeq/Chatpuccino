@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
+import { currentLocale, useT } from '../i18n.jsx';
 import { Icon } from './Icon.jsx';
 
 const MAX_LEN = 40;
@@ -6,23 +7,24 @@ const same = (a, b) => a.toLowerCase() === b.toLowerCase();
 
 // Etiquetas como chips: se eligen de las que ya existen (dropdown) o se crean nuevas con «+».
 export default function TagPicker({ value, onChange, options = [] }) {
+  const { t, lang } = useT();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
 
   const known = useMemo(() => {
     const out = [];
-    for (const t of [...options, ...value]) if (t && !out.some((o) => same(o, t))) out.push(t);
-    return out.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
-  }, [options, value]);
-  const available = known.filter((t) => !value.some((v) => same(v, t)));
+    for (const tag of [...options, ...value]) if (tag && !out.some((o) => same(o, tag))) out.push(tag);
+    return out.sort((a, b) => a.localeCompare(b, currentLocale(), { sensitivity: 'base' }));
+  }, [options, value, lang]);
+  const available = known.filter((tag) => !value.some((v) => same(v, tag)));
 
   const add = (names) => {
     const next = [...value];
     for (const raw of names) {
       const name = raw.trim().slice(0, MAX_LEN);
-      if (!name || next.some((t) => same(t, name))) continue;
-      next.push(known.find((t) => same(t, name)) || name);
+      if (!name || next.some((tag) => same(tag, name))) continue;
+      next.push(known.find((tag) => same(tag, name)) || name);
     }
     if (next.length !== value.length) onChange(next);
   };
@@ -42,10 +44,10 @@ export default function TagPicker({ value, onChange, options = [] }) {
     <div className="tag-picker">
       {value.length > 0 && (
         <div className="tag-list">
-          {value.map((t) => (
-            <span key={t} className="tag-chip">
-              {t}
-              <button type="button" onClick={() => onChange(value.filter((v) => v !== t))} aria-label={`Quitar la etiqueta ${t}`}>
+          {value.map((tag) => (
+            <span key={tag} className="tag-chip">
+              {tag}
+              <button type="button" onClick={() => onChange(value.filter((v) => v !== tag))} aria-label={t('tags.remove_aria', { name: tag })}>
                 <Icon name="close" size={14} />
               </button>
             </span>
@@ -60,16 +62,16 @@ export default function TagPicker({ value, onChange, options = [] }) {
             add([e.target.value]);
             e.target.value = '';
           }}
-          aria-label="Elegir una etiqueta existente"
+          aria-label={t('tags.choose_aria')}
         >
-          <option value="">{available.length ? 'Elegir etiqueta…' : known.length ? 'Ya usas todas las etiquetas' : 'Aún no hay etiquetas'}</option>
-          {available.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          <option value="">{available.length ? t('tags.choose') : known.length ? t('tags.all_used') : t('tags.none_yet')}</option>
+          {available.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
             </option>
           ))}
         </select>
-        <button type="button" className="icon-btn tag-add" onClick={() => (adding ? setAdding(false) : openAdd())} aria-label="Crear etiqueta nueva" aria-expanded={adding} title="Crear etiqueta nueva">
+        <button type="button" className="icon-btn tag-add" onClick={() => (adding ? setAdding(false) : openAdd())} aria-label={t('tags.create')} aria-expanded={adding} title={t('tags.create')}>
           <Icon name={adding ? 'close' : 'plus'} />
         </button>
       </div>
@@ -79,7 +81,7 @@ export default function TagPicker({ value, onChange, options = [] }) {
             ref={inputRef}
             value={draft}
             maxLength={MAX_LEN * 4}
-            placeholder="Nueva etiqueta"
+            placeholder={t('tags.new_placeholder')}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -93,7 +95,7 @@ export default function TagPicker({ value, onChange, options = [] }) {
             }}
           />
           <button type="button" className="btn primary small" onClick={commit} disabled={!draft.trim()}>
-            Añadir
+            {t('common.add')}
           </button>
         </div>
       )}

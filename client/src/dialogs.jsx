@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useT } from './i18n.jsx';
 
 const Ctx = createContext(null);
 
@@ -47,6 +48,7 @@ export function DialogProvider({ children }) {
 }
 
 function DialogView({ dialog, onFinish }) {
+  const { t } = useT();
   const isPrompt = dialog.kind === 'prompt';
   const cancelValue = isPrompt ? null : false;
   const [value, setValue] = useState(dialog.defaultValue || '');
@@ -70,7 +72,7 @@ function DialogView({ dialog, onFinish }) {
   }, []);
 
   const trimmed = value.trim();
-  const error = isPrompt ? (!trimmed && !dialog.allowEmpty ? 'Escribe un valor' : dialog.validate?.(trimmed) || '') : '';
+  const error = isPrompt ? (!trimmed && !dialog.allowEmpty ? t('dialogs.value_required') : dialog.validate?.(trimmed) || '') : '';
 
   function submit(e) {
     e.preventDefault();
@@ -109,7 +111,7 @@ function DialogView({ dialog, onFinish }) {
         <footer className="sheet-foot">
           <span className="spacer" />
           <button type="button" className="btn" onClick={() => onFinish(cancelValue)}>
-            {dialog.cancelLabel || 'Cancelar'}
+            {dialog.cancelLabel || t('common.cancel')}
           </button>
           <button
             type="submit"
@@ -117,7 +119,7 @@ function DialogView({ dialog, onFinish }) {
             className={`btn ${dialog.danger ? 'danger-fill' : 'primary'}`}
             disabled={isPrompt && touched && Boolean(error)}
           >
-            {dialog.confirmLabel || (isPrompt ? 'Aceptar' : 'Confirmar')}
+            {dialog.confirmLabel || (isPrompt ? t('common.accept') : t('common.confirm'))}
           </button>
         </footer>
       </form>

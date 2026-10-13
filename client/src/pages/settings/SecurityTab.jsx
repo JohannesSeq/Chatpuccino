@@ -4,8 +4,10 @@ import { useAuth } from '../../auth.jsx';
 import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { Field } from '../../components/ui.jsx';
+import { useT } from '../../i18n.jsx';
 
 export default function SecurityTab() {
+  const { t } = useT();
   const { auth, setAuth, logout } = useAuth();
   const { toast } = useData();
   const { confirm: askConfirm } = useDialog();
@@ -29,7 +31,7 @@ export default function SecurityTab() {
       setCurrent('');
       setPassword('');
       setConfirm('');
-      toast('Cuenta actualizada. Se cerró la sesión en los demás dispositivos.');
+      toast(t('security.account.updated'));
     } catch (err) {
       toast(err.message, 'error');
     } finally {
@@ -38,10 +40,10 @@ export default function SecurityTab() {
   }
 
   async function revoke() {
-    if (!(await askConfirm({ title: 'Cerrar sesiones', message: 'Se cerrará la sesión en todos los dispositivos, excepto este.', confirmLabel: 'Cerrar sesiones', danger: true }))) return;
+    if (!(await askConfirm(    { title: t('security.sessions.revoke_title'), message: t('security.sessions.revoke_message'), confirmLabel: t('security.sessions.revoke_confirm'), danger: true }))) return;
     try {
       await api.revokeSessions();
-      toast('Sesiones cerradas');
+          toast(t('security.sessions.revoked'));
     } catch (err) {
       toast(err.message, 'error');
     }
@@ -51,7 +53,7 @@ export default function SecurityTab() {
     try {
       setAuth(await api.setAuthEnabled(!auth.enabled, togglePass));
       setTogglePass('');
-      toast(auth.enabled ? 'Inicio de sesión desactivado' : 'Inicio de sesión activado');
+      toast(auth.enabled ? t('security.require.disabled') : t('security.require.enabled'));
     } catch (err) {
       toast(err.message, 'error');
     }
@@ -60,51 +62,51 @@ export default function SecurityTab() {
   return (
     <div className="stack">
       <form className="card" onSubmit={saveAccount}>
-        <h3>Cuenta</h3>
-        <p className="muted">Sesión iniciada como <strong>{auth.username || '—'}</strong>. Para cambiar el usuario o la contraseña confirma tu contraseña actual.</p>
-        <Field label="Usuario">
+        <h3>{t('security.account.title')}</h3>
+        <p className="muted">
+          {t('security.account.logged_as_before')}
+          <strong>{auth.username || '—'}</strong>
+          {t('security.account.logged_as_after')}
+        </p>
+        <Field label={t('security.account.username')}>
           <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoCapitalize="none" />
         </Field>
-        <Field label="Nueva contraseña" hint="Mínimo 6 caracteres. Déjala vacía para conservar la actual.">
+        <Field label={t('security.account.new_password')} hint={t('security.account.new_password_hint')}>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
         </Field>
-        <Field label="Repetir nueva contraseña">
+        <Field label={t('security.account.repeat_password')}>
           <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
         </Field>
-        {mismatch && <p className="err">Las contraseñas no coinciden.</p>}
-        <Field label="Contraseña actual">
+        {mismatch && <p className="err">{t('security.account.mismatch')}</p>}
+        <Field label={t('security.account.current_password')}>
           <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />
         </Field>
         <button className="btn primary" disabled={busy || !current || mismatch || unchanged}>
-          Guardar cambios
+          {t('security.account.save')}
         </button>
       </form>
 
       <section className="card">
-        <h3>Sesiones</h3>
+        <h3>{t('security.sessions.title')}</h3>
         <div className="btn-row">
           <button className="btn" onClick={logout}>
-            Cerrar sesión
+            {t('security.sessions.logout')}
           </button>
           <button className="btn" onClick={revoke}>
-            Cerrar sesión en todos los dispositivos
+            {t('security.sessions.logout_all')}
           </button>
         </div>
-        <p className="muted">Las sesiones duran 30 días. Tras 5 intentos fallidos seguidos, el acceso se bloquea unos segundos (cada vez más).</p>
+        <p className="muted">{t('security.sessions.note')}</p>
       </section>
 
       <section className="card">
-        <h3>Requerir inicio de sesión</h3>
-        <p className="muted">
-          {auth.enabled
-            ? 'Ahora mismo cualquiera que llegue al servidor necesita usuario y contraseña. Desactívalo solo si lo usas en un equipo de confianza.'
-            : 'El inicio de sesión está desactivado: cualquiera con acceso a la red del servidor puede usar la app y ver tu API key guardada.'}
-        </p>
-        <Field label="Confirma tu contraseña">
+        <h3>{t('security.require.title')}</h3>
+        <p className="muted">{auth.enabled ? t('security.require.on_note') : t('security.require.off_note')}</p>
+        <Field label={t('security.require.confirm_password')}>
           <input type="password" value={togglePass} onChange={(e) => setTogglePass(e.target.value)} autoComplete="current-password" />
         </Field>
         <button className={`btn ${auth.enabled ? 'danger' : 'primary'}`} disabled={!togglePass} onClick={toggleEnabled}>
-          {auth.enabled ? 'Desactivar inicio de sesión' : 'Activar inicio de sesión'}
+          {auth.enabled ? t('security.require.disable') : t('security.require.enable')}
         </button>
       </section>
     </div>

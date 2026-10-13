@@ -3,6 +3,7 @@ import path from 'node:path';
 import { DIRS } from './config.js';
 import { embedCard, extractCardText, placeholderPng, isPng } from './png.js';
 import { HttpError, resolveIn, safeName, uniqueName, writeFileAtomic, exists, nowIso } from './util.js';
+import { t } from './i18n.js';
 
 const str = (v) => (typeof v === 'string' ? v : v == null ? '' : String(v));
 const strArr = (v) => (Array.isArray(v) ? v.map(str).filter((s) => s !== '') : []);
@@ -113,9 +114,9 @@ export async function listCharacters() {
 
 export async function getCharacter(id) {
   const file = pngPath(id);
-  if (!(await exists(file))) throw new HttpError(404, 'Personaje no encontrado');
+  if (!(await exists(file))) throw new HttpError(404, t('server.cards.not_found'));
   const { data, mtimeMs } = await readCardFile(file);
-  if (!data) throw new HttpError(422, 'El PNG no contiene datos de personaje');
+  if (!data) throw new HttpError(422, t('server.cards.png_no_data'));
   return { id, data, mtime: mtimeMs };
 }
 
@@ -132,7 +133,7 @@ async function writeCard(id, data, imageBuf) {
       png = placeholderPng(data.name);
     }
   }
-  if (!isPng(png)) throw new HttpError(400, 'La imagen no es un PNG válido');
+  if (!isPng(png)) throw new HttpError(400, t('server.cards.image_not_png'));
   const { v2, v3 } = buildPayloads(data);
   await writeFileAtomic(pngPath(id), embedCard(png, v2, v3));
   cache.delete(pngPath(id));
@@ -140,7 +141,7 @@ async function writeCard(id, data, imageBuf) {
 
 export async function createCharacter(rawData, imageBuf) {
   const data = normalizeCardData(rawData);
-  if (!data.name) throw new HttpError(400, 'El personaje necesita un nombre');
+  if (!data.name) throw new HttpError(400, t('server.cards.name_required'));
   const id = await uniqueName(DIRS.characters, safeName(data.name), '.png');
   await writeCard(id, data, imageBuf);
   return getCharacter(id);
@@ -149,14 +150,14 @@ export async function createCharacter(rawData, imageBuf) {
 export async function updateCharacter(id, rawData, imageBuf) {
   await getCharacter(id);
   const data = normalizeCardData(rawData);
-  if (!data.name) throw new HttpError(400, 'El personaje necesita un nombre');
+  if (!data.name) throw new HttpError(400, t('server.cards.name_required'));
   await writeCard(id, data, imageBuf);
   return getCharacter(id);
 }
 
 export async function deleteCharacter(id) {
   const file = pngPath(id);
-  if (!(await exists(file))) throw new HttpError(404, 'Personaje no encontrado');
+  if (!(await exists(file))) throw new HttpError(404, t('server.cards.not_found'));
   await fs.unlink(file);
   cache.delete(file);
   await fs.rm(resolveIn(DIRS.chats, id), { recursive: true, force: true });
@@ -164,18 +165,18 @@ export async function deleteCharacter(id) {
 
 export async function importCharacter({ png, json }) {
   if (png) {
-    if (!isPng(png)) throw new HttpError(400, 'El archivo no es un PNG válido');
+    if (!isPng(png)) throw new HttpError(400, t('server.cards.file_not_png'));
     const text = extractCardText(png);
-    if (!text) throw new HttpError(422, 'El PNG no contiene datos de personaje (chara/ccv3)', 'NO_CARD');
+    if (!text) throw new HttpError(422, t('server.cards.png_no_card_data'), 'NO_CARD');
     let parsed;
     try {
       parsed = JSON.parse(Buffer.from(text, 'base64').toString('utf8'));
     } catch {
-      throw new HttpError(422, 'Los metadatos del PNG están corruptos');
+      throw new HttpError(422, t('server.cards.png_corrupt'));
     }
     return createCharacter(parsed, png);
   }
-  if (!json || typeof json !== 'object') throw new HttpError(400, 'Archivo de personaje inválido');
+  if (!json || typeof json !== 'object') throw new HttpError(400, t('server.cards.invalid_file'));
   return createCharacter(json, null);
 }
 

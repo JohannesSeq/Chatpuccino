@@ -3,6 +3,7 @@ import { useMatch, useNavigate } from 'react-router-dom';
 import { api, chatRoute } from '../api.js';
 import { useData } from '../data.jsx';
 import { useDialog } from '../dialogs.jsx';
+import { useT } from '../i18n.jsx';
 import { formatListDate } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, SearchBox } from '../components/ui.jsx';
@@ -14,6 +15,7 @@ import ChatView from './ChatView.jsx';
 export default function ChatsPage() {
   const match = useMatch('/chats/:kind/:owner/:file');
   const { refresh } = useData();
+  const { t } = useT();
   useEffect(() => {
     refresh('chats');
   }, [refresh]);
@@ -26,7 +28,7 @@ export default function ChatsPage() {
         ) : (
           <div className="empty">
             <Icon name="chat" size={64} />
-            <p>Selecciona un chat o inicia uno nuevo</p>
+            <p>{t('chats.empty_select')}</p>
           </div>
         )}
       </section>
@@ -37,6 +39,7 @@ export default function ChatsPage() {
 function ChatList({ active }) {
   const { chats, charById, groupById, refresh, toast } = useData();
   const { confirm, prompt } = useDialog();
+  const { t } = useT();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
@@ -65,7 +68,7 @@ function ChatList({ active }) {
   }
 
   async function rename(c) {
-    const title = await prompt({ title: 'Renombrar chat', label: `Chat con ${c.name}`, defaultValue: c.title, placeholder: 'Sin nombre', allowEmpty: true, confirmLabel: 'Guardar' });
+    const title = await prompt({ title: t('chats.menu.rename'), label: t('chats.rename.label', { name: c.name }), defaultValue: c.title, placeholder: t('chats.rename.placeholder'), allowEmpty: true, confirmLabel: t('common.save') });
     if (title === null) return;
     try {
       await api.patchChat(c, { title });
@@ -76,26 +79,26 @@ function ChatList({ active }) {
   }
 
   async function copy(c) {
-    const base = String(c.title || c.createdAt || c.file).replace(/ \((rama|copia)\)$/, '');
+    const base = String(c.title || c.createdAt || c.file).replace(/ \((rama|copia|branch|copy)\)$/, '');
     const title = await prompt({
-      title: 'Copiar chat',
-      message: `Se duplicará la conversación completa con ${c.name}. El original no cambia.`,
-      label: 'Nombre de la copia',
-      defaultValue: `${base} (copia)`,
-      confirmLabel: 'Crear copia',
+      title: t('chats.menu.copy'),
+      message: t('chats.copy.message', { name: c.name }),
+      label: t('chats.copy.label'),
+      defaultValue: t('chats.copy.default_title', { base }),
+      confirmLabel: t('chats.copy.confirm'),
     });
     if (title === null) return;
     try {
       await api.copyChat(c, title);
       await refresh('chats');
-      toast('Copia creada');
+      toast(t('chats.copy.done'));
     } catch (e) {
       toast(e.message, 'error');
     }
   }
 
   async function remove(c) {
-    if (!(await confirm({ title: 'Eliminar chat', message: `Se borrará esta conversación con ${c.name}. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
+    if (!(await confirm({ title: t('chats.menu.delete'), message: t('chats.delete.message', { name: c.name }), confirmLabel: t('common.delete'), danger: true }))) return;
     try {
       await api.deleteChat(c);
       await refresh('chats');
@@ -108,20 +111,20 @@ function ChatList({ active }) {
   return (
     <aside className="chat-list">
       <header className="topbar head-row">
-        <h1>Chats</h1>
-        <button className="icon-btn" onClick={() => setImporting(true)} aria-label="Importar chat" title="Importar chat (.jsonl)">
+        <h1>{t('chats.title')}</h1>
+        <button className="icon-btn" onClick={() => setImporting(true)} aria-label={t('chats.import.title')} title={t('chats.import.button_title')}>
           <Icon name="upload" />
         </button>
       </header>
       <PasswordBanner />
       <div className="pad-x">
-        <SearchBox value={query} onChange={setQuery} placeholder="Buscar chats" />
+        <SearchBox value={query} onChange={setQuery} placeholder={t('chats.search_placeholder')} />
       </div>
       <ul className="rows">
         {rows.map((c, i) => {
           const isActive = active && active.kind === c.kind && active.owner === c.ownerId && active.file === c.file;
           const members = c.group ? c.group.members.map((id) => charById[id]).filter(Boolean) : [];
-          const label = hasPinned && (i === 0 ? (c.pinned ? 'Fijados' : 'Chats') : !c.pinned && rows[i - 1].pinned ? 'Chats' : null);
+          const label = hasPinned && (i === 0 ? (c.pinned ? t('chats.section.pinned') : t('chats.section.chats')) : !c.pinned && rows[i - 1].pinned ? t('chats.section.chats') : null);
           return (
             <React.Fragment key={`${c.kind}/${c.ownerId}/${c.file}`}>
               {label && <li className="section-label">{label}</li>}
@@ -137,16 +140,16 @@ function ChatList({ active }) {
                   </div>
                   <div className="row-sub">
                     {c.title && <span className="tag">{c.title}</span>}
-                    {c.lastMessage ? `${c.lastMessage.isUser ? 'Tú' : c.kind === 'g' ? c.lastMessage.name : ''}${c.lastMessage.isUser || c.kind === 'g' ? ': ' : ''}${c.lastMessage.text.replace(/\*+/g, '')}` : 'Sin mensajes'}
+                    {c.lastMessage ? `${c.lastMessage.isUser ? t('chats.last_message.you') : c.kind === 'g' ? c.lastMessage.name : ''}${c.lastMessage.isUser || c.kind === 'g' ? ': ' : ''}${c.lastMessage.text.replace(/\*+/g, '')}` : t('chats.last_message.none')}
                   </div>
                 </div>
               </button>
               <Menu
                 items={[
-                  { label: c.pinned ? 'Quitar de fijados' : 'Fijar chat', onClick: () => togglePin(c) },
-                  { label: 'Renombrar chat', onClick: () => rename(c) },
-                  { label: 'Copiar chat', onClick: () => copy(c) },
-                  { label: 'Eliminar chat', danger: true, onClick: () => remove(c) },
+                  { label: c.pinned ? t('chats.menu.unpin') : t('chats.menu.pin'), onClick: () => togglePin(c) },
+                  { label: t('chats.menu.rename'), onClick: () => rename(c) },
+                  { label: t('chats.menu.copy'), onClick: () => copy(c) },
+                  { label: t('chats.menu.delete'), danger: true, onClick: () => remove(c) },
                 ]}
               />
             </li>
@@ -155,12 +158,12 @@ function ChatList({ active }) {
         })}
         {!rows.length && (
           <li className="empty small">
-            {chats.length ? 'Sin resultados' : 'Aún no tienes chats. Toca + para empezar uno.'}
+            {chats.length ? t('chats.empty_no_results') : t('chats.empty_none')}
           </li>
         )}
       </ul>
       <PersonaCorner active={active} />
-      <button className="fab" onClick={() => setCreating(true)} aria-label="Nuevo chat">
+                  <button className="fab" onClick={() => setCreating(true)} aria-label={t('chats.new_chat')}>
         <Icon name="plus" size={28} />
       </button>
       {creating && (
@@ -190,6 +193,7 @@ function ChatList({ active }) {
 // Persona activa: la del chat abierto (o la predeterminada si no hay ninguno). Elegirla también la fija para los chats nuevos.
 function PersonaCorner({ active }) {
   const { personas, settings, chats, refresh, toast } = useData();
+  const { t } = useT();
   const [editing, setEditing] = useState(null);
   const openChat = active ? chats.find((c) => c.kind === active.kind && c.ownerId === active.owner && c.file === active.file) : null;
   const activeId = openChat?.personaId || settings.defaultPersona || '';
@@ -203,19 +207,19 @@ function PersonaCorner({ active }) {
       if (openChat) await api.patchChat({ kind: openChat.kind, ownerId: openChat.ownerId, file: openChat.file }, { personaId: p.id });
       await refresh('settings', 'chats');
       reloadChat();
-      toast(`Ahora eres ${p.name}`);
+      toast(t('chats.persona.now_you_are', { name: p.name }));
     } catch (e) {
       toast(e.message, 'error');
     }
   }
 
   const items = [
-    { header: openChat ? 'Persona activa (este chat y los nuevos)' : 'Persona para los chats nuevos' },
+    { header: openChat ? t('chats.persona.header_open') : t('chats.persona.header_new') },
     ...personas.map((p) => ({ label: p.name, icon: <PersonaAvatar persona={p} size={28} />, checked: p.id === activeId, onClick: () => choose(p) })),
-    ...(personas.length ? [] : [{ header: 'Aún no tienes personas' }]),
+    ...(personas.length ? [] :     [{ header: t('chats.persona.none') }]),
     { separator: true },
-    current && { label: `Editar «${current.name}»`, icon: <Icon name="edit" size={20} />, onClick: () => setEditing(current) },
-    { label: 'Nueva persona…', icon: <Icon name="plus" size={20} />, onClick: () => setEditing('new') },
+        current && { label: t('chats.persona.edit', { name: current.name }), icon: <Icon name="edit" size={20} />, onClick: () => setEditing(current) },
+        { label: t('chats.persona.new'), icon: <Icon name="plus" size={20} />, onClick: () => setEditing('new') },
   ];
 
   return (
@@ -224,11 +228,11 @@ function PersonaCorner({ active }) {
         <Menu
           up
           items={items}
-          label="Persona activa"
+          label={t('chats.persona.label')}
           trigger={
             <span className="persona-trigger-inner">
               <PersonaAvatar persona={current} size={40} />
-              <span>{current?.name || 'Usuario'}</span>
+              <span>{current?.name || t('chats.persona.user')}</span>
             </span>
           }
           className="persona-menu"
@@ -252,6 +256,7 @@ function PersonaCorner({ active }) {
 
 function ImportChatSheet({ onClose, onDone }) {
   const { characters, groups, toast } = useData();
+  const { t } = useT();
   const [kind, setKind] = useState('c');
   const [ownerId, setOwnerId] = useState('');
   const [files, setFiles] = useState([]);
@@ -291,27 +296,27 @@ function ImportChatSheet({ onClose, onDone }) {
         toast(e.message, 'error');
       }
     }
-    if (refs.length) toast(`${refs.length} chat(s) importado(s)`);
+    if (refs.length) toast(t('chats.import.done', { count: refs.length }));
     setBusy(false);
     if (refs.length) onDone(refs);
   }
 
   return (
     <Modal
-      title="Importar chat"
+      title={t('chats.import.title')}
       onClose={onClose}
       footer={
         <>
           <span className="spacer" />
           <button className="btn primary" disabled={busy || !ownerId || !files.length} onClick={run}>
-            Importar{files.length > 1 ? ` (${files.length})` : ''}
+            {t('common.import')}{files.length > 1 ? ` (${files.length})` : ''}
           </button>
         </>
       }
     >
-      <p className="muted">Archivos .jsonl de SillyTavern (o exportados desde aquí). Se añaden como chats nuevos; no se mezclan con los existentes.</p>
+      <p className="muted">{t('chats.import.description')}</p>
       <label className="field">
-        <span className="field-label">Archivo(s)</span>
+        <span className="field-label">{t('chats.import.files')}</span>
         <input type="file" accept=".jsonl,.json,application/json,text/plain" multiple onChange={onFiles} />
       </label>
       {files.length > 0 && <p className="muted">{files.map((f) => f.name).join(', ')}</p>}
@@ -323,7 +328,7 @@ function ImportChatSheet({ onClose, onDone }) {
             setOwnerId('');
           }}
         >
-          Personaje
+          {t('chats.kind.character')}
         </button>
         <button
           className={kind === 'g' ? 'active' : ''}
@@ -332,13 +337,13 @@ function ImportChatSheet({ onClose, onDone }) {
             setOwnerId('');
           }}
         >
-          Grupo
+          {t('chats.kind.group')}
         </button>
       </div>
       <label className="field">
-        <span className="field-label">{kind === 'c' ? 'Importar al personaje' : 'Importar al grupo'}</span>
+        <span className="field-label">{kind === 'c' ? t('chats.import.to_character') : t('chats.import.to_group')}</span>
         <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
-          <option value="">Elegir…</option>
+          <option value="">{t('chats.import.choose')}</option>
           {owners.map((o) => (
             <option key={o.id} value={o.id}>
               {o.name}
@@ -352,6 +357,7 @@ function ImportChatSheet({ onClose, onDone }) {
 
 function NewChatSheet({ onClose, onCreated }) {
   const { characters, groups, personas, settings, charById, toast } = useData();
+  const { t } = useT();
   const [tab, setTab] = useState('c');
   const [query, setQuery] = useState('');
   const [personaId, setPersonaId] = useState(settings?.defaultPersona || personas[0]?.id || '');
@@ -375,21 +381,21 @@ function NewChatSheet({ onClose, onCreated }) {
 
   return (
     <>
-      <Modal title="Nuevo chat" onClose={onClose}>
+      <Modal title={t('chats.new.title')} onClose={onClose}>
         <div className="tabs">
           <button className={tab === 'c' ? 'active' : ''} onClick={() => setTab('c')}>
-            Personaje
+            {t('chats.kind.character')}
           </button>
           <button className={tab === 'g' ? 'active' : ''} onClick={() => setTab('g')}>
-            Grupo
+            {t('chats.kind.group')}
           </button>
         </div>
         <label className="field persona-pick">
-          <span className="field-label">Hablar como</span>
+          <span className="field-label">{t('chats.new.speak_as')}</span>
           <div className="inline">
             <PersonaAvatar persona={persona} size={32} />
             <select value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
-              <option value="">Usuario (sin persona)</option>
+              <option value="">{t('chats.new.no_persona')}</option>
               {personas.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -400,28 +406,28 @@ function NewChatSheet({ onClose, onCreated }) {
         </label>
         {tab === 'c' ? (
           <>
-            <SearchBox value={query} onChange={setQuery} placeholder="Buscar personaje" />
+            <SearchBox value={query} onChange={setQuery}             placeholder={t('chats.new.search_character')} />
             <ul className="rows">
               {characters
-                .filter((c) => !q || c.name.toLowerCase().includes(q) || c.tags.some((t) => t.toLowerCase().includes(q)))
+                            .filter((c) => !q || c.name.toLowerCase().includes(q) || c.tags.some((tag) => tag.toLowerCase().includes(q)))
                 .map((c) => (
                   <li key={c.id} className="row">
                     <button className="row-main" disabled={busy} onClick={() => start('c', c.id)}>
                       <CharAvatar character={c} />
                       <div className="row-text">
                         <strong>{c.name}</strong>
-                        <div className="row-sub">{(c.description || 'Sin descripción').replace(/\{\{char\}\}/gi, c.name)}</div>
+                        <div className="row-sub">{(c.description || t('chats.new.no_description')).replace(/\{\{char\}\}/gi, c.name)}</div>
                       </div>
                     </button>
                   </li>
                 ))}
-              {!characters.length && <li className="empty small">No hay personajes. Créalos o impórtalos en Ajustes → Personajes.</li>}
+              {!characters.length && <li className="empty small">{t('chats.new.no_characters')}</li>}
             </ul>
           </>
         ) : (
           <>
             <button className="btn" onClick={() => setEditingGroup('new')}>
-              <Icon name="group" size={18} /> Crear grupo
+              <Icon name="group" size={18} /> {t('chats.new.create_group')}
             </button>
             <ul className="rows">
               {groups.map((g) => (
@@ -435,7 +441,7 @@ function NewChatSheet({ onClose, onCreated }) {
                   </button>
                 </li>
               ))}
-              {!groups.length && <li className="empty small">Aún no hay grupos.</li>}
+              {!groups.length && <li className="empty small">{t('chats.new.no_groups')}</li>}
             </ul>
           </>
         )}

@@ -22,13 +22,14 @@ import { samplingParams } from '../sampling.js';
 import { startSse } from '../sse.js';
 import { getGroup, getPersona, saveGroup } from '../store.js';
 import { HttpError, wrap, nowIso } from '../util.js';
+import { t } from '../i18n.js';
 
 const r = Router();
 
 async function resolvePersona(meta, settings) {
   const id = meta.chat_metadata?.persona || settings.defaultPersona;
   const persona = id ? await getPersona(id) : null;
-  return persona || { id: '', name: meta.user_name || 'Usuario', description: '' };
+  return persona || { id: '', name: meta.user_name || t('server.common.default_user_name'), description: '' };
 }
 
 async function loadOwner(kind, ownerId) {
@@ -45,7 +46,7 @@ async function loadOwner(kind, ownerId) {
       /* miembro eliminado */
     }
   }
-  if (!members.length) throw new HttpError(409, 'Ningún miembro del grupo existe ya');
+  if (!members.length) throw new HttpError(409, t('server.chats.no_group_members'));
   return { name: group.name, members, group };
 }
 
@@ -58,7 +59,7 @@ r.get('/', wrap(async (_req, res) => {
 // Importa un .jsonl (formato SillyTavern) como chat nuevo de un personaje o grupo.
 r.post('/import', wrap(async (req, res) => {
   const { kind, ownerId } = req.query;
-  if (!Buffer.isBuffer(req.body)) throw new HttpError(400, 'Envía el archivo como application/octet-stream');
+  if (!Buffer.isBuffer(req.body)) throw new HttpError(400, t('server.chats.send_octet_stream'));
   const owner = await loadOwner(kind, ownerId);
   let filename = String(req.headers['x-filename'] || '');
   try {
@@ -97,7 +98,7 @@ r.patch('/:kind/:owner/:file', wrap(async (req, res) => {
     }
     if (typeof personaId === 'string') {
       const persona = personaId ? await getPersona(personaId) : null;
-      if (personaId && !persona) throw new HttpError(404, 'Persona no encontrada');
+      if (personaId && !persona) throw new HttpError(404, t('server.personas.not_found'));
       if (persona) {
         chat.meta.chat_metadata.persona = persona.id;
         chat.meta.user_name = persona.name;
@@ -124,7 +125,7 @@ r.get('/:kind/:owner/:file/export', wrap(async (req, res) => {
 r.post('/:kind/:owner/:file/messages', wrap(async (req, res) => {
   const { kind, owner, file } = req.params;
   const mes = String(req.body?.mes ?? '').trim();
-  if (!mes) throw new HttpError(400, 'El mensaje está vacío');
+  if (!mes) throw new HttpError(400, t('server.chats.empty_message'));
   const settings = await getSettings();
   const out = await mutateChat(kind, owner, file, async (chat) => {
     const persona = await resolvePersona(chat.meta, settings);
@@ -138,13 +139,13 @@ r.post('/:kind/:owner/:file/messages', wrap(async (req, res) => {
 function messageAt(chat, req) {
   const i = Number(req.params.i);
   const msg = chat.messages[i];
-  if (!Number.isInteger(i) || !msg) throw new HttpError(404, 'Mensaje no encontrado');
+  if (!Number.isInteger(i) || !msg) throw new HttpError(404, t('server.chats.message_not_found'));
   return { i, msg };
 }
 
 r.patch('/:kind/:owner/:file/messages/:i', wrap(async (req, res) => {
   const mes = String(req.body?.mes ?? '');
-  if (!mes.trim()) throw new HttpError(400, 'El mensaje está vacío');
+  if (!mes.trim()) throw new HttpError(400, t('server.chats.empty_message'));
   const out = await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
     const { msg } = messageAt(chat, req);
     msg.mes = mes;
@@ -166,7 +167,7 @@ r.post('/:kind/:owner/:file/messages/:i/swipe', wrap(async (req, res) => {
   const out = await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
     const { msg } = messageAt(chat, req);
     const id = Number(req.body?.swipe_id);
-    if (!Array.isArray(msg.swipes) || !Number.isInteger(id) || id < 0 || id >= msg.swipes.length) throw new HttpError(400, 'Swipe inválido');
+    if (!Array.isArray(msg.swipes) || !Number.isInteger(id) || id < 0 || id >= msg.swipes.length) throw new HttpError(400, t('server.chats.invalid_swipe'));
     msg.swipe_id = id;
     msg.mes = msg.swipes[id];
     return msg;
@@ -179,9 +180,9 @@ r.delete('/:kind/:owner/:file/messages/:i/swipe', wrap(async (req, res) => {
   const out = await mutateChat(req.params.kind, req.params.owner, req.params.file, (chat) => {
     const { msg } = messageAt(chat, req);
     const swipes = Array.isArray(msg.swipes) && msg.swipes.length ? msg.swipes : [msg.mes];
-    if (swipes.length < 2) throw new HttpError(409, 'Es la única variante: elimina el mensaje completo.');
+    if (swipes.length < 2) throw new HttpError(409, t('server.chats.only_variant'));
     const id = req.query.id !== undefined ? Number(req.query.id) : msg.swipe_id ?? 0;
-    if (!Number.isInteger(id) || id < 0 || id >= swipes.length) throw new HttpError(400, 'Variante inválida');
+    if (!Number.isInteger(id) || id < 0 || id >= swipes.length) throw new HttpError(400, t('server.chats.invalid_variant'));
     msg.swipes = swipes.filter((_, k) => k !== id);
     if (Array.isArray(msg.swipe_info)) msg.swipe_info = msg.swipe_info.filter((_, k) => k !== id);
     msg.swipe_id = Math.max(0, id - 1);
@@ -196,7 +197,7 @@ r.post('/:kind/:owner/:file/branch', wrap(async (req, res) => {
   const { kind, owner, file } = req.params;
   const index = Number(req.body?.index);
   const chat = await readChat(kind, owner, file);
-  if (!Number.isInteger(index) || index < 0 || index >= chat.messages.length) throw new HttpError(400, 'Mensaje inválido');
+  if (!Number.isInteger(index) || index < 0 || index >= chat.messages.length) throw new HttpError(400, t('server.chats.invalid_message'));
   const newFile = await branchChat({ kind, owner, file, chat, index, title: req.body?.title });
   res.status(201).json({ kind, ownerId: owner, file: newFile });
 }));
@@ -221,7 +222,7 @@ r.post('/:kind/:owner/:file/copy', wrap(async (req, res) => {
 // Convierte un chat individual en un grupo nuevo (el personaje original + los elegidos).
 r.post('/:kind/:owner/:file/to-group', wrap(async (req, res) => {
   const { kind, owner, file } = req.params;
-  if (kind !== 'c') throw new HttpError(400, 'Solo los chats individuales se pueden convertir en grupo');
+  if (kind !== 'c') throw new HttpError(400, t('server.chats.only_individual_to_group'));
   const { name, members, replyMode, keepOriginal } = req.body || {};
   const original = await getCharacter(owner);
   const extra = [...new Set((Array.isArray(members) ? members : []).map(String))].filter((id) => id !== owner);
@@ -253,7 +254,7 @@ async function prepareGeneration({ kind, owner, file }, { speakerId, swipe, impe
   } else if (swipe) {
     targetIndex = chat.messages.length - 1;
     const last = chat.messages[targetIndex];
-    if (!last || last.is_user) throw new HttpError(400, 'No hay una respuesta que regenerar');
+    if (!last || last.is_user) throw new HttpError(400, t('server.chats.nothing_to_regenerate'));
     history = chat.messages.slice(0, -1);
     speaker = isGroup
       ? ownerInfo.members.find((m) => `${m.id}.png` === last.original_avatar) || ownerInfo.members.find((m) => m.name === last.name)
@@ -261,7 +262,7 @@ async function prepareGeneration({ kind, owner, file }, { speakerId, swipe, impe
   } else {
     speaker = isGroup ? ownerInfo.members.find((m) => m.id === speakerId) : ownerInfo.members[0];
   }
-  if (!speaker) throw new HttpError(400, 'Personaje que responde no válido');
+  if (!speaker) throw new HttpError(400, t('server.chats.invalid_speaker'));
 
   const persona = await resolvePersona(chat.meta, settings);
   const { name: presetName, preset } = await getActivePreset(settings);
@@ -289,9 +290,9 @@ r.post('/:kind/:owner/:file/prompt', wrap(async (req, res) => {
 
 function requireReady(settings) {
   const conn = activeConnection(settings);
-  if (!conn) throw new HttpError(400, 'Configura una conexión (Ajustes → Conexión y modelo).');
+  if (!conn) throw new HttpError(400, t('server.chats.setup_connection'));
   if (!isReady(conn)) {
-    throw new HttpError(400, conn.model ? 'La conexión activa está incompleta (Ajustes → Conexión y modelo).' : 'Selecciona un modelo (Ajustes → Conexión y modelo).');
+    throw new HttpError(400, conn.model ? t('server.chats.connection_incomplete') : t('server.chats.select_model'));
   }
   return conn;
 }
@@ -310,7 +311,7 @@ r.post('/:kind/:owner/:file/impersonate', wrap(async (req, res) => {
   const finish = (text, extra = {}) => {
     const clean = stripSpeakerPrefix(text, persona.name).trim();
     if (clean) send({ done: true, text: clean, ...extra });
-    else send({ error: 'El modelo devolvió una respuesta vacía.' });
+    else send({ error: t('server.common.empty_response') });
   };
   try {
     streamed = await streamChat({
@@ -327,7 +328,7 @@ r.post('/:kind/:owner/:file/impersonate', wrap(async (req, res) => {
     } else if (partial.trim()) {
       finish(partial, { warning: e.message });
     } else {
-      send({ error: e.message || 'Error al generar el mensaje' });
+      send({ error: e.message || t('server.chats.impersonate_error') });
     }
   } finally {
     res.end();
@@ -351,7 +352,7 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
       const info = { send_date: nowIso(), gen_started: startedAt, gen_finished: nowIso(), extra: { model: conn.model } };
       if (swipe) {
         const m = c.messages[targetIndex];
-        if (!m) throw new HttpError(409, 'El mensaje ya no existe');
+        if (!m) throw new HttpError(409, t('server.chats.message_gone'));
         m.swipes = Array.isArray(m.swipes) && m.swipes.length ? m.swipes : [m.mes];
         m.swipe_info = Array.isArray(m.swipe_info) ? m.swipe_info : [];
         while (m.swipe_info.length < m.swipes.length) m.swipe_info.push({});
@@ -375,7 +376,7 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
       onDelta: (delta) => send({ delta }),
     });
     const saved = await persist(text);
-    if (!saved) send({ error: 'El modelo devolvió una respuesta vacía.' });
+    if (!saved) send({ error: t('server.common.empty_response') });
     else send({ done: true, ...saved });
   } catch (e) {
     const partial = e.partial || '';
@@ -392,7 +393,7 @@ r.post('/:kind/:owner/:file/generate', wrap(async (req, res) => {
     } else if (saved) {
       send({ done: true, warning: e.message, ...saved });
     } else {
-      send({ error: e.message || 'Error al generar la respuesta' });
+      send({ error: e.message || t('server.chats.generate_error') });
     }
   } finally {
     res.end();

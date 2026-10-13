@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { t } from './i18n.js';
 
 export class HttpError extends Error {
   constructor(status, message, code) {
@@ -25,7 +26,7 @@ export function safeName(name, fallback = 'sin-nombre') {
 export function resolveIn(dir, name) {
   const base = path.resolve(dir);
   const p = path.resolve(base, String(name ?? ''));
-  if (path.dirname(p) !== base) throw new HttpError(400, 'Nombre inválido');
+  if (path.dirname(p) !== base) throw new HttpError(400, t('server.common.invalid_name'));
   return p;
 }
 
@@ -81,7 +82,7 @@ export const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, nex
 
 export function decodePngDataUrl(dataUrl) {
   const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl || '');
-  if (!m) throw new HttpError(400, 'La imagen debe ser PNG (data URL).');
+  if (!m) throw new HttpError(400, t('server.common.image_must_be_png'));
   return Buffer.from(m[1], 'base64');
 }
 

@@ -8,12 +8,14 @@ import { AiButton } from '../../components/AiAssist.jsx';
 import { Icon } from '../../components/Icon.jsx';
 import TagPicker from '../../components/TagPicker.jsx';
 import { CharAvatar, DropOverlay, Field, SearchBox } from '../../components/ui.jsx';
+import { useT } from '../../i18n.jsx';
 
 const isPngFile = (f) => /\.png$/i.test(f.name) || f.type === 'image/png';
 const isJsonFile = (f) => /\.json$/i.test(f.name) || f.type === 'application/json';
 const guessName = (filename) => filename.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
 export default function CharactersTab() {
+  const { t } = useT();
   const { characters, refresh, toast } = useData();
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
@@ -23,7 +25,7 @@ export default function CharactersTab() {
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return characters.filter((c) => !q || c.name.toLowerCase().includes(q) || c.tags.some((t) => t.toLowerCase().includes(q)));
+    return characters.filter((c) => !q || c.name.toLowerCase().includes(q) || c.tags.some((tag) => tag.toLowerCase().includes(q)));
   }, [characters, query]);
 
   // Tarjetas (PNG con metadatos o JSON) se importan; cualquier otra imagen sirve para crear un personaje nuevo.
@@ -42,11 +44,11 @@ export default function CharactersTab() {
       } else if (f.type.startsWith('image/')) {
         images.push(f);
       } else {
-        toast(`${f.name}: formato no admitido`, 'error');
+        toast(t('characters.import.unsupported_format', { name: f.name }), 'error');
       }
     }
     if (ok) {
-      toast(`${ok} personaje(s) importado(s)`);
+      toast(t('characters.import.imported', { count: ok }));
       await refresh('characters');
     }
     if (images.length) {
@@ -87,28 +89,28 @@ export default function CharactersTab() {
 
   return (
     <div className="stack">
-      {dragging && <DropOverlay title="Suelta para crear o importar personajes" hint="Tarjetas PNG o JSON de SillyTavern se importan; una imagen normal abre un personaje nuevo con esa imagen." />}
+      {dragging && <DropOverlay title={t('characters.drop.title')} hint={t('characters.drop.hint')} />}
       <div className="btn-row">
         <button className="btn primary" onClick={() => setEditing('new')}>
-          <Icon name="plus" size={18} /> Nuevo personaje
+          <Icon name="plus" size={18} /> {t('characters.list.new')}
         </button>
         <button className="btn" onClick={() => fileRef.current.click()}>
-          Importar (PNG / JSON / imagen)
+          {t('characters.list.import_button')}
         </button>
         <input ref={fileRef} type="file" accept=".png,.json,image/*,application/json" multiple hidden onChange={onImport} />
       </div>
-      <p className="muted">Tip: arrastra aquí tarjetas de personaje o cualquier imagen para crear uno nuevo.</p>
-      <SearchBox value={query} onChange={setQuery} placeholder="Buscar personajes o etiquetas" />
+      <p className="muted">{t('characters.list.tip')}</p>
+      <SearchBox value={query} onChange={setQuery} placeholder={t('characters.list.search_placeholder')} />
       <div className="grid-cards">
         {list.map((c) => (
           <button key={c.id} className="char-card" onClick={() => setEditing(c.id)}>
             <CharAvatar character={c} size={64} />
             <strong>{c.name}</strong>
-            <small>{c.tags.slice(0, 3).join(' · ') || c.description || 'Sin descripción'}</small>
+            <small>{c.tags.slice(0, 3).join(' · ') || c.description || t('characters.list.no_description')}</small>
           </button>
         ))}
       </div>
-      {!list.length && <p className="muted">{characters.length ? 'Sin resultados.' : 'Todavía no hay personajes. Importa tarjetas PNG de SillyTavern o crea una nueva.'}</p>}
+      {!list.length && <p className="muted">{characters.length ? t('characters.list.no_results') : t('characters.list.empty')}</p>}
     </div>
   );
 }
@@ -131,6 +133,7 @@ const EMPTY = {
 };
 
 export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
+  const { t } = useT();
   const { characters, lorebooks, toast } = useData();
   const { confirm } = useDialog();
   const [data, setData] = useState(id ? null : { ...EMPTY, name: initialFile ? guessName(initialFile.name) : '' });
@@ -145,7 +148,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
 
   async function applyFile(file) {
     if (!file?.type?.startsWith('image/')) {
-      toast('Ese archivo no es una imagen', 'error');
+      toast(t('characters.editor.not_image'), 'error');
       return;
     }
     try {
@@ -180,7 +183,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (!data) return <p className="muted">Cargando…</p>;
+  if (!data) return <p className="muted">{t('common.loading')}</p>;
   const set = (k, v) => setData((d) => ({ ...d, [k]: v }));
   const setExt = (k, v) => setData((d) => ({ ...d, extensions: { ...d.extensions, [k]: v } }));
   const greetings = data.alternate_greetings;
@@ -190,7 +193,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   const ai = (field, label, value, onApply) => <AiButton field={field} label={label} value={value} onApply={onApply} context={aiContext} />;
 
   async function readImage() {
-    if (imageReading.trim() && !(await confirm({ title: 'Reemplazar lectura de imagen', message: 'Ya hay una lectura de imagen. Se reemplazará por una nueva.', confirmLabel: 'Leer de nuevo' }))) return;
+    if (imageReading.trim() && !(await confirm({ title: t('characters.editor.reading.replace_title'), message: t('characters.editor.reading.replace_message'), confirmLabel: t('characters.editor.reading.replace_confirm') }))) return;
     const ac = new AbortController();
     readAbort.current = ac;
     setReading(true);
@@ -216,7 +219,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     const text = imageReading.trim();
     if (!text || data.description.includes(text)) return;
     set('description', data.description.trim() ? `${data.description.trimEnd()}\n\n${text}` : text);
-    toast('Añadido a la descripción');
+    toast(t('characters.editor.added_to_description'));
   }
 
   async function pickImage(e) {
@@ -226,7 +229,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   }
 
   async function save() {
-    if (!data.name.trim()) return toast('El nombre es obligatorio', 'error');
+    if (!data.name.trim()) return toast(t('characters.editor.name_required'), 'error');
     setBusy(true);
     const extensions = { ...data.extensions };
     if (!String(extensions.image_reading || '').trim()) delete extensions.image_reading;
@@ -234,7 +237,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
     try {
       if (id) await api.updateCharacter(id, payload, image);
       else await api.createCharacter(payload, image || placeholderPngDataUrl(payload.name));
-      toast('Personaje guardado');
+      toast(t('characters.editor.saved'));
       onClose(true);
     } catch (e) {
       toast(e.message, 'error');
@@ -243,7 +246,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
   }
 
   async function remove() {
-    if (!(await confirm({ title: 'Eliminar personaje', message: `Se eliminará a ${data.name} y todos sus chats. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
+    if (!(await confirm({ title: t('characters.editor.delete_title'), message: t('characters.editor.delete_message', { name: data.name }), confirmLabel: t('common.delete'), danger: true }))) return;
     try {
       await api.deleteCharacter(id);
       onClose(true, { deleted: true });
@@ -259,7 +262,7 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
         const { character_book, ...rest } = d;
         return { ...rest, extensions: { ...rest.extensions, world: name } };
       });
-      toast(`Lorebook "${name}" creado. Guarda el personaje para vincularlo.`);
+      toast(t('characters.editor.lorebook.extracted', { name }));
     } catch (e) {
       toast(e.message, 'error');
     }
@@ -269,47 +272,47 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
 
   return (
     <div className="stack editor">
-      {dragging && <DropOverlay title="Suelta la imagen para usarla como avatar" />}
-      {remaining > 0 && <p className="muted">Quedan {remaining} {remaining === 1 ? 'imagen' : 'imágenes'} más por convertir en personaje. «Volver» las descarta todas.</p>}
+      {dragging && <DropOverlay title={t('characters.drop.avatar_title')} />}
+      {remaining > 0 && <p className="muted">{t('characters.editor.remaining', { count: remaining })}</p>}
       <div className="btn-row">
         <button className="btn" onClick={() => onClose(false)}>
-          <Icon name="back" size={18} /> Volver
+          <Icon name="back" size={18} /> {t('common.back')}
         </button>
         <span className="spacer" />
         {id && (
           <button className="btn danger" onClick={remove}>
-            Eliminar
+            {t('common.delete')}
           </button>
         )}
         <button className="btn primary" disabled={busy} onClick={save}>
-          Guardar
+          {t('common.save')}
         </button>
       </div>
 
       <section className="card">
         <div className="avatar-edit">
           <div>
-            <button className="portrait" onClick={() => fileRef.current.click()} aria-label="Cambiar imagen">
-              {preview ? <img src={preview} alt="" /> : <span>Sin imagen</span>}
+            <button className="portrait" onClick={() => fileRef.current.click()} aria-label={t('characters.editor.change_image')}>
+              {preview ? <img src={preview} alt="" /> : <span>{t('characters.editor.no_image')}</span>}
             </button>
-            <p className="portrait-hint">Toca o arrastra una imagen aquí</p>
+            <p className="portrait-hint">{t('characters.editor.image_hint')}</p>
           </div>
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickImage} />
           <div className="grow">
-            <Field label="Nombre">
+            <Field label={t('characters.editor.fields.name')}>
               <input value={data.name} onChange={(e) => set('name', e.target.value)} />
             </Field>
             <div className="field">
-              <span className="field-label">Etiquetas</span>
-              <TagPicker value={data.tags || []} onChange={(t) => set('tags', t)} options={knownTags} />
+              <span className="field-label">{t('characters.editor.fields.tags')}</span>
+              <TagPicker value={data.tags || []} onChange={(tags) => set('tags', tags)} options={knownTags} />
             </div>
             {id && (
               <div className="btn-row">
                 <a className="btn small" href={`/api/characters/${encodeURIComponent(id)}/export`}>
-                  Exportar PNG
+                  {t('characters.editor.export_png')}
                 </a>
                 <a className="btn small" href={`/api/characters/${encodeURIComponent(id)}/export?format=json`}>
-                  Exportar JSON
+                  {t('characters.editor.export_json')}
                 </a>
               </div>
             )}
@@ -317,104 +320,104 @@ export function CharacterEditor({ id, initialFile, remaining = 0, onClose }) {
         </div>
         <div className="image-reading">
           <Field
-            label="Lectura de imagen"
-            hint="Descripción física del personaje a partir de su imagen. Requiere un modelo con visión (Ajustes → Asistente de personajes)."
-            action={ai('image_reading', 'Lectura de imagen', imageReading, (t) => setExt('image_reading', t))}
+            label={t('characters.editor.fields.image_reading')}
+            hint={t('characters.editor.hints.image_reading')}
+            action={ai('image_reading', t('characters.editor.fields.image_reading'), imageReading, (v) => setExt('image_reading', v))}
           >
-            <textarea rows={4} value={imageReading} readOnly={reading} onChange={(e) => setExt('image_reading', e.target.value)} placeholder="Pulsa «Leer imagen» para que la IA describa el aspecto del personaje" />
+            <textarea rows={4} value={imageReading} readOnly={reading} onChange={(e) => setExt('image_reading', e.target.value)} placeholder={t('characters.editor.reading.placeholder')} />
           </Field>
           <div className="btn-row">
             {reading ? (
               <button className="btn small" onClick={() => readAbort.current?.abort()}>
-                <Icon name="stop" size={16} /> Detener
+                <Icon name="stop" size={16} /> {t('common.stop')}
               </button>
             ) : (
               <button className="btn small" onClick={readImage} disabled={!preview}>
-                <Icon name="image" size={16} /> Leer imagen
+                <Icon name="image" size={16} /> {t('characters.editor.reading.read')}
               </button>
             )}
             <button className="btn small" onClick={addReadingToDescription} disabled={reading || !imageReading.trim()}>
-              Añadir a la descripción
+              {t('characters.editor.reading.add_to_description')}
             </button>
           </div>
         </div>
       </section>
 
       <section className="card">
-        <Field label="Descripción" hint="Quién es el personaje. Usa {{char}} y {{user}}." action={ai('description', 'Descripción', data.description, (t) => set('description', t))}>
+        <Field label={t('characters.editor.fields.description')} hint={t('characters.editor.hints.description')} action={ai('description', t('characters.editor.fields.description'), data.description, (v) => set('description', v))}>
           <textarea rows={8} value={data.description} onChange={(e) => set('description', e.target.value)} />
         </Field>
-        <Field label="Personalidad" action={ai('personality', 'Personalidad', data.personality, (t) => set('personality', t))}>
+        <Field label={t('characters.editor.fields.personality')} action={ai('personality', t('characters.editor.fields.personality'), data.personality, (v) => set('personality', v))}>
           <textarea rows={3} value={data.personality} onChange={(e) => set('personality', e.target.value)} />
         </Field>
-        <Field label="Escenario" action={ai('scenario', 'Escenario', data.scenario, (t) => set('scenario', t))}>
+        <Field label={t('characters.editor.fields.scenario')} action={ai('scenario', t('characters.editor.fields.scenario'), data.scenario, (v) => set('scenario', v))}>
           <textarea rows={3} value={data.scenario} onChange={(e) => set('scenario', e.target.value)} />
         </Field>
-        <Field label="Primer mensaje" action={ai('first_mes', 'Primer mensaje', data.first_mes, (t) => set('first_mes', t))}>
+        <Field label={t('characters.editor.fields.first_message')} action={ai('first_mes', t('characters.editor.fields.first_message'), data.first_mes, (v) => set('first_mes', v))}>
           <textarea rows={5} value={data.first_mes} onChange={(e) => set('first_mes', e.target.value)} />
         </Field>
-        <Field label="Ejemplos de diálogo" hint="Separa cada ejemplo con <START>." action={ai('mes_example', 'Ejemplos de diálogo', data.mes_example, (t) => set('mes_example', t))}>
+        <Field label={t('characters.editor.fields.dialogue_examples')} hint={t('characters.editor.hints.dialogue_examples')} action={ai('mes_example', t('characters.editor.fields.dialogue_examples'), data.mes_example, (v) => set('mes_example', v))}>
           <textarea rows={5} value={data.mes_example} onChange={(e) => set('mes_example', e.target.value)} />
         </Field>
       </section>
 
       <section className="card">
-        <h3>Saludos alternativos</h3>
+        <h3>{t('characters.editor.greetings.title')}</h3>
         {greetings.map((g, i) => (
           <div key={i} className="inline top">
             <textarea rows={3} value={g} onChange={(e) => set('alternate_greetings', greetings.map((x, k) => (k === i ? e.target.value : x)))} />
             <div className="greeting-actions">
-              {ai('alternate_greeting', `Saludo alternativo ${i + 1}`, g, (t) => set('alternate_greetings', greetings.map((x, k) => (k === i ? t : x))))}
-              <button className="icon-btn" onClick={() => set('alternate_greetings', greetings.filter((_, k) => k !== i))} aria-label="Quitar">
+              {ai('alternate_greeting', t('characters.editor.ai_labels.alternate_greeting', { number: i + 1 }), g, (v) => set('alternate_greetings', greetings.map((x, k) => (k === i ? v : x))))}
+              <button className="icon-btn" onClick={() => set('alternate_greetings', greetings.filter((_, k) => k !== i))} aria-label={t('common.remove')}>
                 <Icon name="trash" />
               </button>
             </div>
           </div>
         ))}
         <button className="btn small" onClick={() => set('alternate_greetings', [...greetings, ''])}>
-          <Icon name="plus" size={16} /> Añadir saludo
+          <Icon name="plus" size={16} /> {t('characters.editor.greetings.add')}
         </button>
       </section>
 
       <section className="card">
-        <h3>Lorebook</h3>
-        <Field label="Lorebook vinculado" hint="Siempre activo en los chats de este personaje.">
+        <h3>{t('characters.editor.lorebook.title')}</h3>
+        <Field label={t('characters.editor.lorebook.linked')} hint={t('characters.editor.hints.lorebook')}>
           <select value={data.extensions?.world || ''} onChange={(e) => setExt('world', e.target.value)}>
-            <option value="">Ninguno</option>
+            <option value="">{t('common.none')}</option>
             {lorebooks.map((b) => (
               <option key={b.name} value={b.name}>
                 {b.name}
               </option>
             ))}
-            {data.extensions?.world && !lorebooks.some((b) => b.name === data.extensions.world) && <option value={data.extensions.world}>{data.extensions.world} (no existe)</option>}
+            {data.extensions?.world && !lorebooks.some((b) => b.name === data.extensions.world) && <option value={data.extensions.world}>{t('characters.editor.lorebook.missing', { name: data.extensions.world })}</option>}
           </select>
         </Field>
         {data.character_book && (
           <p className="muted">
-            Esta tarjeta incluye un lorebook embebido ({bookEntries} entradas) que se usa automáticamente.{' '}
+            {t('characters.editor.lorebook.embedded', { count: bookEntries })}{' '}
             <button className="btn small" onClick={extractBook}>
-              Extraer a lorebook
+              {t('characters.editor.lorebook.extract')}
             </button>
           </p>
         )}
       </section>
 
       <details className="card">
-        <summary>Avanzado</summary>
-        <Field label="Prompt de sistema (reemplaza al global)" action={ai('system_prompt', 'Prompt de sistema', data.system_prompt, (t) => set('system_prompt', t))}>
+        <summary>{t('characters.editor.advanced')}</summary>
+        <Field label={t('characters.editor.fields.system_prompt')} action={ai('system_prompt', t('characters.editor.ai_labels.system_prompt'), data.system_prompt, (v) => set('system_prompt', v))}>
           <textarea rows={4} value={data.system_prompt} onChange={(e) => set('system_prompt', e.target.value)} />
         </Field>
-        <Field label="Instrucciones posteriores al historial" action={ai('post_history_instructions', 'Instrucciones posteriores al historial', data.post_history_instructions, (t) => set('post_history_instructions', t))}>
+        <Field label={t('characters.editor.fields.post_history')} action={ai('post_history_instructions', t('characters.editor.fields.post_history'), data.post_history_instructions, (v) => set('post_history_instructions', v))}>
           <textarea rows={3} value={data.post_history_instructions} onChange={(e) => set('post_history_instructions', e.target.value)} />
         </Field>
-        <Field label="Notas del creador" action={ai('creator_notes', 'Notas del creador', data.creator_notes, (t) => set('creator_notes', t))}>
+        <Field label={t('characters.editor.fields.creator_notes')} action={ai('creator_notes', t('characters.editor.fields.creator_notes'), data.creator_notes, (v) => set('creator_notes', v))}>
           <textarea rows={3} value={data.creator_notes} onChange={(e) => set('creator_notes', e.target.value)} />
         </Field>
         <div className="grid-2">
-          <Field label="Creador">
+          <Field label={t('characters.editor.fields.creator')}>
             <input value={data.creator} onChange={(e) => set('creator', e.target.value)} />
           </Field>
-          <Field label="Versión">
+          <Field label={t('characters.editor.fields.version')}>
             <input value={data.character_version} onChange={(e) => set('character_version', e.target.value)} />
           </Field>
         </div>

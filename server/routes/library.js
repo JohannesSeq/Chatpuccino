@@ -13,6 +13,7 @@ import {
 import { deleteGroupChats } from '../chats.js';
 import { getSettings, updateSettings } from '../settings.js';
 import { decodePngDataUrl, exists, safeName, wrap, HttpError } from '../util.js';
+import { t } from '../i18n.js';
 
 export const personas = Router();
 personas.get('/', wrap(async (_req, res) => res.json(await listPersonas())));
@@ -34,7 +35,7 @@ personas.delete('/:id', wrap(async (req, res) => {
 }));
 personas.get('/:id/avatar', wrap(async (req, res) => {
   const p = personaAvatarPath(req.params.id);
-  if (!(await exists(p))) throw new HttpError(404, 'Sin avatar');
+  if (!(await exists(p))) throw new HttpError(404, t('server.library.no_avatar'));
   res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(p);
 }));
@@ -62,7 +63,7 @@ export const lorebooks = Router();
 lorebooks.get('/', wrap(async (_req, res) => res.json(await listBooks())));
 lorebooks.post('/', wrap(async (req, res) => {
   const { name, book } = req.body || {};
-  const final = await createBook(name || 'Nuevo lorebook', book || { entries: {} });
+  const final = await createBook(name || t('server.lore.default_name'), book || { entries: {} });
   res.status(201).json({ name: final });
 }));
 lorebooks.get('/:name', wrap(async (req, res) => res.json(await getBook(req.params.name))));

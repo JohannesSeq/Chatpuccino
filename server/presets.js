@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import { DIRS, SETTINGS_FILE } from './config.js';
 import { HttpError, exists, readJson, resolveIn, safeName, uniqueName, withLock, writeJson } from './util.js';
+import { t } from './i18n.js';
 
 export const DEFAULT_SYSTEM_PROMPT =
   "Write {{char}}'s next reply in a fictional roleplay chat between {{char}} and {{user}}. Stay in character and write in a natural, immersive instant-messaging style. Never write dialogue, actions or thoughts for {{user}}. Reply in the same language {{user}} writes in.";
@@ -213,7 +214,7 @@ export async function listPresets() {
 export async function getPreset(name) {
   await ensureDefault();
   const raw = await readJson(presetPath(name));
-  if (!raw) throw new HttpError(404, 'Preset no encontrado');
+  if (!raw) throw new HttpError(404, t('server.presets.not_found'));
   return normalizePreset(raw);
 }
 
@@ -224,7 +225,7 @@ export async function getActivePreset(settings) {
 }
 
 export async function savePreset(name, raw) {
-  if (!(await exists(presetPath(name)))) throw new HttpError(404, 'Preset no encontrado');
+  if (!(await exists(presetPath(name)))) throw new HttpError(404, t('server.presets.not_found'));
   await writeJson(presetPath(name), normalizePreset(raw));
 }
 
@@ -237,22 +238,22 @@ export async function createPreset(name, raw) {
 
 export function validateImport(raw) {
   const looksLikePreset = raw && typeof raw === 'object' && !Array.isArray(raw) && (Array.isArray(raw.prompts) || ['temperature', 'temp', 'openai_max_context', 'genamt'].some((k) => raw[k] !== undefined));
-  if (!looksLikePreset) throw new HttpError(422, 'El archivo no parece un preset de SillyTavern (faltan "prompts" o parámetros de muestreo).');
+  if (!looksLikePreset) throw new HttpError(422, t('server.presets.not_a_preset'));
 }
 
 export async function deletePreset(name) {
   const all = await listPresets();
-  if (!all.includes(name)) throw new HttpError(404, 'Preset no encontrado');
-  if (all.length < 2) throw new HttpError(409, 'Debe quedar al menos un preset');
+  if (!all.includes(name)) throw new HttpError(404, t('server.presets.not_found'));
+  if (all.length < 2) throw new HttpError(409, t('server.presets.keep_one'));
   await fs.unlink(presetPath(name));
 }
 
 export async function renamePreset(name, newName) {
   const target = safeName(newName, '');
-  if (!target) throw new HttpError(400, 'Nombre inválido');
+  if (!target) throw new HttpError(400, t('server.common.invalid_name'));
   if (target === name) return name;
-  if (!(await exists(presetPath(name)))) throw new HttpError(404, 'Preset no encontrado');
-  if (await exists(presetPath(target))) throw new HttpError(409, 'Ya existe un preset con ese nombre');
+  if (!(await exists(presetPath(name)))) throw new HttpError(404, t('server.presets.not_found'));
+  if (await exists(presetPath(target))) throw new HttpError(409, t('server.presets.name_taken'));
   await fs.rename(presetPath(name), presetPath(target));
   return target;
 }

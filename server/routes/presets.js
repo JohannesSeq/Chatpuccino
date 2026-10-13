@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createPreset, deletePreset, getActivePreset, getPreset, listPresets, renamePreset, savePreset, validateImport } from '../presets.js';
 import { getSettings, mutateSettings } from '../settings.js';
 import { HttpError, safeName, wrap } from '../util.js';
+import { t } from '../i18n.js';
 
 const r = Router();
 
@@ -17,20 +18,20 @@ r.get('/', wrap(async (_req, res) => {
 
 r.post('/', wrap(async (req, res) => {
   const { name, preset } = req.body || {};
-  res.status(201).json({ name: await createPreset(name || 'Nuevo preset', preset) });
+  res.status(201).json({ name: await createPreset(name || t('server.presets.default_name'), preset) });
 }));
 
 // Acepta el JSON de un preset de SillyTavern (chat completion) tal cual.
 r.post('/import', wrap(async (req, res) => {
   const { name, preset } = req.body || {};
   validateImport(preset);
-  res.status(201).json({ name: await createPreset(name || preset.name || 'Preset importado', preset) });
+  res.status(201).json({ name: await createPreset(name || preset.name || t('server.presets.imported_name'), preset) });
 }));
 
 r.get('/:name', wrap(async (req, res) => res.json(await getPreset(req.params.name))));
 
 r.put('/:name', wrap(async (req, res) => {
-  if (!req.body || typeof req.body !== 'object') throw new HttpError(400, 'Preset inválido');
+  if (!req.body || typeof req.body !== 'object') throw new HttpError(400, t('server.presets.invalid'));
   await savePreset(req.params.name, req.body);
   res.json(await getPreset(req.params.name));
 }));

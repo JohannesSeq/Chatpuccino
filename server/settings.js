@@ -1,6 +1,7 @@
 import { SETTINGS_FILE } from './config.js';
 import { listPresets } from './presets.js';
 import { HttpError, readJson, withLock, writeJson } from './util.js';
+import { t } from './i18n.js';
 
 export const DEFAULTS = {
   scanDepth: 4,
@@ -20,7 +21,7 @@ const LEGACY_GENERATION_KEYS = ['temperature', 'top_p', 'top_k', 'min_p', 'frequ
 function normalizeConnection(c) {
   return {
     id: String(c.id),
-    name: String(c.name || 'Conexión'),
+    name: String(c.name || t('server.connections.default_name')),
     type: c.type === 'local' ? 'local' : 'openrouter',
     baseUrl: String(c.baseUrl || ''),
     apiKey: String(c.apiKey || ''),
@@ -86,6 +87,13 @@ export function publicConnection(c) {
   return { ...rest, hasKey: Boolean(apiKey), keyPreview: apiKey ? `${apiKey.slice(0, 7)}…${apiKey.slice(-4)}` : '' };
 }
 
+// Lo que falta configurar, para la frase «Falta configurar {hint}» del cliente.
+function setupHint(active) {
+  if (!active) return t('server.settings.hint_connection');
+  if (active.type === 'local') return t(active.baseUrl ? 'server.settings.hint_model' : 'server.settings.hint_local_url');
+  return t(active.apiKey ? 'server.settings.hint_model' : 'server.settings.hint_api_key');
+}
+
 export function publicSettings(s) {
   const { connections, ...rest } = s;
   const active = activeConnection(s);
@@ -95,7 +103,7 @@ export function publicSettings(s) {
     activeConnection: active?.id || '',
     model: active?.model || '',
     ready: isReady(active),
-    setupHint: !active ? 'una conexión' : active.type === 'local' ? (active.baseUrl ? 'el modelo' : 'la URL del servidor local') : active.apiKey ? 'el modelo' : 'la API key',
+    setupHint: setupHint(active),
   };
 }
 
@@ -111,10 +119,10 @@ export function updateSettings(patch) {
       } else if (key === 'activeLorebooks') {
         s[key] = Array.isArray(patch[key]) ? patch[key].map(String) : [];
       } else if (key === 'activeConnection') {
-        if (!s.connections.some((c) => c.id === patch[key])) throw new HttpError(404, 'Conexión no encontrada');
+        if (!s.connections.some((c) => c.id === patch[key])) throw new HttpError(404, t('server.connections.not_found'));
         s[key] = patch[key];
       } else if (key === 'activePreset') {
-        if (!(await listPresets()).includes(patch[key])) throw new HttpError(404, 'Preset no encontrado');
+        if (!(await listPresets()).includes(patch[key])) throw new HttpError(404, t('server.presets.not_found'));
         s[key] = patch[key];
       } else {
         s[key] = typeof patch[key] === 'string' ? patch[key] : DEFAULTS[key];

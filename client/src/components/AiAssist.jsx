@@ -4,23 +4,20 @@ import { Link } from 'react-router-dom';
 import { assistantGenerate } from '../api.js';
 import { Icon } from './Icon.jsx';
 import { Modal } from './ui.jsx';
+import { useT } from '../i18n.jsx';
 
-const MODES = [
-  ['generate', 'Generar', 'Escribe el texto desde cero'],
-  ['improve', 'Mejorar', 'Corrige y enriquece el texto actual'],
-  ['expand', 'Expandir', 'Añade más detalle sin quitar nada'],
-  ['rewrite', 'Reescribir', 'Dice lo mismo con otras palabras y mejor estilo'],
-];
+const MODES = ['generate', 'improve', 'expand', 'rewrite'];
 
 /**
  * Botón ✨ para generar o mejorar el texto de un campo con el Asistente de personajes.
  * `field` es la clave del campo (description, first_mes…); `context` son los demás campos de la ficha.
  */
 export function AiButton({ field, label, value, onApply, context }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" className="icon-btn ai-btn" onClick={() => setOpen(true)} aria-label={`Asistente de IA: ${label}`} title="Asistente de IA: generar o mejorar este texto">
+      <button type="button" className="icon-btn ai-btn" onClick={() => setOpen(true)} aria-label={t('ai_assist.button_aria', { label })} title={t('ai_assist.button_title')}>
         <Icon name="sparkle" size={18} />
       </button>
       {open &&
@@ -43,12 +40,14 @@ export function AiButton({ field, label, value, onApply, context }) {
 }
 
 function AssistModal({ field, label, value, context, onApply, onClose }) {
+  const { t } = useT();
   const hasText = Boolean(value.trim());
   const [mode, setMode] = useState(hasText ? 'improve' : 'generate');
   const [instructions, setInstructions] = useState('');
   const [result, setResult] = useState('');
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
+  const [needsSetup, setNeedsSetup] = useState(false);
   const abortRef = useRef(null);
 
   // Esc cierra solo esta ventana (y no la que pudiera haber debajo, como la tarjeta abierta desde el chat).
@@ -70,22 +69,25 @@ function AssistModal({ field, label, value, context, onApply, onClose }) {
     abortRef.current = ac;
     setRunning(true);
     setError('');
+    setNeedsSetup(false);
     setResult('');
     try {
       const out = await assistantGenerate({ field, mode, text: value, instructions, context }, ac.signal, (d) => setResult((r) => r + d));
       if (out?.text) setResult(out.text);
     } catch (e) {
-      if (e.name !== 'AbortError') setError(e.message);
+      if (e.name !== 'AbortError') {
+        setError(e.message);
+        setNeedsSetup(e.code === 'ASSISTANT_NOT_READY');
+      }
     } finally {
       abortRef.current = null;
       setRunning(false);
     }
   }
 
-  const needsSetup = error.includes('Asistente de personajes');
   return (
     <Modal
-      title={`Asistente: ${label}`}
+      title={t('ai_assist.modal_title', { label })}
       onClose={() => {
         abortRef.current?.abort();
         onClose();
@@ -95,36 +97,36 @@ function AssistModal({ field, label, value, context, onApply, onClose }) {
           <span className="spacer" />
           {running ? (
             <button className="btn" onClick={() => abortRef.current?.abort()}>
-              Detener
+              {t('common.stop')}
             </button>
           ) : (
             <>
               {result.trim() && (
                 <button className="btn primary" onClick={() => onApply(result)}>
-                  Usar este texto
+                  {t('ai_assist.use_text')}
                 </button>
               )}
               <button className={`btn ${result.trim() ? '' : 'primary'}`} onClick={run}>
-                <Icon name="sparkle" size={16} /> {result.trim() ? 'Regenerar' : 'Generar'}
+                <Icon name="sparkle" size={16} /> {result.trim() ? t('ai_assist.regenerate') : t('ai_assist.modes.generate')}
               </button>
             </>
           )}
         </>
       }
     >
-      <div className="tabs ai-modes" role="radiogroup" aria-label="Qué hacer">
-        {MODES.map(([id, text, hint]) => (
-          <button key={id} role="radio" aria-checked={mode === id} className={mode === id ? 'active' : ''} disabled={running || (id !== 'generate' && !hasText)} title={id !== 'generate' && !hasText ? 'El campo está vacío: usa «Generar»' : hint} onClick={() => setMode(id)}>
-            {text}
+      <div className="tabs ai-modes" role="radiogroup" aria-label={t('ai_assist.modes_aria')}>
+        {MODES.map((id) => (
+          <button key={id} role="radio" aria-checked={mode === id} className={mode === id ? 'active' : ''} disabled={running || (id !== 'generate' && !hasText)} title={id !== 'generate' && !hasText ? t('ai_assist.empty_field') : t(`ai_assist.hints.${id}`)} onClick={() => setMode(id)}>
+            {t(`ai_assist.modes.${id}`)}
           </button>
         ))}
       </div>
       <p className="muted ai-hint">
-        {mode === 'generate' ? (hasText ? 'Escribirá un texto nuevo ignorando el actual.' : 'Escribirá el texto a partir de lo que ya hay en la ficha.') : MODES.find((m) => m[0] === mode)[2] + '.'}
+        {mode === 'generate' ? (hasText ? t('ai_assist.generate_replace') : t('ai_assist.generate_from_card')) : t(`ai_assist.hints.${mode}`) + '.'}
       </p>
       <label className="field">
-        <span className="field-label">Indicaciones (opcional)</span>
-        <textarea rows={2} value={instructions} disabled={running} onChange={(e) => setInstructions(e.target.value)} placeholder="Ej.: más misteriosa, tono oscuro, que mencione su pasado en la torre…" />
+        <span className="field-label">{t('ai_assist.instructions_label')}</span>
+        <textarea rows={2} value={instructions} disabled={running} onChange={(e) => setInstructions(e.target.value)} placeholder={t('ai_assist.instructions_placeholder')} />
       </label>
       {error && (
         <p className="err">
@@ -133,7 +135,7 @@ function AssistModal({ field, label, value, context, onApply, onClose }) {
             <>
               {' '}
               <Link to="/settings/asistente" onClick={onClose}>
-                Ir a la configuración
+                {t('ai_assist.go_settings')}
               </Link>
             </>
           )}
@@ -141,7 +143,7 @@ function AssistModal({ field, label, value, context, onApply, onClose }) {
       )}
       {(running || result) && (
         <label className="field">
-          <span className="field-label">{running ? 'Escribiendo…' : 'Resultado (puedes editarlo antes de usarlo)'}</span>
+          <span className="field-label">{running ? t('ai_assist.writing') : t('ai_assist.result_label')}</span>
           <textarea className="ai-result" rows={9} value={result} readOnly={running} onChange={(e) => setResult(e.target.value)} />
         </label>
       )}

@@ -2,12 +2,14 @@ import React, { useRef, useState } from 'react';
 import { api } from '../api.js';
 import { useData } from '../data.jsx';
 import { useDialog } from '../dialogs.jsx';
+import { useT } from '../i18n.jsx';
 import { fileToPngDataUrl } from '../util.js';
 import { AiButton } from './AiAssist.jsx';
 import { Field, Modal, PersonaAvatar } from './ui.jsx';
 
 /** Crea (persona = null) o edita una persona. onClose(true) si hubo cambios. */
 export default function PersonaEditor({ persona, onClose }) {
+  const { t } = useT();
   const { settings, toast } = useData();
   const { confirm } = useDialog();
   const [name, setName] = useState(persona?.name || '');
@@ -44,7 +46,7 @@ export default function PersonaEditor({ persona, onClose }) {
   }
 
   async function remove() {
-    if (!(await confirm({ title: 'Eliminar persona', message: `Se eliminará la persona «${persona.name}».`, confirmLabel: 'Eliminar', danger: true }))) return;
+    if (!(await confirm({ title: t('personas.editor.delete_title'), message: t('personas.editor.delete_message', { name: persona.name }), confirmLabel: t('common.delete'), danger: true }))) return;
     try {
       await api.deletePersona(persona.id);
       onClose(true);
@@ -55,40 +57,40 @@ export default function PersonaEditor({ persona, onClose }) {
 
   return (
     <Modal
-      title={persona ? 'Editar persona' : 'Nueva persona'}
+      title={persona ? t('personas.editor.edit_title') : t('personas.editor.new_title')}
       onClose={() => onClose(false)}
       footer={
         <>
           {persona && (
             <button className="btn danger" onClick={remove}>
-              Eliminar
+              {t('common.delete')}
             </button>
           )}
           <span className="spacer" />
           <button className="btn primary" disabled={busy || !name.trim()} onClick={save}>
-            Guardar
+            {t('common.save')}
           </button>
         </>
       }
     >
       <div className="inline">
-        <button className="avatar-btn" onClick={() => fileRef.current.click()} aria-label="Cambiar imagen">
+        <button className="avatar-btn" onClick={() => fileRef.current.click()} aria-label={t('personas.editor.change_image')}>
           {image ? <img className="avatar" style={{ width: 72, height: 72 }} src={image} alt="" /> : <PersonaAvatar persona={previewPersona} size={72} />}
         </button>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={pick} />
-        <Field label="Nombre">
+        <Field label={t('personas.editor.name')}>
           <input value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
       </div>
       <Field
-        label="Descripción"
-        hint="Cómo eres en la historia (apariencia, personalidad, trasfondo)."
-        action={<AiButton field="persona_description" label="Descripción de la persona" value={description} onApply={setDescription} context={{ name }} />}
+        label={t('personas.editor.description')}
+        hint={t('personas.editor.description_hint')}
+        action={<AiButton field="persona_description" label={t('personas.editor.description_ai')} value={description} onApply={setDescription} context={{ name }} />}
       >
         <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} />
       </Field>
       <label className="check">
-        <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} /> Usar por defecto en chats nuevos
+        <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} /> {t('personas.editor.use_default')}
       </label>
     </Modal>
   );

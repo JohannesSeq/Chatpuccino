@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import { DIRS } from './config.js';
 import { HttpError, resolveIn, safeName, uniqueName, writeJson, readJson, writeFileAtomic, exists, nowIso } from './util.js';
+import { t } from './i18n.js';
 
 const randomId = () => Math.random().toString(36).slice(2, 10);
 
@@ -33,17 +34,17 @@ export async function getPersona(id) {
 
 export async function savePersona(id, { name, description }, imageBuf) {
   const n = String(name ?? '').trim();
-  if (!n) throw new HttpError(400, 'La persona necesita un nombre');
+  if (!n) throw new HttpError(400, t('server.personas.name_required'));
   let finalId = id;
   if (!finalId) finalId = await uniqueName(DIRS.personas, safeName(n, `persona-${randomId()}`), '.json');
-  else if (!(await exists(personaJson(finalId)))) throw new HttpError(404, 'Persona no encontrada');
+  else if (!(await exists(personaJson(finalId)))) throw new HttpError(404, t('server.personas.not_found'));
   await writeJson(personaJson(finalId), { name: n, description: String(description ?? ''), updated: nowIso() });
   if (imageBuf) await writeFileAtomic(personaAvatarPath(finalId), imageBuf);
   return finalId;
 }
 
 export async function deletePersona(id) {
-  if (!(await exists(personaJson(id)))) throw new HttpError(404, 'Persona no encontrada');
+  if (!(await exists(personaJson(id)))) throw new HttpError(404, t('server.personas.not_found'));
   await fs.unlink(personaJson(id));
   await fs.rm(personaAvatarPath(id), { force: true });
 }
@@ -72,14 +73,14 @@ export async function listGroups() {
 
 export async function getGroup(id) {
   const g = await readJson(groupJson(id));
-  if (!g) throw new HttpError(404, 'Grupo no encontrado');
+  if (!g) throw new HttpError(404, t('server.groups.not_found'));
   return cleanGroup(id, g);
 }
 
 export async function saveGroup(id, body) {
   const g = cleanGroup(id, body);
-  if (!g.name) throw new HttpError(400, 'El grupo necesita un nombre');
-  if (g.members.length < 2) throw new HttpError(400, 'Un grupo necesita al menos 2 personajes');
+  if (!g.name) throw new HttpError(400, t('server.groups.name_required'));
+  if (g.members.length < 2) throw new HttpError(400, t('server.groups.min_members'));
   if (!id) g.id = await uniqueName(DIRS.groups, safeName(g.name, `grupo-${randomId()}`), '.json');
   else await getGroup(id);
   await writeJson(groupJson(g.id), { name: g.name, members: g.members, replyMode: g.replyMode });

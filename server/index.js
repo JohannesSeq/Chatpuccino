@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { DATA, ROOT, ensureDirs } from './config.js';
+import { langMiddleware, t } from './i18n.js';
 import authRoutes, { loadAuth, requireAuth } from './auth.js';
 import settingsRoutes from './routes/settings.js';
 import connectionRoutes from './routes/connections.js';
@@ -24,6 +25,7 @@ export function createApp() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.raw({ type: ['image/png', 'application/octet-stream'], limit: '50mb' }));
 
+  app.use('/api', langMiddleware);
   app.use('/api/auth', authRoutes);
   app.use('/api', requireAuth);
   app.use('/api', settingsRoutes);
@@ -36,7 +38,7 @@ export function createApp() {
   app.use('/api/groups', groups);
   app.use('/api/lorebooks', lorebooks);
   app.use('/api/chats', chatRoutes);
-  app.use('/api', (_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
+  app.use('/api', (_req, res) => res.status(404).json({ error: t('server.common.route_not_found') }));
 
   const dist = path.join(ROOT, 'dist');
   if (fs.existsSync(dist)) {
@@ -50,7 +52,7 @@ export function createApp() {
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
     if (status >= 500) console.error(err);
     if (err.retryAfter) res.setHeader('Retry-After', String(err.retryAfter));
-    res.status(status).json({ error: err.message || 'Error interno', ...(err.code ? { code: err.code } : {}) });
+    res.status(status).json({ error: err.message || t('server.common.internal_error'), ...(err.code ? { code: err.code } : {}) });
   });
   return app;
 }

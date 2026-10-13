@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { DATA } from './config.js';
+import { hasLanguage, t } from './i18n.js';
 import { HttpError, readJson, writeFileAtomic, writeJson } from './util.js';
 
 const FILE = path.join(DATA, 'appearance.json');
@@ -10,6 +11,8 @@ const COLOR_KEYS = ['accent', 'mine', 'theirs', 'chat'];
 
 export const DEFAULT_APPEARANCE = {
   mode: 'dark',
+  // 'auto' = el idioma del navegador; si no, el código de un idioma de /locales
+  language: 'auto',
   // null = usar el color por defecto del modo
   colors: {
     dark: { accent: null, mine: null, theirs: null, chat: null },
@@ -43,6 +46,7 @@ export function normalizeAppearance(raw) {
   }
   return {
     mode: ['dark', 'light', 'system'].includes(r.mode) ? r.mode : d.mode,
+    language: r.language === 'auto' || hasLanguage(r.language) ? r.language : d.language,
     colors,
     uiFont: font(r.uiFont),
     msgFont: font(r.msgFont),
@@ -102,7 +106,7 @@ async function removeWallpaperFiles() {
 
 export async function saveWallpaper(buf) {
   const ext = sniffImage(buf);
-  if (!ext) throw new HttpError(415, 'El fondo debe ser una imagen PNG, JPG, WebP o GIF');
+  if (!ext) throw new HttpError(415, t('server.appearance.wallpaper_format'));
   await removeWallpaperFiles();
   await writeFileAtomic(wallpaperPath(ext), buf);
   return getAppearance();

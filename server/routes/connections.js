@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { HttpError, wrap } from '../util.js';
+import { t } from '../i18n.js';
 import { checkConnection, listModels, normalizeBaseUrl } from '../providers.js';
 import { loadSettings, mutateSettings, publicConnection } from '../settings.js';
 
@@ -8,7 +9,7 @@ const randomId = () => `c${Math.random().toString(36).slice(2, 9)}`;
 
 function find(s, id) {
   const c = s.connections.find((x) => x.id === id);
-  if (!c) throw new HttpError(404, 'Conexión no encontrada');
+  if (!c) throw new HttpError(404, t('server.connections.not_found'));
   return c;
 }
 
@@ -23,7 +24,7 @@ r.post('/', wrap(async (req, res) => {
     const isLocal = type === 'local';
     const c = {
       id: randomId(),
-      name: String(name || '').trim() || (isLocal ? 'Servidor local' : 'OpenRouter'),
+      name: String(name || '').trim() || (isLocal ? t('server.connections.default_local_name') : 'OpenRouter'),
       type: isLocal ? 'local' : 'openrouter',
       baseUrl: isLocal ? normalizeBaseUrl(baseUrl) : '',
       apiKey: String(apiKey || '').trim(),
@@ -73,7 +74,7 @@ r.post('/:id/activate', wrap(async (req, res) => {
 
 r.post('/:id/favorites', wrap(async (req, res) => {
   const model = String(req.body?.model || '').trim();
-  if (!model) throw new HttpError(400, 'Falta el modelo');
+  if (!model) throw new HttpError(400, t('server.connections.model_required'));
   const favorites = await mutateSettings((s) => {
     const c = find(s, req.params.id);
     c.favorites = c.favorites.includes(model) ? c.favorites.filter((m) => m !== model) : [...c.favorites, model];
@@ -90,10 +91,10 @@ r.get('/:id/models', wrap(async (req, res) => {
 r.post('/test', wrap(async (req, res) => {
   const { id, type, baseUrl, apiKey } = req.body || {};
   const stored = id ? find(await loadSettings(), id) : null;
-  const t = stored?.type || (type === 'local' ? 'local' : 'openrouter');
+  const connType = stored?.type || (type === 'local' ? 'local' : 'openrouter');
   const candidate = {
-    type: t,
-    baseUrl: t === 'local' ? normalizeBaseUrl(baseUrl || stored?.baseUrl) : '',
+    type: connType,
+    baseUrl: connType === 'local' ? normalizeBaseUrl(baseUrl || stored?.baseUrl) : '',
     apiKey: String(apiKey || '').trim() || stored?.apiKey || '',
   };
   res.json(await checkConnection(candidate));

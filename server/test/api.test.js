@@ -708,6 +708,46 @@ test('importar PNG sin datos de personaje devuelve código NO_CARD (para crearlo
   assert.equal((await bad.json()).code, undefined);
 });
 
+test('idioma del servidor: X-Lang cambia los errores y los prompts por defecto del asistente', async () => {
+  await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
+
+  // Errores: español por defecto o con un idioma desconocido, inglés con X-Lang: en
+  const anon = async (lang) => {
+    const res = await fetch(`${base}/characters`, { headers: lang ? { 'X-Lang': lang } : {} });
+    return { status: res.status, error: (await res.json()).error };
+  };
+  assert.deepEqual(await anon(), { status: 401, error: 'Inicia sesión para continuar' });
+  assert.deepEqual(await anon('en'), { status: 401, error: 'Sign in to continue' });
+  assert.deepEqual(await anon('xx'), { status: 401, error: 'Inicia sesión para continuar' }, 'idioma desconocido: vuelve al español');
+  assert.equal((await call('GET', '/characters/NoExiste')).json.error, 'Personaje no encontrado');
+  const en = await call('GET', '/characters/NoExiste', null, { 'X-Lang': 'en' });
+  assert.equal(en.status, 404);
+  assert.equal(en.json.error, 'Character not found');
+  assert.equal((await call('GET', '/characters/NoExiste', null, { 'X-Lang': 'xx' })).json.error, 'Personaje no encontrado');
+
+  // Prompts por defecto del asistente: en el idioma de la petición
+  const es = (await call('GET', '/assistant')).json;
+  const english = (await call('GET', '/assistant', null, { 'X-Lang': 'en' })).json;
+  assert.ok(es.defaults.prompts.system.includes('asistente de escritura'));
+  assert.ok(english.defaults.prompts.system.includes('writing assistant'));
+  assert.ok(english.defaults.prompts.image.includes('physical appearance'));
+  assert.ok((await call('GET', '/assistant', null, { 'X-Lang': 'xx' })).json.defaults.prompts.system.includes('asistente de escritura'));
+
+  // Un prompt personalizado no se toca; el de fábrica de otro idioma se muestra en el idioma actual
+  assert.equal(english.prompts.system, 'SISTEMA PROPIO');
+  assert.equal(es.prompts.system, 'SISTEMA PROPIO');
+  assert.equal(english.prompts.image, english.defaults.prompts.image, 'la imagen estaba guardada con el valor por defecto en español');
+
+  const reset = await call('PUT', '/assistant', { prompts: { system: es.defaults.prompts.system } });
+  assert.equal(reset.json.prompts.system, es.defaults.prompts.system);
+  assert.equal((await call('GET', '/assistant', null, { 'X-Lang': 'en' })).json.prompts.system, english.defaults.prompts.system);
+  assert.equal((await call('GET', '/assistant')).json.prompts.system, es.defaults.prompts.system);
+
+  // Se deja personalizado como lo encontraron los demás tests
+  await call('PUT', '/assistant', { prompts: { system: 'SISTEMA PROPIO' } });
+  assert.equal((await call('GET', '/assistant', null, { 'X-Lang': 'en' })).json.prompts.system, 'SISTEMA PROPIO');
+});
+
 test('presets: los parámetros del preset activo llegan al modelo', async () => {
   await call('POST', '/auth/login', { username: 'jefe', password: 'Secreto1' });
   const def = (await call('GET', '/presets/Default')).json;

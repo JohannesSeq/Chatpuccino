@@ -9,33 +9,35 @@ import PresetsTab from './settings/PresetsTab.jsx';
 import AssistantTab from './settings/AssistantTab.jsx';
 import AppearanceTab from './settings/AppearanceTab.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
+import { useT } from '../i18n.jsx';
 
 const TABS = [
-  { id: 'conexion', label: 'Conexión y modelo', C: ConnectionTab },
-  { id: 'presets', label: 'Presets', C: PresetsTab },
-  { id: 'asistente', label: 'Asistente de personajes', C: AssistantTab },
-  { id: 'apariencia', label: 'Apariencia', C: AppearanceTab },
-  { id: 'personajes', label: 'Personajes', C: CharactersTab },
-  { id: 'personas', label: 'Personas', C: PersonasTab },
-  { id: 'lorebooks', label: 'Lorebooks', C: LorebooksTab },
-  { id: 'seguridad', label: 'Seguridad', C: SecurityTab },
+  { id: 'conexion', label: 'settings.tabs.connection', C: ConnectionTab },
+  { id: 'presets', label: 'settings.tabs.presets', C: PresetsTab },
+  { id: 'asistente', label: 'settings.tabs.assistant', C: AssistantTab },
+  { id: 'apariencia', label: 'settings.tabs.appearance', C: AppearanceTab },
+  { id: 'personajes', label: 'settings.tabs.characters', C: CharactersTab },
+  { id: 'personas', label: 'settings.tabs.personas', C: PersonasTab },
+  { id: 'lorebooks', label: 'settings.tabs.lorebooks', C: LorebooksTab },
+  { id: 'seguridad', label: 'settings.tabs.security', C: SecurityTab },
 ];
 
 export default function SettingsPage() {
+  const { t } = useT();
   const { tab } = useParams();
-  const current = TABS.find((t) => t.id === tab);
+  const current = TABS.find((x) => x.id === tab);
   if (!current) return <Navigate to="/settings/conexion" replace />;
   const { C } = current;
   return (
     <div className="settings-page">
       <header className="topbar">
-        <h1>Ajustes</h1>
+        <h1>{t('settings.title')}</h1>
       </header>
       <PasswordBanner />
       <div className="tabs scroll">
-        {TABS.map((t) => (
-          <NavLink key={t.id} to={`/settings/${t.id}`} className={({ isActive }) => (isActive ? 'active' : '')}>
-            {t.label}
+        {TABS.map((x) => (
+          <NavLink key={x.id} to={`/settings/${x.id}`} className={({ isActive }) => (isActive ? 'active' : '')}>
+            {t(x.label)}
           </NavLink>
         ))}
       </div>

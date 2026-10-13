@@ -132,6 +132,16 @@ Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y eli
 - **Burbujas:** opacidad de las tuyas y de las del personaje, desenfoque detrás de ellas y redondeo.
 - **Fondo de pantalla:** una imagen detrás de los mensajes, con desenfoque y oscurecido/aclarado ajustables. Se guarda como `data/wallpaper.*` y la apariencia en `data/appearance.json` (ambos fuera de git).
 
+## Idiomas
+
+La interfaz está disponible en **español** e **inglés**. Se elige en **Ajustes → Apariencia → Idioma**: *Automático* usa el idioma del navegador (español si no está disponible); el cambio es instantáneo y se guarda con tu apariencia, así que se ve igual en todos tus dispositivos. También cambia el idioma de los mensajes del servidor (errores, títulos de chats copiados o ramificados…) y los prompts por defecto del asistente de personajes. El contenido que escribes (chats, personajes, presets) no se traduce.
+
+Todos los textos están en **un archivo JSON por idioma** en la carpeta [`locales/`](locales) (`es.json`, `en.json`), compartidos por el cliente y el servidor:
+
+- Cada archivo tiene `_meta` (`code`, `name` que se muestra en el selector y `dateLocale` para fechas) y los textos agrupados por pantalla (`chat.menu.pin`…). Los parámetros se escriben `{nombre}` y los plurales se definen con `clave_one` / `clave_other` (se usan con `{count}`).
+- **Añadir un idioma:** copia `locales/en.json` (o usa *Exportar este idioma* en Apariencia), renómbralo con el código del idioma (p. ej. `fr.json`), cambia `_meta` y traduce los valores; después `npm run build`. Aparece solo en el selector. Si falta algún texto se usa el español.
+- **Comprobación:** `npm run check:i18n` verifica que todos los idiomas tengan las mismas claves y marcadores y que cada clave usada en el código exista (también lo ejecuta `npm test`).
+
 ## Variantes, ramas y grupos
 
 - **Cambiar de variante:** en el último mensaje del personaje, usa las flechas «‹ 2/3 ›» o, en pantallas táctiles, **desliza la burbuja** hacia la izquierda (siguiente) o la derecha (anterior). Si ya estás en la última variante, deslizar a la izquierda **genera una nueva**: aparece un icono de regenerar que se rellena al avanzar y, al pasar el umbral (se activa con una vibración corta), basta soltar. Si sueltas antes, no pasa nada, así no gastas tokens por accidente. El scroll vertical del chat no se ve afectado.
@@ -179,7 +189,7 @@ Chatpuccino es de código abierto y toda ayuda suma: corregir un error, mejorar 
 
 1. Haz un *fork* del repositorio y crea una rama para tu cambio.
 2. Instala las dependencias con `npm install` y arranca el entorno de desarrollo con `npm run dev`.
-3. Si tocas el servidor, añade o ajusta pruebas en `server/test/` y comprueba que `npm test` pasa; si tocas la interfaz, verifica que `npm run build` compila.
+3. Si tocas el servidor, añade o ajusta pruebas en `server/test/` y comprueba que `npm test` pasa; si tocas la interfaz, verifica que `npm run build` compila. Los textos visibles van en `locales/*.json` (nunca escritos a mano en el código): usa `t('area.clave')` y añade la clave en todos los idiomas; `npm run check:i18n` te avisa de lo que falte.
 4. Abre un *pull request* describiendo qué cambia y por qué (las capturas ayudan mucho en cambios visuales).
 
 Para reportar un fallo o proponer una idea, abre un *issue* con los pasos para reproducirlo, qué esperabas que pasara y, si puedes, tu sistema y navegador.
@@ -189,6 +199,7 @@ Para reportar un fallo o proponer una idea, abre un *issue* con los pasos para r
 | Carpeta | Contenido |
 | --- | --- |
 | `client/` | Interfaz React (Vite): páginas de chats y ajustes, componentes y tema |
+| `locales/` | Idiomas de la interfaz y del servidor (un JSON por idioma) |
 | `server/` | API Express: tarjetas PNG, chats JSONL, lorebooks, presets, conexiones y autenticación |
 | `server/test/` | Pruebas de integración (`node --test`) |
 | `docs/screenshots/` | Capturas usadas en este README |

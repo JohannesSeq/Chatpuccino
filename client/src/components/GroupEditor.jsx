@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { api } from '../api.js';
 import { useData } from '../data.jsx';
 import { useDialog } from '../dialogs.jsx';
+import { useT } from '../i18n.jsx';
 import { CharAvatar, Modal } from './ui.jsx';
 
 export default function GroupEditor({ group, onClose, onSaved, onDeleted }) {
   const { characters, refresh, toast } = useData();
   const { confirm } = useDialog();
+  const { t } = useT();
   const [name, setName] = useState(group?.name || '');
   const [members, setMembers] = useState(group?.members || []);
   const [replyMode, setReplyMode] = useState(group?.replyMode || 'smart');
@@ -29,7 +31,7 @@ export default function GroupEditor({ group, onClose, onSaved, onDeleted }) {
   }
 
   async function remove() {
-    if (!(await confirm({ title: 'Eliminar grupo', message: `Se eliminará el grupo «${group.name}» y todos sus chats. No se puede deshacer.`, confirmLabel: 'Eliminar', danger: true }))) return;
+    if (!(await confirm({ title: t('groups.delete_title'), message: t('groups.delete_message', { name: group.name }), confirmLabel: t('common.delete'), danger: true }))) return;
     try {
       await api.deleteGroup(group.id);
       await refresh('groups', 'chats');
@@ -41,35 +43,35 @@ export default function GroupEditor({ group, onClose, onSaved, onDeleted }) {
 
   return (
     <Modal
-      title={group ? 'Editar grupo' : 'Nuevo grupo'}
+      title={group ? t('groups.edit_title') : t('groups.new_title')}
       onClose={onClose}
       footer={
         <>
           {group && (
             <button className="btn danger" onClick={remove}>
-              Eliminar
+              {t('common.delete')}
             </button>
           )}
           <span className="spacer" />
           <button className="btn primary" disabled={busy || !name.trim() || members.length < 2} onClick={save}>
-            Guardar
+            {t('common.save')}
           </button>
         </>
       }
     >
       <label className="field">
-        <span className="field-label">Nombre del grupo</span>
+        <span className="field-label">{t('groups.name')}</span>
         <input value={name} onChange={(e) => setName(e.target.value)} />
       </label>
       <label className="field">
-        <span className="field-label">Quién responde</span>
+        <span className="field-        label">{t('groups.reply_mode.label')}</span>
         <select value={replyMode} onChange={(e) => setReplyMode(e.target.value)}>
-          <option value="smart">Inteligente: el mencionado, o el siguiente por turnos</option>
-          <option value="all">Todos, uno tras otro</option>
-          <option value="manual">Manual: yo elijo quién responde</option>
+                  <option value="smart">{t('groups.reply_mode.smart')}</option>
+                  <option value="all">{t('groups.reply_mode.all')}</option>
+                  <option value="manual">{t('groups.reply_mode.manual')}</option>
         </select>
       </label>
-      <div className="field-label">Miembros ({members.length}) — mínimo 2</div>
+              <div className="field-label">{t('groups.members', { count: members.length })}</div>
       <div className="pick-list">
         {characters.map((c) => (
           <label key={c.id} className="pick-row">
@@ -78,7 +80,7 @@ export default function GroupEditor({ group, onClose, onSaved, onDeleted }) {
             <span>{c.name}</span>
           </label>
         ))}
-        {!characters.length && <p className="muted">Primero crea o importa personajes en Ajustes.</p>}
+        {!characters.length && <p className="muted">{t('groups.no_characters')}</p>}
       </div>
     </Modal>
   );

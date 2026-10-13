@@ -8,7 +8,8 @@
     "dev": "concurrently -k -n server,client -c blue,green \"node --watch server/index.js\" \"vite\"",
     "build": "vite build",
     "start": "node server/index.js",
-    "test": "node --test server/test"
+    "test": "node --test server/test",
+    "check:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "express": "^4.19.2"

@@ -1,6 +1,7 @@
 import { activateEntries, estimateTokens, getBookOrNull, normalizeBook } from './lore.js';
 import { getOrder } from './presets.js';
 import { HttpError } from './util.js';
+import { t } from './i18n.js';
 
 export function applyMacros(text, ctx) {
   if (!text) return '';
@@ -188,7 +189,7 @@ export async function buildPrompt({ settings, preset, speaker, members, persona,
 
   const historyBlock = [...(intro ? [{ role: 'system', content: intro }] : []), ...withInjections, ...afterHistory];
   const messages = pieces.flatMap((p) => (p.history ? historyBlock : [{ role: p.role, content: p.content }]));
-  if (!messages.length) throw new HttpError(400, 'El preset activo no genera ningún prompt: activa al menos uno en Ajustes → Presets.');
+  if (!messages.length) throw new HttpError(400, t('server.presets.no_prompt'));
   return preset.squash_system_messages ? squash(messages) : messages;
 }
 
