@@ -7,6 +7,7 @@ import { formatRP, formatTime, isTouch } from '../util.js';
 import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, ViewableAvatar } from '../components/ui.jsx';
 import GroupEditor from '../components/GroupEditor.jsx';
+import Swipeable from '../components/Swipeable.jsx';
 import { CharacterEditor } from './settings/CharactersTab.jsx';
 
 const nameHue = (name) => {
@@ -34,6 +35,7 @@ export default function ChatView() {
   const [groupSheet, setGroupSheet] = useState(false);
   const [convertSheet, setConvertSheet] = useState(false);
   const [cardId, setCardId] = useState(null);
+  const [swipeAnim, setSwipeAnim] = useState(null);
 
   const abortRef = useRef(null);
   const impersonateAbort = useRef(null);
@@ -232,6 +234,7 @@ export default function ChatView() {
     if (id < 0 || id >= (m.swipes?.length || 1)) return;
     try {
       const updated = await api.setSwipe(ref, i, id);
+      setSwipeAnim({ index: i, id, dir: delta > 0 ? 'next' : 'prev' });
       setChat((c) => ({ ...c, messages: c.messages.map((x, k) => (k === i ? updated : x)) }));
     } catch (e) {
       toast(e.message, 'error');
@@ -430,7 +433,14 @@ export default function ChatView() {
             <div key={i} className={`msg ${m.is_user ? 'me' : 'them'} ${selected === i ? 'selected' : ''}`}>
               {!m.is_user && isGroup && <ViewableAvatar character={speaker} name={m.name} size={32} />}
               <div className="bubble-wrap">
-                <div className="bubble" onClick={() => setSelected(selected === i ? null : i)}>
+                <Swipeable
+                  className="bubble"
+                  enabled={isLastBot && !generating && editing?.index !== i && swipes > 0}
+                  canPrev={(m.swipe_id ?? 0) > 0}
+                  canNext={(m.swipe_id ?? 0) < swipes - 1}
+                  onSwipe={(delta) => swipeTo(i, delta)}
+                  onClick={() => setSelected(selected === i ? null : i)}
+                >
                   {!m.is_user && isGroup && (
                     <div className="sender" style={{ color: `hsl(${nameHue(m.name)} 65% var(--sender-l))` }}>
                       {speaker ? (
@@ -462,10 +472,10 @@ export default function ChatView() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text" dangerouslySetInnerHTML={{ __html: formatRP(m.mes) }} />
+                    <div key={`${i}-${m.swipe_id ?? 0}`} className={`text ${swipeAnim?.index === i && swipeAnim.id === (m.swipe_id ?? 0) ? `swipe-${swipeAnim.dir}` : ''}`} dangerouslySetInnerHTML={{ __html: formatRP(m.mes) }} />
                   )}
                   <time>{formatTime(m.send_date)}</time>
-                </div>
+                </Swipeable>
                 {selected === i && !editing && (
                   <div className="actions">
                     <button onClick={() => setEditing({ index: i, text: m.mes })}>

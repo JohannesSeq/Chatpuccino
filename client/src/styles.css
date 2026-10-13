@@ -391,6 +391,11 @@ html.has-wallpaper .preview-chat::before {
 .typing i:nth-child(2) { animation-delay: 0.2s; }
 .typing i:nth-child(3) { animation-delay: 0.4s; }
 @keyframes blink { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+@keyframes swipe-next { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes swipe-prev { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.bubble .text.swipe-next { animation: swipe-next 0.22s ease-out; }
+.bubble .text.swipe-prev { animation: swipe-prev 0.22s ease-out; }
+@media (prefers-reduced-motion: reduce) { .bubble .text.swipe-next, .bubble .text.swipe-prev { animation: none; } }
 
 .composer { background: var(--panel); padding: 8px 8px calc(8px + var(--safe-bottom)); border-top: 1px solid var(--border); }
 .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; }

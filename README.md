@@ -115,6 +115,7 @@ Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y eli
 
 ## Variantes, ramas y grupos
 
+- **Cambiar de variante:** en el último mensaje del personaje, usa las flechas «‹ 2/3 ›» o, en pantallas táctiles, **desliza la burbuja** hacia la izquierda (siguiente) o la derecha (anterior). En los extremos la burbuja rebota sin cambiar; el scroll vertical del chat no se ve afectado.
 - **Eliminar una variante:** en el último mensaje del personaje, el botón rojo 🗑 junto a «‹ 2/3 ›» borra solo la variante que estás viendo; el mensaje conserva las demás (la última no se puede quitar: borra el mensaje).
 - **Ramificar:** toca un mensaje → *Ramificar*. Se crea un chat nuevo con una copia de la conversación hasta ese mensaje (inclusive), enlazado al original (`main_chat` en el `.jsonl`) y titulado «… (rama)». El original no cambia.
 - **Impersonar:** el botón ✨ junto a *Enviar* pide al modelo que escriba un mensaje **como tú** (según tu persona y el contexto) y lo va escribiendo en la caja de texto; lo revisas, lo editas y lo envías tú. Si ya habías escrito algo, se usa como inicio. No se guarda nada en el chat hasta que envías, y puedes detenerlo con el mismo botón. La instrucción que se envía es editable en *Presets → Mensajes auxiliares* («Impersonar»).
