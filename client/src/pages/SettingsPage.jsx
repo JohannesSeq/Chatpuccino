@@ -1,9 +1,6 @@
 import React from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import ConnectionTab from './settings/ConnectionTab.jsx';
-import CharactersTab from './settings/CharactersTab.jsx';
-import PersonasTab from './settings/PersonasTab.jsx';
-import LorebooksTab from './settings/LorebooksTab.jsx';
 import SecurityTab from './settings/SecurityTab.jsx';
 import PresetsTab from './settings/PresetsTab.jsx';
 import AssistantTab from './settings/AssistantTab.jsx';
@@ -16,15 +13,16 @@ const TABS = [
   { id: 'presets', label: 'settings.tabs.presets', C: PresetsTab },
   { id: 'asistente', label: 'settings.tabs.assistant', C: AssistantTab },
   { id: 'apariencia', label: 'settings.tabs.appearance', C: AppearanceTab },
-  { id: 'personajes', label: 'settings.tabs.characters', C: CharactersTab },
-  { id: 'personas', label: 'settings.tabs.personas', C: PersonasTab },
-  { id: 'lorebooks', label: 'settings.tabs.lorebooks', C: LorebooksTab },
   { id: 'seguridad', label: 'settings.tabs.security', C: SecurityTab },
 ];
+
+// Pestañas que ahora viven en el Catálogo (enlaces y marcadores antiguos).
+const MOVED = new Set(['personajes', 'personas', 'lorebooks']);
 
 export default function SettingsPage() {
   const { t } = useT();
   const { tab } = useParams();
+  if (MOVED.has(tab)) return <Navigate to={`/catalog/${tab}`} replace />;
   const current = TABS.find((x) => x.id === tab);
   if (!current) return <Navigate to="/settings/conexion" replace />;
   const { C } = current;

@@ -8,6 +8,7 @@
 .library-empty strong { color: var(--text); }
 .library-empty p { margin: 0; max-width: 460px; }
 .library-page .tabs.scroll a { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+.library-page .tabs-label { align-self: center; flex: none; margin: 0 4px 0 12px; padding-left: 12px; border-left: 1px solid var(--border); color: var(--muted); font-size: 12px; white-space: nowrap; }
 
 /* checkerboard para ver la transparencia de los sprites */
 .checker {

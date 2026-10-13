@@ -232,7 +232,7 @@ export default function WorldEditor({ world, onClose }) {
           />
           <span className="field-hint">
             {t('world_editor.stats.hint')}{' '}
-            <Link to="/novel/library/stats" onClick={goLibrary}>
+            <Link to="/catalog/estadisticas" onClick={goLibrary}>
               {stats.length ? t('world_editor.stats.manage') : t('world_editor.stats.create')}
             </Link>
           </span>
@@ -254,7 +254,7 @@ export default function WorldEditor({ world, onClose }) {
           </div>
           <span className="field-hint">
             {backgrounds.length ? t('world_editor.background.hint') : t('world_editor.background.none_exist')}{' '}
-            <Link to="/novel/library/backgrounds" onClick={goLibrary}>
+            <Link to="/catalog/fondos" onClick={goLibrary}>
               {backgrounds.length ? t('world_editor.background.manage') : t('world_editor.background.create')}
             </Link>
           </span>

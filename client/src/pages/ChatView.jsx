@@ -9,7 +9,7 @@ import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, ViewableAvatar } from '../components/ui.jsx';
 import GroupEditor from '../components/GroupEditor.jsx';
 import Swipeable from '../components/Swipeable.jsx';
-import { CharacterEditor } from './settings/CharactersTab.jsx';
+import { CharacterEditor } from './catalog/CharactersTab.jsx';
 
 const nameHue = (name) => {
   let h = 0;

@@ -114,7 +114,7 @@ export default function ScenePanel({ world, cast, stats, backgrounds, state, lor
         </div>
         {backgrounds.length === 0 && (
           <p className="muted vn-small">
-            {t('novelview.panel.no_backgrounds')} <Link to="/novel/library/backgrounds">{t('novelview.panel.open_backgrounds')}</Link>
+            {t('novelview.panel.no_backgrounds')} <Link to="/catalog/fondos">{t('novelview.panel.open_backgrounds')}</Link>
           </p>
         )}
       </details>

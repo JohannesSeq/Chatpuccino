@@ -40,6 +40,7 @@
   },
   "app": {
     "nav": {
+      "catalog": "Catálogo",
       "chats": "Chats",
       "novel": "Novela",
       "settings": "Ajustes"
@@ -179,6 +180,17 @@
     "subtitle": "Inicia sesión para continuar",
     "username": "Usuario"
   },
+  "catalog": {
+    "tabs": {
+      "backgrounds": "Fondos",
+      "characters": "Personajes",
+      "lorebooks": "Lorebooks",
+      "personas": "Personas",
+      "stats": "Estadísticas",
+      "tags": "Etiquetas"
+    },
+    "title": "Catálogo"
+  },
   "characters": {
     "drop": {
       "avatar_title": "Suelta la imagen para usarla como avatar",
@@ -292,7 +304,7 @@
       "done": "Chat convertido en grupo",
       "group_name": "Nombre del grupo",
       "keep_original": "Conservar también el chat original con {name}",
-      "no_others": "No hay otros personajes. Crea o importa más en Ajustes → Personajes.",
+      "no_others": "No hay otros personajes. Crea o importa más en Catálogo → Personajes.",
       "reply_all": "Todos, uno tras otro",
       "reply_manual": "Manual: yo elijo quién responde",
       "reply_smart": "Inteligente: el mencionado, o el siguiente por turnos",
@@ -357,7 +369,7 @@
       "type_local": "local"
     },
     "persona_sheet": {
-      "empty": "Crea personas en Ajustes → Personas.",
+      "empty": "Crea personas en Catálogo → Personas.",
       "no_description": "Sin descripción",
       "title": "Persona de este chat"
     },
@@ -429,7 +441,7 @@
     },
     "new": {
       "create_group": "Crear grupo",
-      "no_characters": "No hay personajes. Créalos o impórtalos en Ajustes → Personajes.",
+      "no_characters": "No hay personajes. Créalos o impórtalos en Catálogo → Personajes.",
       "no_description": "Sin descripción",
       "no_groups": "Aún no hay grupos.",
       "no_persona": "Usuario (sin persona)",
@@ -560,7 +572,7 @@
     "members": "Miembros ({count}) — mínimo 2",
     "name": "Nombre del grupo",
     "new_title": "Nuevo grupo",
-    "no_characters": "Primero crea o importa personajes en Ajustes.",
+    "no_characters": "Primero crea o importa personajes en el Catálogo.",
     "reply_mode": {
       "all": "Todos, uno tras otro",
       "label": "Quién responde",
@@ -586,10 +598,10 @@
     "back": "Volver a Novela",
     "back_aria": "Volver a la lista de mundos",
     "backgrounds": {
-      "drop_hint": "Se añadirán a la biblioteca de fondos",
+      "drop_hint": "Se añadirán al catálogo de fondos",
       "drop_title": "Suelta las imágenes aquí",
       "editor": {
-        "delete_message": "«{name}» se eliminará de la biblioteca y se quitará de los mundos que lo usan como escena actual.",
+        "delete_message": "«{name}» se eliminará del catálogo y se quitará de los mundos que lo usan como escena actual.",
         "delete_title": "¿Eliminar el fondo?",
         "deleted": "Fondo eliminado",
         "description": "Descripción",
@@ -613,6 +625,12 @@
       "uploaded_one": "Se subió 1 fondo",
       "uploaded_other": "Se subieron {count} fondos",
       "uploading": "Subiendo {done}/{total}…"
+    },
+    "shortcuts": {
+      "characters": "Personajes",
+      "hint": "Se abre en el Catálogo",
+      "label": "Catálogo:",
+      "lorebooks": "Lorebooks"
     },
     "sprites": {
       "bulk": {
@@ -646,7 +664,7 @@
       "intro": "Cada personaje puede tener varios conjuntos de ropa y una imagen por cada expresión. Elige un personaje para gestionar sus sprites.",
       "load_error": "No se pudieron cargar los sprites",
       "loading": "Cargando sprites…",
-      "no_characters": "Aún no hay personajes. Créalos o impórtalos desde Ajustes.",
+      "no_characters": "Aún no hay personajes. Créalos o impórtalos desde el Catálogo.",
       "no_results": "Ningún personaje coincide con la búsqueda.",
       "not_image": "Solo se pueden subir imágenes.",
       "outfits": {
@@ -703,7 +721,7 @@
         "created": "Estadística creada",
         "default": "Inicial",
         "default_invalid": "El valor inicial debe ser un número entre {min} y {max}.",
-        "delete_message": "«{name}» se eliminará de la biblioteca y se desvinculará de todos los mundos que la usan. Esta acción no se puede deshacer.",
+        "delete_message": "«{name}» se eliminará del catálogo y se desvinculará de todos los mundos que la usan. Esta acción no se puede deshacer.",
         "delete_title": "¿Eliminar la estadística?",
         "deleted": "Estadística eliminada",
         "description": "Descripción para la IA",
@@ -837,15 +855,15 @@
     "empty_text": "Un mundo es una historia continua con su reparto de personajes, fondos y estadísticas. La IA narra las escenas y tú decides qué hacer.",
     "empty_title": "Aún no tienes mundos",
     "hint": {
-      "need_backgrounds": "Aún no hay fondos: súbelos en la biblioteca",
-      "need_characters": "Aún no hay personajes: crea alguno en Ajustes",
-      "need_stats": "Aún no hay estadísticas: créalas en la biblioteca"
+      "need_backgrounds": "Aún no hay fondos: súbelos en el catálogo",
+      "need_characters": "Aún no hay personajes: crea alguno en el catálogo",
+      "need_stats": "Aún no hay estadísticas: créalas en el catálogo"
     },
     "last_line": {
       "none": "Historia sin empezar"
     },
     "library_aria": "Biblioteca de la novela",
-    "library_title": "Biblioteca: estadísticas, fondos y sprites",
+    "library_title": "Biblioteca: sprites y accesos al catálogo",
     "new_world": "Nuevo mundo",
     "search_placeholder": "Buscar mundos…",
     "title": "Mundos"
@@ -924,14 +942,14 @@
       "lorebooks": "Libros de lore",
       "manage": "Gestionar personajes / editar mundo",
       "no_background": "Sin fondo",
-      "no_backgrounds": "Aún no hay fondos en la biblioteca.",
+      "no_backgrounds": "Aún no hay fondos en el catálogo.",
       "no_cast": "Este mundo no tiene personajes.",
       "no_outfits": "Sin vestuarios",
       "no_premise": "Sin premisa.",
       "no_stats": "Este mundo no tiene estadísticas asociadas.",
       "on_stage": "En escena",
       "open": "Opciones de escena",
-      "open_backgrounds": "Abrir la biblioteca de fondos",
+      "open_backgrounds": "Abrir el catálogo de fondos",
       "outfit_aria": "Vestuario de {name}",
       "persona": "Persona",
       "scene": "Escena",
@@ -1526,10 +1544,7 @@
     "tabs": {
       "appearance": "Apariencia",
       "assistant": "Asistente de personajes",
-      "characters": "Personajes",
       "connection": "Conexión y modelo",
-      "lorebooks": "Lorebooks",
-      "personas": "Personas",
       "presets": "Presets",
       "security": "Seguridad"
     },
@@ -1543,6 +1558,28 @@
     "new_placeholder": "Nueva etiqueta",
     "none_yet": "Aún no hay etiquetas",
     "remove_aria": "Quitar la etiqueta {name}"
+  },
+  "tags_tab": {
+    "delete_aria": "Eliminar la etiqueta «{name}»",
+    "delete_message_one": "Se quitará «{name}» de {count} personaje. Los personajes no se eliminan.",
+    "delete_message_other": "Se quitará «{name}» de {count} personajes. Los personajes no se eliminan.",
+    "delete_title": "Eliminar etiqueta",
+    "deleted": "Etiqueta «{name}» eliminada",
+    "empty": "Aún no hay etiquetas: añádelas al editar un personaje.",
+    "intro": "Las etiquetas organizan a tus personajes. Aquí puedes ver cuántos personajes usa cada una, renombrarla (si el nuevo nombre ya existe, se fusionan) o quitarla de todos. Para añadir una etiqueta a un personaje, edítalo desde la pestaña Personajes.",
+    "merged": "Etiquetas fusionadas en «{name}»",
+    "name_label": "Nombre de la etiqueta",
+    "no_results": "Ninguna etiqueta coincide con la búsqueda.",
+    "partial_one": "No se pudo actualizar {count} personaje",
+    "partial_other": "No se pudieron actualizar {count} personajes",
+    "rename": "Renombrar",
+    "rename_aria": "Renombrar la etiqueta «{name}»",
+    "rename_message": "Se cambiará «{name}» en todos los personajes que la usan.",
+    "rename_title": "Renombrar etiqueta",
+    "renamed": "Etiqueta renombrada a «{name}»",
+    "search": "Buscar etiquetas…",
+    "used_by_one": "{count} personaje",
+    "used_by_other": "{count} personajes"
   },
   "ui": {
     "avatar": {
@@ -1570,7 +1607,7 @@
       "label": "Fondo inicial",
       "manage": "Gestionar fondos",
       "none": "Sin fondo",
-      "none_exist": "Aún no hay fondos en la biblioteca.",
+      "none_exist": "Aún no hay fondos en el catálogo.",
       "preview_alt": "Vista previa del fondo «{name}»"
     },
     "cast": {
@@ -1612,7 +1649,7 @@
     },
     "stats": {
       "create": "Crear estadísticas",
-      "hint": "Las estadísticas (afecto, peligro, dinero…) influyen en cómo actúan los personajes y cambian a medida que avanza la historia. Se definen en la biblioteca global.",
+      "hint": "Las estadísticas (afecto, peligro, dinero…) influyen en cómo actúan los personajes y cambian a medida que avanza la historia. Se definen en el catálogo.",
       "label": "Estadísticas",
       "manage": "Gestionar estadísticas",
       "none_exist": "Aún no hay estadísticas creadas",

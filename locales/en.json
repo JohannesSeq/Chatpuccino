@@ -40,6 +40,7 @@
   },
   "app": {
     "nav": {
+      "catalog": "Catalog",
       "chats": "Chats",
       "novel": "Novel",
       "settings": "Settings"
@@ -179,6 +180,17 @@
     "subtitle": "Sign in to continue",
     "username": "Username"
   },
+  "catalog": {
+    "tabs": {
+      "backgrounds": "Backgrounds",
+      "characters": "Characters",
+      "lorebooks": "Lorebooks",
+      "personas": "Personas",
+      "stats": "Stats",
+      "tags": "Tags"
+    },
+    "title": "Catalog"
+  },
   "characters": {
     "drop": {
       "avatar_title": "Drop the image to use it as the avatar",
@@ -292,7 +304,7 @@
       "done": "Chat converted to group",
       "group_name": "Group name",
       "keep_original": "Also keep the original chat with {name}",
-      "no_others": "There are no other characters. Create or import more in Settings → Characters.",
+      "no_others": "There are no other characters. Create or import more in Catalog → Characters.",
       "reply_all": "Everyone, one after another",
       "reply_manual": "Manual: I choose who replies",
       "reply_smart": "Smart: whoever is mentioned, or the next in turn",
@@ -357,7 +369,7 @@
       "type_local": "local"
     },
     "persona_sheet": {
-      "empty": "Create personas in Settings → Personas.",
+      "empty": "Create personas in Catalog → Personas.",
       "no_description": "No description",
       "title": "Persona for this chat"
     },
@@ -429,7 +441,7 @@
     },
     "new": {
       "create_group": "Create group",
-      "no_characters": "There are no characters. Create or import them in Settings → Characters.",
+      "no_characters": "There are no characters. Create or import them in Catalog → Characters.",
       "no_description": "No description",
       "no_groups": "There are no groups yet.",
       "no_persona": "User (no persona)",
@@ -560,7 +572,7 @@
     "members": "Members ({count}) — minimum 2",
     "name": "Group name",
     "new_title": "New group",
-    "no_characters": "First create or import characters in Settings.",
+    "no_characters": "First create or import characters in the Catalog.",
     "reply_mode": {
       "all": "Everyone, one after another",
       "label": "Who replies",
@@ -586,10 +598,10 @@
     "back": "Back to Novel",
     "back_aria": "Back to the worlds list",
     "backgrounds": {
-      "drop_hint": "They will be added to the backgrounds library",
+      "drop_hint": "They will be added to the backgrounds catalog",
       "drop_title": "Drop the images here",
       "editor": {
-        "delete_message": "“{name}” will be removed from the library and cleared from any world using it as the current scene.",
+        "delete_message": "“{name}” will be removed from the catalog and cleared from any world using it as the current scene.",
         "delete_title": "Delete this background?",
         "deleted": "Background deleted",
         "description": "Description",
@@ -613,6 +625,12 @@
       "uploaded_one": "1 background uploaded",
       "uploaded_other": "{count} backgrounds uploaded",
       "uploading": "Uploading {done}/{total}…"
+    },
+    "shortcuts": {
+      "characters": "Characters",
+      "hint": "Opens in the Catalog",
+      "label": "Catalog:",
+      "lorebooks": "Lorebooks"
     },
     "sprites": {
       "bulk": {
@@ -646,7 +664,7 @@
       "intro": "Each character can have several outfits and one image per expression. Pick a character to manage their sprites.",
       "load_error": "Couldn't load the sprites",
       "loading": "Loading sprites…",
-      "no_characters": "No characters yet. Create or import some in Settings.",
+      "no_characters": "No characters yet. Create or import some in the Catalog.",
       "no_results": "No characters match your search.",
       "not_image": "Only images can be uploaded.",
       "outfits": {
@@ -703,7 +721,7 @@
         "created": "Stat created",
         "default": "Starting value",
         "default_invalid": "The starting value must be a number between {min} and {max}.",
-        "delete_message": "“{name}” will be removed from the library and detached from every world that uses it. This can't be undone.",
+        "delete_message": "“{name}” will be removed from the catalog and detached from every world that uses it. This can't be undone.",
         "delete_title": "Delete this stat?",
         "deleted": "Stat deleted",
         "description": "Description for the AI",
@@ -837,15 +855,15 @@
     "empty_text": "A world is one continuous story with its own cast, backgrounds and stats. The AI narrates the scenes and you decide what to do.",
     "empty_title": "You have no worlds yet",
     "hint": {
-      "need_backgrounds": "No backgrounds yet: upload some in the library",
-      "need_characters": "No characters yet: create some in Settings",
-      "need_stats": "No stats yet: create them in the library"
+      "need_backgrounds": "No backgrounds yet: upload some in the catalog",
+      "need_characters": "No characters yet: create some in the catalog",
+      "need_stats": "No stats yet: create them in the catalog"
     },
     "last_line": {
       "none": "Story not started"
     },
     "library_aria": "Novel library",
-    "library_title": "Library: stats, backgrounds and sprites",
+    "library_title": "Library: sprites and catalog shortcuts",
     "new_world": "New world",
     "search_placeholder": "Search worlds…",
     "title": "Worlds"
@@ -924,14 +942,14 @@
       "lorebooks": "Lorebooks",
       "manage": "Manage characters / edit world",
       "no_background": "No background",
-      "no_backgrounds": "There are no backgrounds in the library yet.",
+      "no_backgrounds": "There are no backgrounds in the catalog yet.",
       "no_cast": "This world has no characters.",
       "no_outfits": "No outfits",
       "no_premise": "No premise.",
       "no_stats": "This world has no stats attached.",
       "on_stage": "On stage",
       "open": "Scene options",
-      "open_backgrounds": "Open the backgrounds library",
+      "open_backgrounds": "Open the backgrounds catalog",
       "outfit_aria": "{name}'s outfit",
       "persona": "Persona",
       "scene": "Scene",
@@ -1526,10 +1544,7 @@
     "tabs": {
       "appearance": "Appearance",
       "assistant": "Character Assistant",
-      "characters": "Characters",
       "connection": "Connection & model",
-      "lorebooks": "Lorebooks",
-      "personas": "Personas",
       "presets": "Presets",
       "security": "Security"
     },
@@ -1543,6 +1558,28 @@
     "new_placeholder": "New tag",
     "none_yet": "There are no tags yet",
     "remove_aria": "Remove the tag {name}"
+  },
+  "tags_tab": {
+    "delete_aria": "Delete the “{name}” tag",
+    "delete_message_one": "“{name}” will be removed from {count} character. Characters are not deleted.",
+    "delete_message_other": "“{name}” will be removed from {count} characters. Characters are not deleted.",
+    "delete_title": "Delete tag",
+    "deleted": "Tag “{name}” deleted",
+    "empty": "No tags yet: add them when editing a character.",
+    "intro": "Tags organize your characters. Here you can see how many characters use each one, rename it (if the new name already exists they are merged) or remove it from all of them. To add a tag to a character, edit it from the Characters tab.",
+    "merged": "Tags merged into “{name}”",
+    "name_label": "Tag name",
+    "no_results": "No tag matches the search.",
+    "partial_one": "{count} character could not be updated",
+    "partial_other": "{count} characters could not be updated",
+    "rename": "Rename",
+    "rename_aria": "Rename the “{name}” tag",
+    "rename_message": "“{name}” will be changed on every character that uses it.",
+    "rename_title": "Rename tag",
+    "renamed": "Tag renamed to “{name}”",
+    "search": "Search tags…",
+    "used_by_one": "{count} character",
+    "used_by_other": "{count} characters"
   },
   "ui": {
     "avatar": {
@@ -1570,7 +1607,7 @@
       "label": "Starting background",
       "manage": "Manage backgrounds",
       "none": "No background",
-      "none_exist": "There are no backgrounds in the library yet.",
+      "none_exist": "There are no backgrounds in the catalog yet.",
       "preview_alt": "Preview of background “{name}”"
     },
     "cast": {
@@ -1612,7 +1649,7 @@
     },
     "stats": {
       "create": "Create stats",
-      "hint": "Stats (affection, danger, money…) influence how the characters act and change as the story goes on. They are managed in the global library.",
+      "hint": "Stats (affection, danger, money…) influence how the characters act and change as the story goes on. They are managed in the catalog.",
       "label": "Stats",
       "manage": "Manage stats",
       "none_exist": "No stats created yet",

@@ -101,16 +101,16 @@ function WorldList({ activeId }) {
   }
 
   const missing = [
-    !characters.length && { key: 'characters', to: '/settings/personajes', label: t('novel.hint.need_characters') },
-    !backgrounds.length && { key: 'backgrounds', to: '/novel/library/backgrounds', label: t('novel.hint.need_backgrounds') },
-    !stats.length && { key: 'stats', to: '/novel/library/stats', label: t('novel.hint.need_stats') },
+    !characters.length && { key: 'characters', to: '/catalog/personajes', label: t('novel.hint.need_characters') },
+    !backgrounds.length && { key: 'backgrounds', to: '/catalog/fondos', label: t('novel.hint.need_backgrounds') },
+    !stats.length && { key: 'stats', to: '/catalog/estadisticas', label: t('novel.hint.need_stats') },
   ].filter(Boolean);
 
   return (
     <aside className="chat-list novel-list">
       <header className="topbar head-row">
         <h1>{t('novel.title')}</h1>
-        <Link to="/novel/library/stats" className="icon-btn" aria-label={t('novel.library_aria')} title={t('novel.library_title')}>
+        <Link to="/novel/library/sprites" className="icon-btn" aria-label={t('novel.library_aria')} title={t('novel.library_title')}>
           <Icon name="tune" />
         </Link>
       </header>

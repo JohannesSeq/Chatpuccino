@@ -38,6 +38,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 | 💬 **Estilo mensajería** | Chats con burbujas, marcas de hora, chats **fijados**, búsqueda y chats ilimitados por personaje; cada uno con su propia historia. |
 | 👥 **Grupos** | Varios personajes en la misma conversación, con respuesta inteligente (el mencionado o el siguiente por turnos), todos a la vez o manual; y puedes convertir un chat individual en grupo. |
 | 🎭 **Personajes** | Crea, edita e importa tarjetas PNG/JSON de SillyTavern. Arrastra una imagen para crear uno nuevo, organízalos con **etiquetas** (se eligen de un desplegable con las que ya usas o se crean con «+») y abre la tarjeta desde el chat con solo tocar su nombre. Un **asistente de IA** (✨) genera, mejora, expande o reescribe cada bloque de texto y describe el aspecto del personaje leyendo su imagen. |
+| 🗂️ **Catálogo** | Una sección propia con todo lo que creas y reutilizas: personajes, personas, etiquetas, lorebooks, fondos y estadísticas, en pestañas. |
 | 🙋 **Personas** | Tu representación en la historia, intercambiable al vuelo desde la esquina de la lista de chats. |
 | 📚 **Lorebooks** | Editor de World Info compatible con SillyTavern para dar contexto adicional al modelo. |
 | 🎛️ **Presets y prompts** | Lista ordenada de prompts, parámetros de muestreo y formatos guardados en JSON, con inspector del prompt final. |
@@ -80,7 +81,7 @@ npm start          # http://localhost:3001 (también accesible desde tu red loca
 
 Desarrollo con recarga en caliente: `npm run dev` (cliente en http://localhost:5173, API en 3001).
 
-Primer arranque: entra con **`admin` / `Admin`** y cambia la contraseña en **Ajustes → Seguridad**. Luego, en **Ajustes → Conexión y modelo**, añade una conexión (OpenRouter con tu API key, o un servidor local compatible con OpenAI como LM Studio u Ollama) y elige un modelo. Después importa o crea un personaje en **Ajustes → Personajes** y empieza a chatear desde **Chats**.
+Primer arranque: entra con **`admin` / `Admin`** y cambia la contraseña en **Ajustes → Seguridad**. Luego, en **Ajustes → Conexión y modelo**, añade una conexión (OpenRouter con tu API key, o un servidor local compatible con OpenAI como LM Studio u Ollama) y elige un modelo. Después importa o crea un personaje en **Catálogo → Personajes** y empieza a chatear desde **Chats**.
 
 ---
 
@@ -129,9 +130,10 @@ Cuando el modelo no devuelve texto (en el asistente, en los chats o en los mundo
 Tercera sección del menú (**Novela**): roleplay como una **novela visual**, con escena, sprites del personaje y cuadro de diálogo. Los «chats» se llaman **Mundos**.
 
 - **Mundos:** cada mundo es una historia continua con su propio reparto, personaje(s) **en escena**, lorebooks (se eligen en un desplegable, como las etiquetas), estadísticas asociadas, fondo actual y persona opcional. Se crean con el botón **+** de la lista; puedes duplicarlos y ramificarlos.
-- **Biblioteca global** (botón de la cabecera de la lista → `/novel/library`):
+- **Catálogo** (sección propia del menú, `/catalog`, pestañas *Personajes · Personas · Etiquetas · Lorebooks · Fondos · Estadísticas*): lo que se crea una vez y se reutiliza en chats y mundos. La pestaña **Etiquetas** muestra cuántos personajes usa cada etiqueta y permite renombrarla (si el nombre ya existe, se fusionan) o quitarla de todos. Para la novela:
   - **Estadísticas:** nombre, **descripción** (qué mide y cómo debe influir; se envía a la IA), alcance (*por personaje* o *del mundo*), rango, valor inicial y color. Se asocian a los mundos desde un desplegable.
   - **Fondos:** imágenes de escenario con nombre y descripción (la IA los elige según la historia). Arrastra varias a la vez.
+  - **Biblioteca de la novela** (botón de la cabecera de la lista → `/novel/library`): sprites y accesos directos al Catálogo (estadísticas, fondos, personajes, lorebooks).
   - **Sprites:** por personaje, varios **atuendos** y una imagen por **expresión** siguiendo el sistema de SillyTavern: las 28 etiquetas de emoción (`joy`, `anger`, `neutral`…), varias variantes por etiqueta (`joy.png`, `joy-2.png`), expresión de reserva y expresiones propias. Subida masiva con detección de la etiqueta por el nombre del archivo, o casilla por casilla. Si falta un sprite se usa la expresión de reserva y, en último caso, el avatar de la tarjeta. Aquí también se fijan los **valores iniciales de las estadísticas** de cada personaje.
 - **Generación:** usa la conexión y el preset activos del roleplay. La IA escribe la escena como un **guion** (`[Luna|joy] texto`, `[Narrator] texto`) y, al final, un bloque de control oculto con los cambios (estadísticas, fondo, atuendos, entradas y salidas de escena). El servidor lo valida: solo estadísticas asociadas, valores dentro del rango y cambios pequeños por escena. Si el modelo omite el bloque y el mundo tiene estadísticas, hace una consulta breve de análisis. El prompt incluye las fichas de los personajes en escena, el lorebook, las estadísticas con sus valores actuales y la instrucción de que **influyan en el comportamiento y las decisiones** (afecto bajo → más fría, etc.), y las expresiones, atuendos y fondos disponibles.
 - **Estadísticas:** los valores viven en cada escena (así ramificar, borrar o cambiar de variante los «rebobina»); cada cambio aparece como **notificación emergente** (`Luna · Afecto +4 (30 → 34)` con el motivo). Además se guardan en un JSON por personaje (`data/worlds/<mundo>/characters/<personaje>.json`) y puedes corregir cualquier valor a mano desde el panel.

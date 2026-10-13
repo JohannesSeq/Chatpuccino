@@ -553,7 +553,7 @@ function SpriteWorkspace({ character, data, reload, apply }) {
         <p className="muted">{t('library.sprites.stats.hint')}</p>
         {charStats.length === 0 ? (
           <p className="field-hint">
-            {t('library.sprites.stats.none')} <Link to="/novel/library/stats">{t('library.sprites.stats.none_link')}</Link>
+            {t('library.sprites.stats.none')} <Link to="/catalog/estadisticas">{t('library.sprites.stats.none_link')}</Link>
           </p>
         ) : (
           <>
