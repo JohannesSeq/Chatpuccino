@@ -60,12 +60,27 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 
 <table>
   <tr>
+    <td width="68%"><img src="docs/screenshots/novel-desktop.png" alt="Modo Novela en escritorio: Luna y Kai en escena, cuadro de diálogo y notificaciones de estadísticas"><br><sub><b>Modo Novela</b> en escritorio: escena con sprites, diálogo, opciones de escena y notificaciones cuando cambia una estadística.</sub></td>
+    <td width="32%" align="center"><img src="docs/screenshots/novel-mobile.png" alt="Modo Novela en el móvil con la escena y el cuadro de diálogo debajo" width="230"><br><sub>Y en el móvil, con foco en el texto o en el personaje.</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
     <td width="50%"><img src="docs/screenshots/character-card.png" alt="Tarjeta de personaje abierta desde el chat"><br><sub><b>Tarjeta de personaje</b> editable desde el propio chat.</sub></td>
-    <td width="50%"><img src="docs/screenshots/presets.png" alt="Presets con la lista ordenada de prompts"><br><sub><b>Presets</b> con varios prompts, orden y activación individual.</sub></td>
+    <td width="50%"><img src="docs/screenshots/ai-assistant.png" alt="Asistente de IA expandiendo la descripción de un personaje"><br><sub><b>Asistente de IA</b> (✨) para generar, mejorar, expandir o reescribir cada texto.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/appearance.png" alt="Pestaña de apariencia con vista previa en vivo"><br><sub><b>Apariencia</b>: colores, fuentes, fondo y transparencia con vista previa.</sub></td>
+    <td width="50%"><img src="docs/screenshots/catalog.png" alt="Catálogo con las pestañas Personajes, Personas, Etiquetas, Lorebooks, Fondos, Sprites y Estadísticas"><br><sub><b>Catálogo</b>: personajes, personas, etiquetas, lorebooks, fondos, sprites y estadísticas en un solo lugar.</sub></td>
+    <td width="50%"><img src="docs/screenshots/sprites.png" alt="Sprites de Luna: conjuntos de ropa y una imagen por expresión"><br><sub><b>Sprites</b>: conjuntos de ropa y una imagen por expresión, como en SillyTavern.</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/lorebooks-list.png" alt="Editor de lorebook con tres entradas"><br><sub><b>Lorebooks</b> en formato World Info de SillyTavern.</sub></td>
+    <td width="50%"><img src="docs/screenshots/catalog-tags.png" alt="Gestión de etiquetas: renombrar, fusionar y eliminar"><br><sub><b>Etiquetas</b>: renómbralas, fusiónalas o quítalas de todos los personajes.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/presets.png" alt="Presets con la lista ordenada de prompts"><br><sub><b>Presets</b> con varios prompts, orden y activación individual.</sub></td>
+    <td width="50%"><img src="docs/screenshots/appearance.png" alt="Pestaña de apariencia con vista previa en vivo"><br><sub><b>Apariencia</b>: colores, fuentes, fondo y transparencia con vista previa.</sub></td>
   </tr>
 </table>
 
