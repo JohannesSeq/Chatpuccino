@@ -97,12 +97,12 @@ r.post('/generate', wrap(async (req, res) => {
 }));
 
 r.post('/describe-image', wrap(async (req, res) => {
-  const { image, name = '', instructions = '' } = req.body || {};
+  const { image, name = '', instructions = '', purpose = '' } = req.body || {};
   if (typeof image !== 'string' || !IMAGE_RE.test(image)) throw new HttpError(400, t('server.assistant.invalid_image'));
   if (image.length > MAX_IMAGE_CHARS) throw new HttpError(413, t('server.assistant.image_too_large'));
   const cfg = await loadAssistant();
   const conn = requireAssistant(cfg, { vision: true });
-  const messages = buildImageMessages({ prompts: cfg.prompts, image, name: String(name), instructions: String(instructions) });
+  const messages = buildImageMessages({ prompts: cfg.prompts, image, name: String(name), instructions: String(instructions), purpose: purpose === 'sd' ? 'sd' : '' });
   await runAssistant(res, { conn, messages, sampling: cfg.sampling });
 }));
 

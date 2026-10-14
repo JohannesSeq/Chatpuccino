@@ -42,7 +42,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/chats" replace />} />
             <Route path="/chats/*" element={<ChatsPage />} />
             <Route path="/novel/*" element={<NovelPage />} />
-            <Route path="/catalog/:tab?" element={<CatalogPage />} />
+            <Route path="/catalog/:tab?/:sub?" element={<CatalogPage />} />
             <Route path="/settings/:tab?" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/chats" replace />} />
           </Routes>

@@ -10,6 +10,7 @@ import {
   updateCharacter,
 } from '../cards.js';
 import { deleteSprites } from '../sprites.js';
+import { deleteStudioCharacter } from '../studio.js';
 import { cascadeWorlds } from '../vn-common.js';
 import { decodePngDataUrl, safeName, wrap } from '../util.js';
 
@@ -37,6 +38,7 @@ r.put('/:id', wrap(async (req, res) => {
 r.delete('/:id', wrap(async (req, res) => {
   await deleteCharacter(req.params.id);
   await deleteSprites(req.params.id);
+  await deleteStudioCharacter(req.params.id);
   await cascadeWorlds('detachCharacter', req.params.id);
   res.status(204).end();
 }));

@@ -17,10 +17,13 @@ export const DIRS = {
   worlds: path.join(DATA, 'worlds'),
   vnBackgrounds: path.join(DATA, 'vn', 'backgrounds'),
   vnSprites: path.join(DATA, 'vn', 'sprites'),
+  // Estudio de imágenes
+  studioCharacters: path.join(DATA, 'studio', 'characters'),
 };
 
 export const SETTINGS_FILE = path.join(DATA, 'settings.json');
 export const ASSISTANT_FILE = path.join(DATA, 'assistant.jsonl');
+export const STUDIO_FILE = path.join(DATA, 'studio', 'config.json');
 export const STATS_FILE = path.join(DATA, 'vn', 'stats.json');
 export const BACKGROUNDS_FILE = path.join(DATA, 'vn', 'backgrounds.json');
 export const OPENROUTER_BASE = process.env.OPENROUTER_BASE || 'https://openrouter.ai/api/v1';

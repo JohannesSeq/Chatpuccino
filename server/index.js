@@ -14,6 +14,7 @@ import assistantRoutes from './routes/assistant.js';
 import statsRoutes from './routes/stats.js';
 import backgroundRoutes from './routes/backgrounds.js';
 import spriteRoutes from './routes/sprites.js';
+import studioRoutes from './routes/studio.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
@@ -40,6 +41,7 @@ export function createApp() {
   app.use('/api/stats', statsRoutes);
   app.use('/api/backgrounds', backgroundRoutes);
   app.use('/api/sprites', spriteRoutes);
+  app.use('/api/studio', studioRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);
@@ -58,7 +60,8 @@ export function createApp() {
   app.use((err, _req, res, _next) => {
     if (res.headersSent) return res.end();
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
-    if (status >= 500) console.error(err);
+    // Los fallos de Stable Diffusion (apagado, sin --api…) son esperables y ya llegan explicados al usuario.
+    if (status >= 500 && !String(err.code || '').startsWith('STUDIO_')) console.error(err);
     if (err.retryAfter) res.setHeader('Retry-After', String(err.retryAfter));
     res.status(status).json({ error: err.message || t('server.common.internal_error'), ...(err.code ? { code: err.code } : {}) });
   });

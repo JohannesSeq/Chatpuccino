@@ -1,0 +1,41 @@
+/* Estudio de imágenes: paneles de Personajes y Fondos */
+.sg-quick, .sg-negative, .sg-describe, .sg-place { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--panel-2); }
+.sg-quick > summary, .sg-negative > summary, .sg-describe > summary, .sg-place > summary { min-height: 32px; display: flex; align-items: center; gap: 8px; margin-bottom: 0; }
+.sg-quick[open] > summary, .sg-negative[open] > summary, .sg-describe[open] > summary, .sg-place[open] > summary { margin-bottom: 8px; }
+.sg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.sg-count { margin: -6px 0 0; }
+.sg-unsaved { color: var(--warn-text); font-size: calc(13px * var(--ui-scale)); }
+.sg-warn { margin: 0; padding: 6px 10px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-text); font-size: calc(13px * var(--ui-scale)); }
+.sg-notice { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--accent-soft); }
+.sg-final textarea, .sg-negative textarea { width: 100%; }
+.sg-final textarea[readonly] { background: var(--panel-2); color: var(--muted); }
+
+/* presets de tamaño */
+.sg-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.sg-chip { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-height: 40px; min-width: 44px; padding: 4px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--border); color: var(--text); line-height: 1.2; }
+.sg-chip small { color: var(--muted); font-size: calc(11px * var(--ui-scale)); }
+.sg-chip.on { background: var(--accent-soft); border-color: var(--accent); }
+
+/* fuentes para describir una imagen */
+.sg-sources { display: flex; gap: 8px; overflow-x: auto; padding: 6px 0 10px; }
+.sg-source { flex: 0 0 auto; width: 84px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border-radius: 10px; border: 2px solid var(--border); color: var(--text); min-height: 44px; }
+.sg-source img { width: 100%; height: 84px; object-fit: contain; border-radius: 6px; }
+.sg-source small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(11px * var(--ui-scale)); color: var(--muted); }
+.sg-source.on { border-color: var(--accent); }
+.sg-source-add { justify-content: center; border-style: dashed; background: var(--panel); height: 112px; }
+
+/* diálogo «Guardar como sprite» */
+.sg-save { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sg-save-preview { border-radius: 12px; overflow: hidden; line-height: 0; }
+.sg-save-preview img { width: 100%; max-height: 340px; object-fit: contain; display: block; }
+.sg-save-form { min-width: 0; }
+.sg-bg-preview { border-radius: 12px; overflow: hidden; line-height: 0; margin-bottom: 12px; }
+.sg-bg-preview img { width: 100%; max-height: 260px; object-fit: contain; display: block; }
+@media (max-width: 560px) {
+  .sg-save { grid-template-columns: 1fr; }
+  .sg-save-preview { max-width: 240px; margin-inline: auto; }
+}
+
+/* acciones de las tarjetas de resultado */
+.studio-actions .btn, .studio-actions .menu-trigger, .studio-actions .icon-btn { min-height: 36px; }
+.studio-actions .menu { margin-left: auto; }

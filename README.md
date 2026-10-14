@@ -46,6 +46,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 | 🎨 **Personalización** | Modo claro/oscuro/automático, colores, fuentes, tamaños, transparencia de burbujas y fondo de pantalla. |
 | 🔐 **Seguridad** | Inicio de sesión con contraseña cifrada (scrypt), bloqueo ante intentos fallidos y cierre de sesiones. |
 | 📖 **Modo Novela** | Roleplay como novela visual: **Mundos** con escena, sprites por expresión y atuendo (sistema de SillyTavern), fondos, **estadísticas** que cambian con la historia (con notificaciones) e influyen en los personajes, y una interfaz pensada para escritorio y móvil. |
+| 🖼️ **Estudio de imágenes** | Conecta tu servidor de **Stable Diffusion** para generar imágenes de personajes, **expresiones con inpaint** (solo la cara), fondos y quitar el fondo, listos para el Modo Novela. |
 | 📱 **Móvil y escritorio** | Diseño responsivo pensado primero para el pulgar. |
 
 ## 📸 Capturas
@@ -79,8 +80,16 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
     <td width="50%"><img src="docs/screenshots/catalog-tags.png" alt="Gestión de etiquetas: renombrar, fusionar y eliminar"><br><sub><b>Etiquetas</b>: renómbralas, fusiónalas o quítalas de todos los personajes.</sub></td>
   </tr>
   <tr>
+    <td width="50%"><img src="docs/screenshots/studio-settings.png" alt="Estudio de imágenes: parámetros con barras deslizantes por perfil"><br><sub><b>Estudio de imágenes</b>: parámetros con barras deslizantes y un perfil por tipo de imagen.</sub></td>
+    <td width="50%"><img src="docs/screenshots/studio-expressions.png" alt="Expresiones generadas con inpaint y silueta transparente"><br><sub><b>Expresiones</b> con inpaint: solo cambia la cara y conserva la transparencia.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/studio-removebg.png" alt="Herramienta de quitar fondo con vista previa sobre transparencia"><br><sub><b>Quitar fondo</b>: por color (local) o con IA (rembg).</sub></td>
     <td width="50%"><img src="docs/screenshots/presets.png" alt="Presets con la lista ordenada de prompts"><br><sub><b>Presets</b> con varios prompts, orden y activación individual.</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/appearance.png" alt="Pestaña de apariencia con vista previa en vivo"><br><sub><b>Apariencia</b>: colores, fuentes, fondo y transparencia con vista previa.</sub></td>
+    <td width="50%"></td>
   </tr>
 </table>
 
@@ -145,7 +154,7 @@ Cuando el modelo no devuelve texto (en el asistente, en los chats o en los mundo
 Tercera sección del menú (**Novela**): roleplay como una **novela visual**, con escena, sprites del personaje y cuadro de diálogo. Los «chats» se llaman **Mundos**.
 
 - **Mundos:** cada mundo es una historia continua con su propio reparto, personaje(s) **en escena**, lorebooks (se eligen en un desplegable, como las etiquetas), estadísticas asociadas, fondo actual y persona opcional. Se crean con el botón **+** de la lista; puedes duplicarlos y ramificarlos.
-- **Catálogo** (sección propia del menú, `/catalog`, pestañas *Personajes · Personas · Etiquetas · Lorebooks · Fondos · Sprites · Estadísticas*): lo que se crea una vez y se reutiliza en chats y mundos. La pestaña **Etiquetas** muestra cuántos personajes usa cada etiqueta y permite renombrarla (si el nombre ya existe, se fusionan) o quitarla de todos. Para la novela:
+- **Catálogo** (sección propia del menú, `/catalog`, pestañas *Personajes · Personas · Etiquetas · Lorebooks · Fondos · Sprites · Estadísticas · Estudio de imágenes*): lo que se crea una vez y se reutiliza en chats y mundos. La pestaña **Etiquetas** muestra cuántos personajes usa cada etiqueta y permite renombrarla (si el nombre ya existe, se fusionan) o quitarla de todos. Para la novela:
   - **Estadísticas:** nombre, **descripción** (qué mide y cómo debe influir; se envía a la IA), alcance (*por personaje* o *del mundo*), rango, valor inicial y color. Se asocian a los mundos desde un desplegable.
   - **Fondos:** imágenes de escenario con nombre y descripción (la IA los elige según la historia). Arrastra varias a la vez.
   - **Accesos directos** (botón de la cabecera de la lista de mundos → `/novel/library`): enlaces rápidos a Sprites, Estadísticas, Fondos, Personajes y Lorebooks del Catálogo.
@@ -155,6 +164,18 @@ Tercera sección del menú (**Novela**): roleplay como una **novela visual**, co
 - **Vista de novela (escritorio):** fondo, personajes de pie con la expresión de la línea actual (el que habla se resalta, los demás se atenúan) y el cuadro de diálogo debajo. Se avanza con clic, Espacio, Intro o →; ← vuelve atrás. Botones: **Responder** (abre el cuadro para escribir tu respuesta, con ✨ para que la IA la escriba), **Continuar**, **Regenerar**, variantes, editar, borrar, **ramificar**, historial. A la derecha, el panel con **fondo de la escena**, **atuendo** de cada personaje, **quién está en escena**, el reparto, las estadísticas y la edición del mundo.
 - **Teléfonos:** escena arriba y diálogo debajo, con dos modos de enfoque: **texto** (la escena se reduce) y **personaje** (el diálogo se compacta); el panel se abre como hoja inferior.
 - **Datos:** `data/worlds/<mundo>/` (`world.json`, `story.jsonl` en formato de chat de SillyTavern), `data/vn/stats.json`, `data/vn/backgrounds*` y `data/vn/sprites/<personaje>/`; todo dentro de `data/`, que no se sube al repositorio.
+
+## Estudio de imágenes
+
+**Catálogo → Estudio de imágenes** se conecta a **tu propio servidor de Stable Diffusion** (API de [AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) o Forge, iniciado con `--api`) para crear las imágenes de tus personajes y de las novelas. Chatpuccino no incluye ni descarga modelos: las imágenes se generan en tu máquina.
+
+- **Configuración:** la **conexión** (dirección, usuario/contraseña opcionales y botón de prueba), el **modelo** (lista del servidor, **favoritos ★**, añadir uno a mano, VAE y *clip skip*), los **parámetros** de la imagen con barras deslizantes y **un perfil por tipo de imagen** (personajes, expresiones y fondos): tamaño con presets, pasos, CFG, muestreador, *scheduler*, semilla, imágenes por tanda, restaurar caras y **re-escalado** (*Hires. fix*: factor, reescalador, pasos y denoising), y los **prompts** base y negativo de cada perfil. Los prompts se escriben como etiquetas separadas por comas (`red hair, big eyes, realistic style`).
+- **Personajes:** cada personaje tiene su **prompt de apariencia** (más un negativo propio). El asistente de IA (✨) lo escribe a partir de la ficha, y **«Generar prompt desde la imagen»** lo deduce de la imagen del personaje con un modelo de visión. Al generar se combinan el prompt del perfil, el del personaje y la pose/escena de la tanda. Cada resultado se puede **guardar como sprite**, usar como imagen de la tarjeta, **quitarle el fondo**, descargar o enviarlo como base para las expresiones.
+- **Expresiones:** a partir de la imagen del personaje se regenera **solo la cara** con *inpaint* (img2img con máscara). La máscara es una elipse ajustable (se guarda por personaje) que se puede retocar con pincel y goma, con el dedo o el ratón. Las 28 emociones de SillyTavern traen un prompt editable; se pueden generar varias de una vez, elegir entre los candidatos y guardarlos como sprites del atuendo que elijas (compatibles con el Modo Novela).
+- **Quitar fondo:** herramienta integrada, con dos métodos: **por color** (local, en el navegador: tolerancia, suavizado de borde y cuentagotas; ideal con fondo liso, que es lo que dejan los prompts `simple background, white background`) o **con IA** si tu Stable Diffusion tiene la extensión [rembg](https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg). Si la imagen base ya es transparente, la silueta se conserva sola al generar las expresiones.
+- **Fondos:** genera escenarios (con ✨ para el prompt, presets de proporción 16:9, 3:2…) y guárdalos directamente en el catálogo de **Fondos** de la novela.
+- **Progreso y cancelación:** se ve el paso y el tiempo estimado, y se puede cancelar (también se interrumpe la tarea en Stable Diffusion). Los resultados se conservan mientras uses el Catálogo; lo que guardes se escribe en tus sprites, fondos o tarjeta.
+- **Datos:** `data/studio/config.json` (conexión, modelo y perfiles; incluye la contraseña de Stable Diffusion si la usas) y `data/studio/characters/<personaje>.json` (prompt y región de la cara).
 
 ## Importar chats
 
@@ -212,6 +233,7 @@ Variables opcionales: `PORT`, `HOST` (por defecto `0.0.0.0`), `DATA_DIR` (por de
 | `lorebooks/<nombre>.json` | Lorebooks en formato World Info de SillyTavern |
 | `presets/<nombre>.json` | Presets de generación y prompts (formato Chat Completion de SillyTavern) |
 | `assistant.jsonl` | Configuración del asistente de personajes: conexión (con API key), prompts y muestreo |
+| `studio/` | Estudio de imágenes: `config.json` (servidor de Stable Diffusion, modelo, perfiles) y `characters/<id>.json` (prompt y región de la cara) |
 | `settings.json` | Conexiones (API keys, modelos, favoritos) y parámetros |
 | `auth.json` | Usuario, hash de la contraseña y secreto de sesión |
 

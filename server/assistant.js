@@ -192,11 +192,13 @@ export const FIELDS = [
   'lorebook_entry_title',
   'lorebook_entry_keys',
   'stat_description',
+  'sd_character',
+  'sd_background',
 ];
 
 const CONTEXT_KEYS = [
   'name', 'tags', 'description', 'personality', 'scenario', 'first_mes', 'mes_example', 'image_reading',
-  'cast', 'stats', 'lorebooks', 'lorebook_description', 'entry_title', 'entry_keys', 'entry_content', 'scope', 'range',
+  'cast', 'stats', 'lorebooks', 'lorebook_description', 'entry_title', 'entry_keys', 'entry_content', 'scope', 'range', 'style',
 ];
 
 const clip = (s, n) => {
@@ -224,21 +226,23 @@ export function buildFieldMessages({ prompts, field, mode, text, instructions, c
     t('server.assistant.msg.final'),
   ].filter(Boolean);
   return [
-    { role: 'system', content: prompts.system },
+    { role: 'system', content: field.startsWith('sd_') ? t('server.assistant.sd_system') : prompts.system },
     { role: 'user', content: parts.join('\n\n') },
   ];
 }
-/** Mensajes para leer una imagen (formato multimodal de la API de OpenAI). */
-export function buildImageMessages({ prompts, image, name, instructions }) {
+
+/** Mensajes para leer una imagen (formato multimodal de la API de OpenAI). Con `purpose: 'sd'` se pide un prompt de Stable Diffusion. */
+export function buildImageMessages({ prompts, image, name, instructions, purpose = '' }) {
+  const sd = purpose === 'sd';
   const text = [
-    prompts.image,
+    sd ? t('server.assistant.sd_image_prompt') : prompts.image,
     name ? t('server.assistant.msg.image_name', { name: clip(name, 200) }) : '',
     instructions?.trim() ? t('server.assistant.msg.image_instructions', { instructions: clip(instructions, 2000) }) : '',
   ]
     .filter(Boolean)
     .join('\n\n');
   return [
-    { role: 'system', content: prompts.system },
+    { role: 'system', content: sd ? t('server.assistant.sd_system') : prompts.system },
     { role: 'user', content: [{ type: 'text', text }, { type: 'image_url', image_url: { url: image } }] },
   ];
 }

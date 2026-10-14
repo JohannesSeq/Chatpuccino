@@ -14,15 +14,20 @@ async function apiFetch(url, init) {
   return res;
 }
 
-async function req(method, url, body) {
+async function req(method, url, body, signal) {
   const res = await apiFetch(`/api${url}`, {
     method,
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal,
   });
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(data?.error || t('api.http_error', { status: res.status }));
+  if (!res.ok) {
+    const err = new Error(data?.error || t('api.http_error', { status: res.status }));
+    err.code = data?.code;
+    throw err;
+  }
   return data;
 }
 
@@ -169,6 +174,21 @@ export const api = {
     );
   },
   deleteSprite: (charId, outfitId, file) => req('DELETE', `/sprites/${enc(charId)}/outfits/${enc(outfitId)}/files/${enc(file)}`),
+
+  // ---- Estudio de imágenes (Stable Diffusion) ----
+  studio: () => req('GET', '/studio'),
+  saveStudio: (patch) => req('PUT', '/studio', patch),
+  testStudio: (body) => req('POST', '/studio/test', body),
+  studioOptions: () => req('GET', '/studio/options'),
+  toggleStudioFavorite: (model) => req('POST', '/studio/favorites', { model }),
+  studioProgress: () => req('GET', '/studio/progress'),
+  studioInterrupt: () => req('POST', '/studio/interrupt'),
+  // Devuelven { images: [{ data (base64 PNG), seed }], prompt, negative }; `signal` cancela también la tarea en Stable Diffusion.
+  studioGenerate: (body, signal) => req('POST', '/studio/generate', body, signal),
+  studioInpaint: (body, signal) => req('POST', '/studio/inpaint', body, signal),
+  studioRemoveBg: (body, signal) => req('POST', '/studio/rembg', body, signal),
+  studioCharacter: (id) => req('GET', `/studio/characters/${enc(id)}`),
+  saveStudioCharacter: (id, patch) => req('PUT', `/studio/characters/${enc(id)}`, patch),
 
   worlds: () => req('GET', '/worlds'),
   createWorld: (body) => req('POST', '/worlds', body),
