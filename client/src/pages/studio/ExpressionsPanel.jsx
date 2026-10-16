@@ -5,7 +5,7 @@ import { useData } from '../../data.jsx';
 import { Lightbox } from '../../components/ui.jsx';
 import { useT } from '../../i18n.jsx';
 import { DEFAULT_EXPRESSIONS, DEFAULT_FACE_REGION, joinPrompts } from '../../../../shared/studio.js';
-import { CharacterGate, GenerationBar, SetupNotice } from './ui.jsx';
+import { CharacterGate, CountStepper, GenerationBar, SetupNotice } from './ui.jsx';
 import { useGeneration, useStudio } from './StudioContext.jsx';
 import MaskEditor from './MaskEditor.jsx';
 import BasePicker from './expr/BasePicker.jsx';
@@ -69,7 +69,7 @@ function Workspace({ character }) {
       fill: profile.inpaint.fill,
       onlyMasked: profile.inpaint.onlyMasked,
       padding: profile.inpaint.padding,
-      batchCount: Math.min(4, Math.max(1, profile.batchCount || 1)),
+      batchCount: Math.min(8, Math.max(1, profile.batchCount || 1)),
       seed: profile.seed ?? -1,
       flatten: '#ffffff',
     }),
@@ -391,7 +391,8 @@ function Workspace({ character }) {
 
       <section className="card" aria-labelledby="expr-gen">
         <h3 id="expr-gen">{t('studio.expressions.generate.title')}</h3>
-        <div className="btn-row">
+        <div className="btn-row gen-row">
+          <CountStepper value={settings.batchCount} onChange={(v) => setSettings((s) => ({ ...s, batchCount: v }))} max={8} label={t('studio.common.count_per_expression')} disabled={busy} />
           <button className="btn primary" onClick={() => generate(orderedSelected)} disabled={busy || !work || !count || noOutfit}>
             {t('studio.expressions.generate.button', { count })}
           </button>

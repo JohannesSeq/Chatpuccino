@@ -21,6 +21,13 @@
 .seed-row { display: flex; gap: 8px; align-items: center; }
 .seed-row input { flex: 1; min-width: 0; }
 
+/* cantidad de imágenes junto al botón Generar */
+.count-stepper { display: inline-flex; flex-direction: column; gap: 2px; }
+.count-controls { display: inline-flex; align-items: center; gap: 6px; }
+.count-controls .btn.small { min-width: 36px; min-height: 40px; padding: 0 10px; font-size: calc(18px * var(--ui-scale)); line-height: 1; }
+.count-controls input { width: 64px; min-height: 40px; text-align: center; padding: 4px 6px; }
+.btn-row.gen-row { align-items: flex-end; }
+
 /* progreso de la generación */
 .gen-bar { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
 .gen-bar-row { display: flex; align-items: center; gap: 10px; }

@@ -8,7 +8,7 @@ import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { useT } from '../../i18n.jsx';
 import { useGeneration, useStudio } from './StudioContext.jsx';
-import { GenerationBar, ImageCard, ResultGrid, SetupNotice, useLocalPref } from './ui.jsx';
+import { CountStepper, GenerationBar, ImageCard, ResultGrid, SetupNotice, useLocalPref } from './ui.jsx';
 import FinalPrompt from './gen/FinalPrompt.jsx';
 import QuickSettings, { useQuickSettings } from './gen/QuickSettings.jsx';
 import SaveBackgroundDialog from './gen/SaveBackgroundDialog.jsx';
@@ -92,7 +92,8 @@ export default function BackgroundsPanel() {
         <h3>{t('studio.backgrounds.generate.title')}</h3>
         <QuickSettings qs={qs} presets={presets} />
         <FinalPrompt positive={positive} negative={negative} />
-        <div className="btn-row">
+        <div className="btn-row gen-row">
+          <CountStepper value={qs.value.batchCount} onChange={(v) => qs.set({ batchCount: v })} disabled={gen.running} />
           <button className="btn primary" onClick={generate} disabled={gen.running || !joinPrompts(prompt, extra)}>
             {gen.running ? t('studio.common.generating') : t('studio.backgrounds.generate.run', { count: qs.value.batchCount })}
           </button>

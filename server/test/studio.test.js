@@ -180,6 +180,17 @@ test('estudio: genera personajes (txt2img) combinando perfil, personaje y petici
   assert.equal(bgSent.enable_hr, false);
   assert.ok(bgSent.prompt.includes('scenery') && bgSent.prompt.endsWith('castle, night'));
   assert.equal((await call('POST', '/studio/generate', { kind: 'expression', prompt: 'x' })).status, 400);
+
+  // la cantidad de imágenes la elige el usuario (hasta 16 por tanda)
+  const many = await call('POST', '/studio/generate', { kind: 'background', prompt: 'forest', overrides: { batchCount: 12 } });
+  assert.equal(many.json.images.length, 12);
+  assert.equal(last('/sdapi/v1/txt2img').body.n_iter, 12);
+  await call('POST', '/studio/generate', { kind: 'background', prompt: 'forest', overrides: { batchCount: 99 } });
+  assert.equal(last('/sdapi/v1/txt2img').body.n_iter, 16, 'tope de 16');
+  await call('POST', '/studio/generate', { kind: 'background', prompt: 'forest', overrides: { batchCount: 1 } });
+  assert.equal(last('/sdapi/v1/txt2img').body.n_iter, 1);
+  assert.equal((await call('PUT', '/studio', { profiles: { background: { batchCount: 20 } } })).json.profiles.background.batchCount, 16);
+  await call('PUT', '/studio', { profiles: { background: { batchCount: 2 } } });
   await call('PUT', '/studio', { profiles: { background: { prompt: '' } } });
   assert.equal((await call('POST', '/studio/generate', { kind: 'background' })).status, 400, 'sin ningún prompt');
 });

@@ -50,6 +50,44 @@ export function SliderField({ label, value, onChange, range, hint, disabled, suf
   );
 }
 
+/** Cantidad de imágenes a generar: − [n] + junto al botón Generar (comparte valor con el ajuste rápido de la tanda). */
+export function CountStepper({ value, onChange, min = 1, max = 16, label, disabled }) {
+  const { t } = useT();
+  const shown = label ?? t('studio.common.count_label');
+  const clamp = (n) => Math.min(max, Math.max(min, Math.round(n)));
+  const [draft, setDraft] = useState(null);
+  const commit = (raw) => {
+    setDraft(null);
+    const n = Number(raw);
+    if (raw !== '' && Number.isFinite(n)) onChange(clamp(n));
+  };
+  return (
+    <div className="count-stepper" role="group" aria-label={shown}>
+      <span className="field-label">{shown}</span>
+      <span className="count-controls">
+        <button type="button" className="btn small" onClick={() => onChange(clamp(value - 1))} disabled={disabled || value <= min} aria-label={t('studio.common.count_less')}>
+          −
+        </button>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={min}
+          max={max}
+          value={draft ?? value}
+          disabled={disabled}
+          aria-label={shown}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={(e) => commit(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && commit(e.currentTarget.value)}
+        />
+        <button type="button" className="btn small" onClick={() => onChange(clamp(value + 1))} disabled={disabled || value >= max} aria-label={t('studio.common.count_more')}>
+          +
+        </button>
+      </span>
+    </div>
+  );
+}
+
 /** Semilla: número (-1 = aleatoria) con botón para volver a «aleatoria». */
 export function SeedField({ value, onChange, label, hint }) {
   const { t } = useT();

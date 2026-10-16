@@ -1786,6 +1786,10 @@
     },
     "common": {
       "change_character": "Change character",
+      "count_label": "Number of images",
+      "count_less": "One image fewer",
+      "count_more": "One image more",
+      "count_per_expression": "Images per expression",
       "eta": "~{seconds} s",
       "generating": "Generating…",
       "go_settings": "Go to settings",

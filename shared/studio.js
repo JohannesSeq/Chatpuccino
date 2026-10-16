@@ -11,7 +11,7 @@ export const PARAM_RANGES = {
   cfg: [1, 30, 0.5],
   seed: [-1, 4294967295, 1],
   clipSkip: [1, 12, 1],
-  batchCount: [1, 8, 1],
+  batchCount: [1, 16, 1],
   hiresScale: [1, 4, 0.05],
   hiresSteps: [0, 150, 1],
   hiresDenoise: [0, 1, 0.01],

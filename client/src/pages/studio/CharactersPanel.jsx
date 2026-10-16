@@ -7,7 +7,7 @@ import { useData } from '../../data.jsx';
 import { useDialog } from '../../dialogs.jsx';
 import { useT } from '../../i18n.jsx';
 import { useGeneration, useStudio } from './StudioContext.jsx';
-import { CharacterGate, GenerationBar, ImageCard, ResultGrid, SetupNotice, useLocalPref } from './ui.jsx';
+import { CharacterGate, CountStepper, GenerationBar, ImageCard, ResultGrid, SetupNotice, useLocalPref } from './ui.jsx';
 import { canvasToDataUrl, stripDataUrl } from './imageTools.js';
 import CharacterPromptCard from './gen/CharacterPromptCard.jsx';
 import FinalPrompt from './gen/FinalPrompt.jsx';
@@ -128,7 +128,8 @@ function CharacterWorkspace({ character }) {
         <QuickSettings qs={qs} presets={SIZE_PRESETS} />
         <FinalPrompt positive={positive} negative={negative} />
         {cs.dirty && <p className="field-hint">{t('studio.characters.generate.autosave')}</p>}
-        <div className="btn-row">
+        <div className="btn-row gen-row">
+          <CountStepper value={qs.value.batchCount} onChange={(v) => qs.set({ batchCount: v })} disabled={gen.running} />
           <button className="btn primary" onClick={generate} disabled={gen.running || !ready || !positive.trim()}>
             {gen.running ? t('studio.common.generating') : t('studio.characters.generate.run', { count: qs.value.batchCount })}
           </button>

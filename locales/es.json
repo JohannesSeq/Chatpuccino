@@ -1786,6 +1786,10 @@
     },
     "common": {
       "change_character": "Cambiar personaje",
+      "count_label": "Cantidad de imágenes",
+      "count_less": "Una imagen menos",
+      "count_more": "Una imagen más",
+      "count_per_expression": "Imágenes por expresión",
       "eta": "~{seconds} s",
       "generating": "Generando…",
       "go_settings": "Ir a la configuración",

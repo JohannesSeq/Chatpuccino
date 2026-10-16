@@ -12,7 +12,7 @@ export default function QuickSettings({ value, onChange, onReset }) {
       <div className="studio-cols">
         <SliderField label={t('studio.expressions.quick.denoise')} value={value.denoise} onChange={(v) => set({ denoise: v })} range={PARAM_RANGES.denoise} hint={t('studio.expressions.quick.denoise_hint')} />
         <SliderField label={t('studio.expressions.quick.mask_blur')} value={value.maskBlur} onChange={(v) => set({ maskBlur: v })} range={PARAM_RANGES.maskBlur} suffix="px" />
-        <SliderField label={t('studio.expressions.quick.batch')} value={value.batchCount} onChange={(v) => set({ batchCount: v })} range={[1, 4, 1]} hint={t('studio.expressions.quick.batch_hint')} />
+        <SliderField label={t('studio.expressions.quick.batch')} value={value.batchCount} onChange={(v) => set({ batchCount: v })} range={[1, 8, 1]} hint={t('studio.expressions.quick.batch_hint')} />
         <SeedField value={value.seed} onChange={(v) => set({ seed: v })} />
       </div>
       <label className="field">
