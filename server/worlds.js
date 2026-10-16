@@ -23,6 +23,7 @@ import {
   sceneToWorld,
   setMessageVn,
   stateBefore,
+  swipeVn,
   applyControl,
 } from './worldState.js';
 
@@ -571,6 +572,49 @@ export function persistScene(id, { script, control, model, startedAt, swipe = fa
     sceneToWorld(world, applied.scene);
     ctx.dirty.add('story').add('world').add('state');
     return { index, message: msg, changes: applied.changes, state: applied.state, scene: applied.scene };
+  });
+}
+
+// ---------- reevaluar estadísticas ----------
+
+/** Índice del último mensaje del asistente (el que manda sobre el estado actual) o -1. */
+export const lastAssistantIndex = (messages) => {
+  for (let i = messages.length - 1; i >= 0; i--) if (!messages[i].is_user && !messages[i].is_system) return i;
+  return -1;
+};
+
+/** Reúne lo necesario para volver a evaluar las estadísticas de la última escena (sin llamar al modelo). */
+export async function prepareReevaluation(id) {
+  const world = await readWorld(id);
+  const chat = await readStory(id);
+  const c = await loadContext(world);
+  if (!c.stats.length) throw new HttpError(400, t('server.worlds.reevaluate_no_stats'));
+  const index = lastAssistantIndex(chat.messages);
+  if (index < 0) throw new HttpError(400, t('server.worlds.reevaluate_nothing'));
+  const msg = chat.messages[index];
+  const base = stateBefore(world, chat.messages, index, stateOptions(c));
+  const userMessage = [...chat.messages.slice(0, index)].reverse().find((m) => m.is_user)?.mes || '';
+  const persona = await resolvePersona(world, chat, await getSettings());
+  return { c, index, swipeId: msg.swipe_id ?? 0, mes: msg.mes, base, userMessage, persona };
+}
+
+/**
+ * Sustituye los cambios de estadísticas de la última escena por `control.stats` (calculados desde el estado anterior,
+ * así que nunca se suman dos veces). La escena (fondo, atuendos, quién está en escena) no se toca.
+ */
+export function persistReevaluation(id, { index, swipeId, mes, control }) {
+  return mutateWorld(id, async (ctx) => {
+    const { world, chat } = ctx;
+    const msg = chat.messages[index];
+    if (!msg || index !== lastAssistantIndex(chat.messages) || (msg.swipe_id ?? 0) !== swipeId || msg.mes !== mes) throw new HttpError(409, t('server.worlds.reevaluate_changed'));
+    const c = await loadContext(world);
+    const base = stateBefore(world, chat.messages, index, stateOptions(c));
+    const applied = applyControl({ stats: control?.stats }, { cast: c.cast, stats: c.stats, state: base, backgrounds: c.backgrounds, outfits: outfitsOf(c.cast) });
+    const prev = swipeVn(msg);
+    const state = { stats: applied.state.stats, scene: prev?.state?.scene ?? applied.state.scene };
+    setMessageVn(msg, { ...(prev || {}), changes: applied.changes, state, control: { ...(isObj(prev?.control) ? prev.control : {}), stats: control?.stats ?? [] } });
+    ctx.dirty.add('story').add('state');
+    return { index, message: msg, changes: applied.changes, state };
   });
 }
 

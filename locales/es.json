@@ -974,6 +974,16 @@
       "title": "Opciones de escena",
       "world": "Mundo"
     },
+    "reevaluate": {
+      "done_changes_one": "Estadísticas reevaluadas: {count} cambio.",
+      "done_changes_other": "Estadísticas reevaluadas: {count} cambios.",
+      "done_none": "Estadísticas reevaluadas: no hubo cambios en esta escena.",
+      "failed_hint": "No se pudieron evaluar las estadísticas de esta escena. Usa «Reevaluar estadísticas» (⋮ o el panel).",
+      "menu": "Reevaluar estadísticas",
+      "panel_button": "Reevaluar",
+      "panel_hint": "Vuelve a pedir al modelo los cambios de estadísticas de la última escena (sustituye a los actuales).",
+      "running": "Reevaluando…"
+    },
     "scene": {
       "background_changed": "Nuevo fondo: {name}",
       "entered": "Entra en escena: {names}",
@@ -1023,6 +1033,14 @@
   },
   "presets": {
     "active_label": "Preset en uso",
+    "analysis": {
+      "hint": "Entre {min} y {max}. La respuesta es un JSON corto, pero los modelos que razonan gastan tokens pensando antes: si el análisis falla o sale vacío, sube este valor.",
+      "intro": "Cuando el modelo no escribe los cambios de estadísticas junto a la escena (o al pulsar «Reevaluar estadísticas»), se le hace una consulta aparte solo para eso. Aquí eliges cuántos tokens puede gastar en responder. Ajuste global: no depende del preset.",
+      "label": "Tokens máximos del análisis",
+      "reset": "Restablecer ({default})",
+      "saved": "Tokens del análisis guardados",
+      "title": "Modo Novela: análisis de estadísticas"
+    },
     "aux": {
       "squash": "Unir mensajes de sistema consecutivos en uno (más compatible con la mayoría de modelos)",
       "title": "Mensajes auxiliares y formatos"
@@ -1408,6 +1426,7 @@
       "no_events": "El proveedor no devolvió ningún dato. Revisa la conexión y el modelo («{model}»): puede estar caído o no admitir este tipo de petición.",
       "reasoning_only": "El modelo («{model}») solo produjo razonamiento y ninguna respuesta. Prueba con un modelo sin razonamiento o sube el límite de tokens ({setting}; ahora {maxTokens}).",
       "refusal": "El modelo rechazó la solicitud (filtro de contenido o negativa). Prueba con otro modelo o cambia el texto.",
+      "setting_analysis": "Ajustes → Presets → Modo Novela: análisis de estadísticas",
       "setting_assistant": "Ajustes → Asistente de personajes → Muestreo",
       "setting_chat": "Ajustes → Presets → Muestreo",
       "setting_world": "Ajustes → Presets → Muestreo"
@@ -1578,6 +1597,10 @@
         "stats_title": "# Estadísticas",
         "stats_values": "Valores actuales:"
       },
+      "reevaluate_changed": "La escena cambió mientras se reevaluaba. Inténtalo de nuevo.",
+      "reevaluate_invalid": "El modelo no devolvió los cambios en un formato válido. Inténtalo de nuevo o prueba con otro modelo.",
+      "reevaluate_no_stats": "Este mundo no tiene estadísticas asociadas.",
+      "reevaluate_nothing": "Aún no hay ninguna escena que reevaluar.",
       "start_not_empty": "La historia ya ha empezado",
       "stat_not_found": "La estadística «{id}» no existe"
     }

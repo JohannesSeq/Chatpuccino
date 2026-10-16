@@ -203,6 +203,8 @@ export const api = {
   branchWorld: (id, index, name) => req('POST', `/worlds/${enc(id)}/branch`, { index, name }),
   copyWorld: (id, name) => req('POST', `/worlds/${enc(id)}/copy`, { name }),
   setWorldStat: (id, body) => req('PATCH', `/worlds/${enc(id)}/state`, body),
+  // Vuelve a pedir al modelo los cambios de estadísticas de la última escena. Resuelve con { index, message, changes, state }.
+  reevaluateWorld: (id, signal) => req('POST', `/worlds/${enc(id)}/reevaluate`, {}, signal),
 };
 
 /** Lee un stream SSE de eventos {delta}/{done}/{error}. Resuelve con el evento final `done`. */

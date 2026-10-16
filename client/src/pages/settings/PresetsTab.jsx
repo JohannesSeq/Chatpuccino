@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon.jsx';
 import { Field, Modal } from '../../components/ui.jsx';
 import { useT } from '../../i18n.jsx';
 import { SAMPLERS } from '../../samplers.js';
+import AnalysisTokensCard from './AnalysisTokensCard.jsx';
 
 const MARKER_IDS = ['charDescription', 'charPersonality', 'scenario', 'personaDescription', 'worldInfoBefore', 'worldInfoAfter', 'dialogueExamples', 'chatHistory'];
 
@@ -304,6 +305,8 @@ export default function PresetsTab() {
           </Field>
         ))}
       </details>
+
+      <AnalysisTokensCard />
 
       {editing && (
         <PromptEditor

@@ -276,6 +276,9 @@ code { background: var(--panel-3); border-radius: 4px; padding: 0 4px; font-size
 .inline { display: flex; align-items: center; gap: 10px; }
 .inline.top { align-items: flex-start; margin-bottom: 8px; }
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 12px; }
+.analysis-row { display: flex; align-items: center; gap: 12px; }
+.analysis-row input[type='range'] { flex: 1; min-width: 0; accent-color: var(--accent); min-height: 28px; }
+.analysis-row input[type='number'] { width: 110px; flex: none; }
 .pick-list { display: flex; flex-direction: column; }
 .pick-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
 

@@ -25,7 +25,9 @@ import {
   listWorlds,
   loadContext,
   parseJsonLoose,
+  persistReevaluation,
   persistScene,
+  prepareReevaluation,
   readStory,
   readWorld,
   resolvePersona,
@@ -153,6 +155,51 @@ r.post('/:id/prompt', wrap(async (req, res) => {
 
 const LEADING_TAG = /^\s*\[[^\]\n]{1,60}\]\s*/;
 
+/** Pide al modelo solo los cambios de estadísticas de una escena. Resuelve con { stats } o null si la respuesta no es utilizable. */
+async function requestStats({ conn, signal, persona, c, state, script, userMessage, meta, maxTokens }) {
+  const text = await streamChat({
+    conn,
+    signal,
+    meta,
+    body: {
+      model: conn.model,
+      messages: buildAnalysisMessages({ persona, cast: c.cast, stats: c.stats, state, scriptText: script, userMessage }),
+      temperature: 0.2,
+      // Configurable (Ajustes → Presets): los modelos que razonan necesitan margen antes de contestar.
+      max_tokens: maxTokens,
+    },
+    onDelta: () => {},
+  });
+  const json = parseJsonLoose(text);
+  return json && Array.isArray(json.stats) ? { stats: json.stats } : null;
+}
+
+// Reevalúa las estadísticas de la última escena (p. ej. cuando falló la consulta de análisis o el modelo se equivocó).
+r.post('/:id/reevaluate', wrap(async (req, res) => {
+  const settings = await getSettings();
+  const conn = requireReady(settings);
+  const input = await prepareReevaluation(req.params.id);
+  const ac = new AbortController();
+  res.on('close', () => !res.writableEnded && ac.abort());
+  const meta = {};
+  let out;
+  try {
+    out = await requestStats({ conn, signal: ac.signal, persona: input.persona, c: input.c, state: input.base, script: input.mes, userMessage: input.userMessage, meta, maxTokens: settings.analysisTokens });
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    throw e;
+  }
+  if (!out) {
+    if (!meta.contentChars) {
+      const empty = reportEmpty({ where: 'analysis', conn, meta, maxTokens: settings.analysisTokens });
+      throw new HttpError(502, empty.error, empty.code);
+    }
+    console.warn('[IA] La reevaluación de estadísticas no devolvió un JSON válido.');
+    throw new HttpError(502, t('server.worlds.reevaluate_invalid'), 'REEVALUATE_INVALID');
+  }
+  res.json(await persistReevaluation(req.params.id, { index: input.index, swipeId: input.swipeId, mes: input.mes, control: out }));
+}));
+
 r.post('/:id/impersonate', wrap(async (req, res) => {
   const conn = requireReady(await getSettings());
   const { persona, preset, messages } = await prepare(req.params.id, { impersonate: true, draft: req.body?.draft });
@@ -197,24 +244,26 @@ r.post('/:id/generate', wrap(async (req, res) => {
   const startedAt = nowIso();
 
   // Pide solo los cambios de estadísticas cuando el modelo no escribió un bloque de control válido.
+  // Si la consulta falla no se pierde la escena: se guarda sin cambios y se avisa para poder reevaluarla.
+  let analysisFailed = false;
   const analyze = async (script) => {
     if (!prep.c.stats.length) return null;
     const userMessage = [...prep.history].reverse().find((m) => m.is_user)?.mes || '';
     try {
-      const text = await streamChat({
-        conn,
-        signal: ac.signal,
-        body: {
-          model: conn.model,
-          messages: buildAnalysisMessages({ persona: prep.persona, cast: prep.c.cast, stats: prep.c.stats, state: prep.state, scriptText: script, userMessage }),
-          temperature: 0.2,
-          max_tokens: 400,
-        },
-        onDelta: () => {},
-      });
-      const json = parseJsonLoose(text);
-      return json && Array.isArray(json.stats) ? { stats: json.stats } : null;
-    } catch {
+      const meta = {};
+      const maxTokens = prep.settings.analysisTokens;
+      const out = await requestStats({ conn, signal: ac.signal, persona: prep.persona, c: prep.c, state: prep.state, script, userMessage, meta, maxTokens });
+      if (!out) {
+        analysisFailed = true;
+        // Solo registro en consola (el usuario ya recibe el aviso de «reevaluar»); ayuda a ver si faltaron tokens.
+        if (!meta.contentChars) reportEmpty({ where: 'analysis', conn, meta, maxTokens });
+      }
+      return out;
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        analysisFailed = true;
+        console.warn(`[IA] Falló el análisis de estadísticas del mundo: ${e.message}`);
+      }
       return null;
     }
   };
@@ -248,7 +297,7 @@ r.post('/:id/generate', wrap(async (req, res) => {
     });
     const saved = await persist(text, { analysis: true });
     if (!saved) send(reportEmpty({ where: 'world', conn, meta, maxTokens, cleanedEmpty: Boolean(text.trim()) }));
-    else send({ done: true, ...saved });
+    else send({ done: true, ...saved, ...(analysisFailed ? { analysisFailed: true } : {}) });
   } catch (e) {
     const partial = e.partial || '';
     let saved = null;

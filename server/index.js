@@ -60,8 +60,8 @@ export function createApp() {
   app.use((err, _req, res, _next) => {
     if (res.headersSent) return res.end();
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
-    // Los fallos de Stable Diffusion (apagado, sin --api…) son esperables y ya llegan explicados al usuario.
-    if (status >= 500 && !String(err.code || '').startsWith('STUDIO_')) console.error(err);
+    // Fallos esperables y ya explicados al usuario (Stable Diffusion, reevaluación de estadísticas…): no hace falta el stack.
+    if (status >= 500 && !/^(STUDIO_|REEVALUATE_|EMPTY_RESPONSE)/.test(String(err.code || ''))) console.error(err);
     if (err.retryAfter) res.setHeader('Retry-After', String(err.retryAfter));
     res.status(status).json({ error: err.message || t('server.common.internal_error'), ...(err.code ? { code: err.code } : {}) });
   });

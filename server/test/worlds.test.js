@@ -453,11 +453,12 @@ test('análisis de respaldo cuando falta el bloque de control', async () => {
   replies.push('```json\n{"stats":[{"character":"Luna","stat":"affection","change":3,"reason":"amable"}]}\n```');
   const gen = await sse(`/worlds/${WID()}/generate`, {});
   assert.equal(requests.length, 2);
-  assert.equal(requests[1].max_tokens, 400);
+  assert.equal(requests[1].max_tokens, 800);
   assert.equal(requests[1].stream, true);
   assert.match(requests[1].messages[1].content, /Gracias por la ayuda/);
   assert.match(requests[1].messages[1].content, /Luna: Affection 59/);
   assert.deepEqual(gen.done.changes.map((c) => [c.stat, c.from, c.to, c.reason]), [['affection', 59, 62, 'amable']]);
+  assert.equal(gen.done.analysisFailed, undefined);
   assert.deepEqual(gen.done.message.extra.vn.control, { stats: [{ character: 'Luna', stat: 'affection', change: 3, reason: 'amable' }] });
 
   // bloque dañado + análisis fallido (basura) → sin cambios
@@ -468,6 +469,7 @@ test('análisis de respaldo cuando falta el bloque de control', async () => {
   const gen2 = await sse(`/worlds/${WID()}/generate`, {});
   assert.equal(requests.length, 2);
   assert.deepEqual(gen2.done.changes, []);
+  assert.equal(gen2.done.analysisFailed, true, 'se avisa para poder reevaluar');
   assert.equal(gen2.done.message.mes, '[Luna] "Hm."');
   assert.equal(gen2.done.state.stats.characters.Luna.affection, 62);
 
@@ -494,6 +496,82 @@ test('análisis de respaldo cuando falta el bloque de control', async () => {
   await sse(`/worlds/${WID()}/generate`, { swipe: true }, { 'X-Lang': 'en' });
   assert.match(systemOf(requests[0]), /narrator and game master/);
   assert.match(systemOf(requests[0]), /Current scene/);
+});
+
+test('reevaluar estadísticas: sustituye los cambios de la última escena sin duplicarlos ni tocar la escena', async () => {
+  const w = (await call('POST', '/worlds', { name: 'Reeval', statIds: ['affection', 'danger'], characters: ['Luna'], active: ['Luna'], background: 'bosque' })).json;
+  const reeval = () => call('POST', `/worlds/${w.id}/reevaluate`, {});
+  const luna = async () => (await get(w.id)).state.stats.characters.Luna.affection;
+
+  assert.equal((await reeval()).status, 400, 'sin escenas');
+  requests.length = 0;
+  replies.push('[Luna|joy] "Hola."\n<vn>{rota</vn>', 'no sé');
+  const gen = await sse(`/worlds/${w.id}/generate`, { start: true });
+  assert.equal(gen.done.analysisFailed, true);
+  assert.deepEqual(gen.done.changes, []);
+  const base = await luna();
+  const scene = (await get(w.id)).state.scene;
+
+  requests.length = 0;
+  replies.push('```json\n{"stats":[{"character":"Luna","stat":"affection","change":4,"reason":"fue amable"}]}\n```');
+  const ok = await reeval();
+  assert.equal(ok.status, 200);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].max_tokens, 800, 'por defecto');
+  assert.match(requests[0].messages[1].content, /Hola\./);
+  assert.deepEqual(ok.json.changes.map((c) => [c.stat, c.from, c.to, c.reason]), [['affection', base, base + 4, 'fue amable']]);
+  assert.equal(ok.json.state.stats.characters.Luna.affection, base + 4);
+  assert.equal(await luna(), base + 4);
+  const stored = (await get(w.id)).messages[0];
+  assert.deepEqual(stored.extra.vn.changes.map((c) => c.to), [base + 4]);
+  assert.deepEqual(stored.swipe_info[0].extra.vn.changes.map((c) => c.to), [base + 4], 'también en el swipe seleccionado');
+  assert.deepEqual((await get(w.id)).state.scene, scene, 'la escena no cambia');
+  assert.deepEqual(readJson(worldFile(w.id, 'characters', 'Luna.json')).stats.affection, base + 4, 'el JSON del personaje se actualiza');
+
+  // los tokens del análisis son configurables (global, con tope por arriba y por abajo) y se usan al reevaluar y en el análisis de respaldo
+  const setTokens = async (v) => (await call('PUT', '/settings', { analysisTokens: v })).json.analysisTokens;
+  assert.equal((await call('GET', '/settings')).json.analysisTokens, 800);
+  assert.equal(await setTokens(1500), 1500);
+  assert.equal(await setTokens(5), 100, 'mínimo');
+  assert.equal(await setTokens(999999), 8000, 'máximo');
+  assert.equal(await setTokens('abc'), 8000, 'un valor no numérico se ignora');
+  assert.equal(await setTokens(1500.4), 1500);
+  replies.push('{"stats":[]}');
+  await reeval();
+  assert.equal(requests.at(-1).max_tokens, 1500);
+  replies.push('[Luna|joy] "Otra vez."\n<vn>{rota</vn>', '{"stats":[]}');
+  requests.length = 0;
+  await sse(`/worlds/${w.id}/generate`, {});
+  assert.equal(requests.at(-1).max_tokens, 1500, 'también en el análisis de respaldo');
+  assert.equal(await setTokens(800), 800);
+  // la escena nueva pasa a ser la última: se descarta para dejar el mundo como estaba
+  await call('DELETE', `/worlds/${w.id}/messages/1`);
+
+  // volver a reevaluar parte del estado anterior: no se suma dos veces
+  replies.push('{"stats":[{"character":"Luna","stat":"affection","change":6}]}');
+  assert.equal((await reeval()).json.state.stats.characters.Luna.affection, base + 6);
+  // el modelo responde algo inservible → error claro y nada cambia
+  replies.push('no puedo ayudarte con eso');
+  const bad = await reeval();
+  assert.equal(bad.status, 502);
+  assert.equal(bad.json.code, 'REEVALUATE_INVALID');
+  assert.equal(await luna(), base + 6);
+  // «sin cambios» también es una respuesta válida
+  replies.push('{"stats":[]}');
+  const none = await reeval();
+  assert.deepEqual(none.json.changes, []);
+  assert.equal(await luna(), base);
+
+  // la escena cambió mientras tanto → se rechaza
+  await assert.rejects(W.persistReevaluation(w.id, { index: 0, swipeId: 0, mes: 'otro texto', control: { stats: [] } }), (e) => e.status === 409);
+
+  // sin estadísticas asociadas no hay nada que reevaluar
+  const plain = (await call('POST', '/worlds', { name: 'Sin stats 2', characters: ['Luna'], active: ['Luna'] })).json;
+  replies.push('[Luna] "Hola."');
+  await sse(`/worlds/${plain.id}/generate`, { start: true });
+  assert.equal((await call('POST', `/worlds/${plain.id}/reevaluate`, {})).status, 400);
+  await call('DELETE', `/worlds/${plain.id}`);
+  await call('DELETE', `/worlds/${w.id}`);
 });
 
 test('edición y borrado de mensajes restauran el estado', async () => {

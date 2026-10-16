@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useT } from '../../i18n.jsx';
 import { Avatar } from '../../components/ui.jsx';
+import { Icon } from '../../components/Icon.jsx';
 import { fmtNum } from './vnUtils.js';
 
 function StatValue({ stat, value, label, onCommit }) {
@@ -81,9 +82,9 @@ function StatBar({ stat, value, who, onCommit }) {
 /**
  * Panel de opciones de la escena (columna derecha en escritorio, hoja inferior en el móvil).
  * Props: world, cast, stats, backgrounds, state, lorebooks, persona, onUpdate(patch) -> Promise,
- * onSetStat(charId|null, statId, value) -> Promise, onEditWorld().
+ * onSetStat(charId|null, statId, value) -> Promise, onReevaluate() | null, reevaluating, onEditWorld().
  */
-export default function ScenePanel({ world, cast, stats, backgrounds, state, lorebooks, persona, onUpdate, onSetStat, onEditWorld }) {
+export default function ScenePanel({ world, cast, stats, backgrounds, state, lorebooks, persona, onUpdate, onSetStat, onReevaluate, reevaluating, onEditWorld }) {
   const { t } = useT();
   const scene = state?.scene || { background: '', active: [], outfits: {} };
   const activeSet = useMemo(() => new Set(scene.active || []), [scene.active]);
@@ -160,6 +161,13 @@ export default function ScenePanel({ world, cast, stats, backgrounds, state, lor
       <details open className="vn-sec">
         <summary>{t('novelview.panel.stats')}</summary>
         {stats.length === 0 && <p className="muted vn-small">{t('novelview.panel.no_stats')}</p>}
+        {stats.length > 0 && (onReevaluate || reevaluating) && (
+          <div className="vn-reeval">
+            <button type="button" className="btn small" onClick={() => onReevaluate?.()} disabled={!onReevaluate} title={t('novelview.reevaluate.panel_hint')}>
+              <Icon name="refresh" size={16} /> {reevaluating ? t('novelview.reevaluate.running') : t('novelview.reevaluate.panel_button')}
+            </button>
+          </div>
+        )}
         {worldStats.length > 0 && (
           <div className="vn-stat-group">
             <h4>{world.name}</h4>

@@ -66,8 +66,10 @@ function NovelViewInner({ worldId, onExit }) {
   const [charExpanded, setCharExpanded] = useState(false);
   const [statToasts, setStatToasts] = useState([]);
   const [setupError, setSetupError] = useState(false);
+  const [reevaluating, setReevaluating] = useState(false);
 
   const mounted = useRef(true);
+  const reevaluatingRef = useRef(false);
   const abortRef = useRef(null);
   const impAbort = useRef(null);
   const toastId = useRef(0);
@@ -256,6 +258,7 @@ function NovelViewInner({ worldId, onExit }) {
         return { ...next, state: st, world: w };
       });
       pushChanges(out.changes || out.message.extra?.vn?.changes);
+      if (out.analysisFailed) toast(t('novelview.reevaluate.failed_hint'), 'error');
       sceneDiff(before, nextScene, { cast: payloadRef.current.cast, backgrounds: payloadRef.current.backgrounds, t }).forEach((m) => toast(m));
       refresh('worlds');
     } catch (e) {
@@ -464,6 +467,25 @@ function NovelViewInner({ worldId, onExit }) {
     [worldId, setData, toast],
   );
 
+  const reevaluate = useCallback(async () => {
+    if (reevaluatingRef.current) return;
+    reevaluatingRef.current = true;
+    setReevaluating(true);
+    try {
+      const res = await api.reevaluateWorld(worldId);
+      if (!mounted.current) return;
+      setData((p) => ({ ...replaceMessage(p, res.index, res.message), state: { ...p.state, stats: res.state.stats } }));
+      setNonce((n) => n + 1);
+      pushChanges(res.changes);
+      toast(res.changes.length ? t('novelview.reevaluate.done_changes', { count: res.changes.length }) : t('novelview.reevaluate.done_none'));
+    } catch (e) {
+      if (mounted.current) toast(e.message, 'error');
+    } finally {
+      reevaluatingRef.current = false;
+      if (mounted.current) setReevaluating(false);
+    }
+  }, [worldId, setData, pushChanges, toast, t]);
+
   const openEditor = () => {
     setSheetOpen(false);
     setEditorOpen(true);
@@ -509,9 +531,13 @@ function NovelViewInner({ worldId, onExit }) {
   const onTextClick = collapsed ? () => setCharExpanded(true) : advance;
   const toggleFocus = (mode) => setFocus((f) => (f === mode ? 'normal' : mode));
 
+  const hasBotMessage = messages.some((m) => !m.is_user && !m.is_system);
+  const canReevaluate = stats.length > 0 && hasBotMessage && !generating && !reevaluating;
+
   const menuItems = [
     committed && !generating && { label: t('common.edit'), icon: <Icon name="edit" size={18} />, onClick: () => setEditing({ index: pos.mi, text: committed.mes }) },
     committed && !generating && { label: t('novelview.menu.branch'), icon: <Icon name="branch" size={18} />, onClick: branchFrom },
+    stats.length > 0 && hasBotMessage && { label: reevaluating ? t('novelview.reevaluate.running') : t('novelview.reevaluate.menu'), icon: <Icon name="refresh" size={18} />, onClick: () => canReevaluate && reevaluate() },
     isLastBot && swipeCount > 1 && { label: t('chat.swipes.delete_this'), icon: <Icon name="trash" size={18} />, danger: true, onClick: removeVariant },
     committed && !generating && { label: t('chat.messages.delete'), icon: <Icon name="trash" size={18} />, danger: true, onClick: removeMessage },
     committed && !generating && { separator: true },
@@ -528,7 +554,7 @@ function NovelViewInner({ worldId, onExit }) {
     : null;
 
   const panel = (
-    <ScenePanel world={world} cast={cast} stats={stats} backgrounds={backgrounds} state={state} lorebooks={payload.lorebooks} persona={payload.persona} onUpdate={updateWorld} onSetStat={setStat} onEditWorld={openEditor} />
+    <ScenePanel world={world} cast={cast} stats={stats} backgrounds={backgrounds} state={state} lorebooks={payload.lorebooks} persona={payload.persona} onUpdate={updateWorld} onSetStat={setStat} onReevaluate={canReevaluate ? reevaluate : null} reevaluating={reevaluating} onEditWorld={openEditor} />
   );
 
   const panelButtonOpen = phone ? sheetOpen : panelOpen;

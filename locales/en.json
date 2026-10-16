@@ -974,6 +974,16 @@
       "title": "Scene options",
       "world": "World"
     },
+    "reevaluate": {
+      "done_changes_one": "Stats re-evaluated: {count} change.",
+      "done_changes_other": "Stats re-evaluated: {count} changes.",
+      "done_none": "Stats re-evaluated: no changes in this scene.",
+      "failed_hint": "The stats for this scene could not be evaluated. Use “Re-evaluate stats” (⋮ or the panel).",
+      "menu": "Re-evaluate stats",
+      "panel_button": "Re-evaluate",
+      "panel_hint": "Asks the model again for the stat changes of the last scene (replaces the current ones).",
+      "running": "Re-evaluating…"
+    },
     "scene": {
       "background_changed": "New background: {name}",
       "entered": "Enters the scene: {names}",
@@ -1023,6 +1033,14 @@
   },
   "presets": {
     "active_label": "Active preset",
+    "analysis": {
+      "hint": "Between {min} and {max}. The answer is a short JSON, but reasoning models spend tokens thinking first: if the analysis fails or comes back empty, raise this value.",
+      "intro": "When the model does not write the stat changes along with the scene (or when you press “Re-evaluate stats”), a separate request is made just for that. Here you choose how many tokens it may spend answering. Global setting: it does not depend on the preset.",
+      "label": "Max analysis tokens",
+      "reset": "Reset ({default})",
+      "saved": "Analysis tokens saved",
+      "title": "Novel Mode: stats analysis"
+    },
     "aux": {
       "squash": "Merge consecutive system messages into one (more compatible with most models)",
       "title": "Auxiliary messages and formats"
@@ -1408,6 +1426,7 @@
       "no_events": "The provider returned no data. Check the connection and the model (“{model}”): it may be down or may not support this kind of request.",
       "reasoning_only": "The model (“{model}”) only produced reasoning and no answer. Try a model without reasoning or raise the token limit ({setting}; currently {maxTokens}).",
       "refusal": "The model refused the request (content filter or refusal). Try another model or change the text.",
+      "setting_analysis": "Settings → Presets → Novel Mode: stats analysis",
       "setting_assistant": "Settings → Character Assistant → Sampling",
       "setting_chat": "Settings → Presets → Sampling",
       "setting_world": "Settings → Presets → Sampling"
@@ -1578,6 +1597,10 @@
         "stats_title": "# Stats",
         "stats_values": "Current values:"
       },
+      "reevaluate_changed": "The scene changed while it was being re-evaluated. Try again.",
+      "reevaluate_invalid": "The model did not return the changes in a valid format. Try again or try another model.",
+      "reevaluate_no_stats": "This world has no stats attached.",
+      "reevaluate_nothing": "There is no scene to re-evaluate yet.",
       "start_not_empty": "The story has already started",
       "stat_not_found": "Stat “{id}” does not exist"
     }

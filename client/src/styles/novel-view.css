@@ -115,6 +115,8 @@
 .vn-sec > summary { margin: 0; font-weight: 600; }
 .vn-sec h4 { display: flex; align-items: center; gap: 6px; margin: 8px 0 4px; font-size: calc(14px * var(--ui-scale)); }
 .vn-small { font-size: calc(13px * var(--ui-scale)); margin: 8px 0 0; }
+.vn-reeval { margin: 8px 0 4px; }
+.vn-reeval .btn { display: inline-flex; align-items: center; gap: 6px; }
 .vn-wide-btn { width: 100%; margin-top: 8px; }
 .vn-bg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin-top: 8px; }
 .vn-bg-tile { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; border: 2px solid transparent; background: var(--panel-3); }

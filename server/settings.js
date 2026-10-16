@@ -6,6 +6,7 @@ import { t } from './i18n.js';
 export const DEFAULTS = {
   scanDepth: 4,
   loreBudget: 2048,
+  analysisTokens: 800,
   activeLorebooks: [],
   defaultPersona: '',
   activeConnection: '',
@@ -13,7 +14,16 @@ export const DEFAULTS = {
   pinnedChats: [],
 };
 
-const NUMERIC = ['scanDepth', 'loreBudget'];
+const NUMERIC = ['scanDepth', 'loreBudget', 'analysisTokens'];
+
+// Tokens máximos de la consulta que evalúa las estadísticas de una escena (Modo Novela).
+// 8000 como tope: más no aporta (la respuesta es un JSON corto) y solo encarece los modelos que razonan.
+export const ANALYSIS_TOKENS = { min: 100, max: 8000, default: 800 };
+
+const clampAnalysis = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(ANALYSIS_TOKENS.max, Math.max(ANALYSIS_TOKENS.min, Math.round(n))) : ANALYSIS_TOKENS.default;
+};
 
 // Ajustes de generación de versiones anteriores: ahora viven en los presets.
 const LEGACY_GENERATION_KEYS = ['temperature', 'top_p', 'top_k', 'min_p', 'frequency_penalty', 'presence_penalty', 'repetition_penalty', 'max_tokens', 'maxContext', 'systemPrompt'];
@@ -50,6 +60,7 @@ export async function loadSettings() {
   const stored = (await readJson(SETTINGS_FILE, {})) || {};
   const s = { ...DEFAULTS, ...migrate(stored) };
   s.pinnedChats = Array.isArray(s.pinnedChats) ? s.pinnedChats.map(String) : [];
+  s.analysisTokens = clampAnalysis(s.analysisTokens);
   return s;
 }
 
@@ -113,7 +124,7 @@ export function updateSettings(patch) {
       if (!(key in patch)) continue;
       if (NUMERIC.includes(key)) {
         const n = Number(patch[key]);
-        if (Number.isFinite(n)) s[key] = n;
+        if (Number.isFinite(n)) s[key] = key === 'analysisTokens' ? clampAnalysis(n) : n;
       } else if (key === 'pinnedChats') {
         continue; // se gestiona solo con setPinned
       } else if (key === 'activeLorebooks') {
