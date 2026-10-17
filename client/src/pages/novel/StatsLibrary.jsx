@@ -176,7 +176,7 @@ function StatEditor({ stat, onClose }) {
           />
         }
       >
-        <textarea rows={4} value={form.description} onChange={(e) => set({ description: e.target.value })} placeholder={t('library.stats.editor.description_placeholder')} />
+        <textarea rows={6} value={form.description} onChange={(e) => set({ description: e.target.value })} placeholder={t('library.stats.editor.description_placeholder')} />
       </Field>
       <Field label={t('library.stats.editor.scope')} hint={t(`library.stats.editor.scope_${form.scope}_help`)}>
         <select value={form.scope} onChange={(e) => set({ scope: e.target.value })}>

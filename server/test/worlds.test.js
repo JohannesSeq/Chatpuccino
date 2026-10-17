@@ -547,6 +547,20 @@ test('reevaluar estadísticas: sustituye los cambios de la última escena sin du
   // la escena nueva pasa a ser la última: se descarta para dejar el mundo como estaba
   await call('DELETE', `/worlds/${w.id}/messages/1`);
 
+  // la descripción de una estadística llega completa a la IA (antes se cortaba a 200 caracteres)
+  const longDesc = `Mide el afecto. ${'Sube con gestos amables y sinceros. '.repeat(25)}FIN-DE-LA-DESCRIPCION`;
+  assert.ok(longDesc.length > 800);
+  assert.equal((await call('PUT', '/stats/affection', { name: 'Affection', description: longDesc, scope: 'character', min: 0, max: 100, default: 50 })).status, 200);
+  replies.push('{"stats":[]}');
+  await reeval();
+  assert.ok(requests.at(-1).messages[1].content.includes('FIN-DE-LA-DESCRIPCION'), 'análisis con la descripción completa');
+  requests.length = 0;
+  replies.push('[Luna|joy] "Hola."\n<vn>{}</vn>');
+  await sse(`/worlds/${w.id}/generate`, {});
+  assert.ok(systemOf(requests[0]).includes('FIN-DE-LA-DESCRIPCION'), 'escena con la descripción completa');
+  await call('DELETE', `/worlds/${w.id}/messages/${(await get(w.id)).messages.length - 1}`);
+  await call('PUT', '/stats/affection', { name: 'Affection', description: 'Afecto hacia el jugador', scope: 'character', min: 0, max: 100, default: 50 });
+
   // volver a reevaluar parte del estado anterior: no se suma dos veces
   replies.push('{"stats":[{"character":"Luna","stat":"affection","change":6}]}');
   assert.equal((await reeval()).json.state.stats.characters.Luna.affection, base + 6);

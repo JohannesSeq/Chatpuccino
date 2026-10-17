@@ -6,7 +6,8 @@ import { applyMacros, collectLoreEntries, squash } from './prompt.js';
 import { fillNames } from '../shared/names.js';
 
 const cost = (content) => estimateTokens(content) + 4;
-const DESC_MAX = 200;
+// Mismo tope que server/stats.js: la descripción de una estadística es una regla para la IA y no debe cortarse.
+const DESC_MAX = 2000;
 const clip = (s, n) => {
   const x = String(s ?? '').replace(/\s+/g, ' ').trim();
   return x.length > n ? `${x.slice(0, n - 1)}…` : x;

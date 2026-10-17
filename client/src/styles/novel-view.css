@@ -142,7 +142,7 @@
 .vn-stat-input { width: 84px; padding: 2px 8px; border-radius: 6px; }
 .vn-stat-track { height: 8px; border-radius: 999px; overflow: hidden; background: var(--panel-3); }
 .vn-stat-track i { display: block; height: 100%; border-radius: inherit; background: var(--stat-color, var(--accent)); transition: width 0.4s ease; }
-.vn-stat-desc { margin: 4px 0 0; font-size: calc(12px * var(--ui-scale)); }
+.vn-stat-desc { margin: 4px 0 0; font-size: calc(12px * var(--ui-scale)); white-space: pre-wrap; overflow-wrap: anywhere; }
 .vn-premise { margin: 0 0 8px; white-space: pre-wrap; font-size: calc(14px * var(--ui-scale)); }
 .vn-world-meta { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 0; font-size: calc(13px * var(--ui-scale)); }
 .vn-world-meta dt { color: var(--muted); }
