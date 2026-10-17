@@ -2,9 +2,9 @@ import { STATS_FILE } from './config.js';
 import { t } from './i18n.js';
 import { slugify, uniqueSlug } from './vn-common.js';
 import { HttpError, readJson, withLock, writeJson } from './util.js';
+import { STAT_DESCRIPTION_MAX as MAX_DESCRIPTION } from '../shared/vn.js';
 
 const MAX_NAME = 60;
-const MAX_DESCRIPTION = 2000;
 const MAX_ABS = 1e9;
 export const STAT_SCOPES = ['character', 'world'];
 
@@ -22,8 +22,11 @@ export function clampStat(stat, value) {
   return Math.round(Math.min(stat.max, Math.max(stat.min, v)) * 100) / 100;
 }
 
-/** Valida y normaliza una estadística (lanza 400 si es inválida). El id queda vacío si no viene uno válido. */
-export function normalizeStat(raw) {
+/**
+ * Valida y normaliza una estadística (lanza 400 si es inválida). El id queda vacío si no viene uno válido.
+ * Al guardar (strict) una descripción demasiado larga se rechaza en vez de cortarla en silencio; al leer se acota.
+ */
+export function normalizeStat(raw, { strict = true } = {}) {
   const r = raw && typeof raw === 'object' ? raw : {};
   const name = String(r.name ?? '').trim().slice(0, MAX_NAME);
   if (!name) throw new HttpError(400, t('server.stats.name_required'));
@@ -34,10 +37,12 @@ export function normalizeStat(raw) {
   if (!(min < max)) throw new HttpError(400, t('server.stats.invalid_range'));
   const color = typeof r.color === 'string' ? r.color.trim() : '';
   if (color && !/^#[0-9a-f]{6}$/i.test(color)) throw new HttpError(400, t('server.stats.invalid_color'));
+  const description = String(r.description ?? '').trim();
+  if (strict && description.length > MAX_DESCRIPTION) throw new HttpError(400, t('server.stats.description_too_long', { max: MAX_DESCRIPTION, count: description.length }));
   const stat = {
     id: typeof r.id === 'string' ? slugify(r.id) : '',
     name,
-    description: String(r.description ?? '').trim().slice(0, MAX_DESCRIPTION),
+    description: description.slice(0, MAX_DESCRIPTION),
     scope,
     min,
     max,
@@ -53,7 +58,7 @@ async function readAll() {
   const out = [];
   for (const item of Array.isArray(raw) ? raw : []) {
     try {
-      const stat = normalizeStat(item);
+      const stat = normalizeStat(item, { strict: false });
       if (stat.id) out.push(stat);
     } catch {
       /* entrada dañada: se omite */

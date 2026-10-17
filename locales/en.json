@@ -744,8 +744,10 @@
         "delete_title": "Delete this stat?",
         "deleted": "Stat deleted",
         "description": "Description for the AI",
+        "description_count": "{count} / {max} characters",
         "description_hint": "The AI reads this text: it defines what the stat measures and how it should influence characters' behavior and decisions (e.g. “How much the character trusts and cares about the user; low values make her cold and distrustful, high values warm and protective”).",
         "description_placeholder": "What it measures and how it shapes behavior…",
+        "description_too_long": "The description is too long (maximum {max} characters).",
         "max": "Maximum",
         "min": "Minimum",
         "name": "Name",
@@ -1491,6 +1493,7 @@
       "outfit_not_found": "Outfit not found"
     },
     "stats": {
+      "description_too_long": "The description is too long ({count} characters; maximum {max}). Shorten it so it is not cut off.",
       "invalid_color": "The color must use the #rrggbb format",
       "invalid_number": "Minimum, maximum and default values must be valid numbers",
       "invalid_range": "The minimum must be lower than the maximum",

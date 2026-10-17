@@ -744,8 +744,10 @@
         "delete_title": "¿Eliminar la estadística?",
         "deleted": "Estadística eliminada",
         "description": "Descripción para la IA",
+        "description_count": "{count} / {max} caracteres",
         "description_hint": "La IA lee este texto: define qué mide la estadística y cómo debe influir en la conducta y las decisiones de los personajes (p. ej. «Cuánto confía y se preocupa el personaje por el usuario; con valores bajos es fría y desconfiada, con valores altos, cálida y protectora»).",
         "description_placeholder": "Qué mide y cómo influye en el comportamiento…",
+        "description_too_long": "La descripción es demasiado larga (máximo {max} caracteres).",
         "max": "Máximo",
         "min": "Mínimo",
         "name": "Nombre",
@@ -1491,6 +1493,7 @@
       "outfit_not_found": "Atuendo no encontrado"
     },
     "stats": {
+      "description_too_long": "La descripción es demasiado larga ({count} caracteres; máximo {max}). Acórtala para que no se corte.",
       "invalid_color": "El color debe tener el formato #rrggbb",
       "invalid_number": "Los valores mínimo, máximo y por defecto deben ser números válidos",
       "invalid_range": "El mínimo debe ser menor que el máximo",

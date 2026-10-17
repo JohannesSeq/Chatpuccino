@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon.jsx';
 import { AiButton } from '../../components/AiAssist.jsx';
 import { Field, Modal, SearchBox } from '../../components/ui.jsx';
 import { useT } from '../../i18n.jsx';
+import { STAT_DESCRIPTION_MAX } from '../../../../shared/vn.js';
 
 const DEFAULT_COLOR = '#00a884';
 const EMPTY = { name: '', description: '', scope: 'character', min: '0', max: '100', default: '50', color: '' };
@@ -95,10 +96,12 @@ function StatEditor({ stat, onClose }) {
   const min = num(form.min);
   const max = num(form.max);
   const def = num(form.default);
+  const descLength = form.description.trim().length;
   let error = '';
   if (!form.name.trim()) error = t('library.stats.editor.name_required');
   else if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) error = t('library.stats.editor.range_invalid');
   else if (!Number.isFinite(def) || def < min || def > max) error = t('library.stats.editor.default_invalid', { min, max });
+  else if (form.description.trim().length > STAT_DESCRIPTION_MAX) error = t('library.stats.editor.description_too_long', { max: STAT_DESCRIPTION_MAX });
 
   async function save() {
     setTouched(true);
@@ -176,7 +179,8 @@ function StatEditor({ stat, onClose }) {
           />
         }
       >
-        <textarea rows={6} value={form.description} onChange={(e) => set({ description: e.target.value })} placeholder={t('library.stats.editor.description_placeholder')} />
+        <textarea rows={6} value={form.description} onChange={(e) => set({ description: e.target.value })} placeholder={t('library.stats.editor.description_placeholder')} aria-invalid={descLength > STAT_DESCRIPTION_MAX} />
+        <span className={descLength > STAT_DESCRIPTION_MAX ? 'field-hint desc-count err' : 'field-hint desc-count'}>{t('library.stats.editor.description_count', { count: descLength, max: STAT_DESCRIPTION_MAX })}</span>
       </Field>
       <Field label={t('library.stats.editor.scope')} hint={t(`library.stats.editor.scope_${form.scope}_help`)}>
         <select value={form.scope} onChange={(e) => set({ scope: e.target.value })}>

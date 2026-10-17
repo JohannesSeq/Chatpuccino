@@ -58,7 +58,7 @@ process.env.OPENROUTER_BASE = `http://127.0.0.1:${fake.address().port}`;
 const { createApp } = await import('../index.js');
 const { placeholderPng } = await import('../png.js');
 const W = await import('../worlds.js');
-const { splitControl, streamVisible } = await import('../../shared/vn.js');
+const { splitControl, streamVisible, STAT_DESCRIPTION_MAX } = await import('../../shared/vn.js');
 
 const app = createApp().listen(0);
 await new Promise((r) => app.once('listening', r));
@@ -550,6 +550,18 @@ test('reevaluar estadísticas: sustituye los cambios de la última escena sin du
   // la descripción de una estadística llega completa a la IA (antes se cortaba a 200 caracteres)
   const longDesc = `Mide el afecto. ${'Sube con gestos amables y sinceros. '.repeat(25)}FIN-DE-LA-DESCRIPCION`;
   assert.ok(longDesc.length > 800);
+  assert.equal((await call('PUT', '/stats/affection', { name: 'Affection', description: longDesc, scope: 'character', min: 0, max: 100, default: 50 })).status, 200);
+
+  // una descripción más larga que el límite (antes se guardaba cortada a 2000 sin avisar) se guarda entera o se rechaza
+  const big = `${'a'.repeat(5000)}FIN`;
+  const saved = await call('PUT', '/stats/affection', { name: 'Affection', description: big, scope: 'character', min: 0, max: 100, default: 50 });
+  assert.equal(saved.status, 200);
+  assert.equal(saved.json.description, big, 'sin recortes por debajo del límite');
+  assert.equal((await call('GET', '/stats')).json.find((s) => s.id === 'affection').description, big, 'tras recargar sigue entera');
+  const tooLong = await call('PUT', '/stats/affection', { name: 'Affection', description: 'x'.repeat(STAT_DESCRIPTION_MAX + 1), scope: 'character', min: 0, max: 100, default: 50 });
+  assert.equal(tooLong.status, 400, 'pasarse del límite se rechaza en vez de cortarse en silencio');
+  assert.match(tooLong.json.error, /demasiado larga/);
+  assert.equal((await call('GET', '/stats')).json.find((s) => s.id === 'affection').description, big, 'el valor guardado no cambia');
   assert.equal((await call('PUT', '/stats/affection', { name: 'Affection', description: longDesc, scope: 'character', min: 0, max: 100, default: 50 })).status, 200);
   replies.push('{"stats":[]}');
   await reeval();

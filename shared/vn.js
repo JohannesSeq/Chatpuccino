@@ -17,6 +17,9 @@ export const DEFAULT_EXPRESSIONS = [
 
 export const DEFAULT_FALLBACK_EXPRESSION = 'neutral';
 
+// Longitud máxima de la descripción de una estadística (es una regla que se envía entera a la IA).
+export const STAT_DESCRIPTION_MAX = 8000;
+
 const NARRATOR_NAMES = new Set(['narrator', 'narration', 'narrador', 'narradora', 'narración', 'narracion', 'system', 'sistema']);
 export const isNarrator = (name) => !name || NARRATOR_NAMES.has(String(name).trim().toLowerCase());
 
