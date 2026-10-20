@@ -908,6 +908,8 @@
     },
     "classic": {
       "aria": "Choose how the story continues",
+      "edit": "Edit this option before sending it",
+      "edit_n": "Edit option {n}",
       "hint": "Instead of typing, you pick from up to 3 options the AI proposes based on the persona, the characters, the situation and the stats (like classic visual novels and dating sims).",
       "label": "Classic mode",
       "loading": "Thinking up options…",

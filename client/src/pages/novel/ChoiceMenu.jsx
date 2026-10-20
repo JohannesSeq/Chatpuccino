@@ -4,10 +4,10 @@ import { useT } from '../../i18n.jsx';
 
 /**
  * Modo clásico: hasta 3 opciones superpuestas al escenario, encima del cuadro de diálogo.
- * Props: choices (texto[]), loading, error, onPick(texto), onRegenerate(), onWrite().
+ * Props: choices (texto[]), loading, error, onPick(texto), onEdit(texto), onRegenerate(), onWrite().
  * Con el teclado, las teclas 1–3 eligen (lo gestiona NovelView).
  */
-export default function ChoiceMenu({ choices, loading, error, onPick, onRegenerate, onWrite }) {
+export default function ChoiceMenu({ choices, loading, error, onPick, onEdit, onRegenerate, onWrite }) {
   const { t } = useT();
   const shown = loading ? [] : choices;
   return (
@@ -33,10 +33,15 @@ export default function ChoiceMenu({ choices, loading, error, onPick, onRegenera
         </div>
       )}
       {shown.map((text, i) => (
-        <button key={`${i}:${text}`} type="button" className="vn-choice" style={{ animationDelay: `${i * 70}ms` }} onClick={() => onPick(text)}>
-          <kbd aria-hidden="true">{i + 1}</kbd>
-          <span>{text}</span>
-        </button>
+        <div key={`${i}:${text}`} className="vn-choice-row" style={{ animationDelay: `${i * 70}ms` }}>
+          <button type="button" className="vn-choice" onClick={() => onPick(text)}>
+            <kbd aria-hidden="true">{i + 1}</kbd>
+            <span>{text}</span>
+          </button>
+          <button type="button" className="vn-choice-edit" onClick={() => onEdit(text)} title={t('novelview.classic.edit')} aria-label={t('novelview.classic.edit_n', { n: i + 1 })}>
+            <Icon name="edit" size={18} />
+          </button>
+        </div>
       ))}
       <div className="vn-choices-tools">
         <button type="button" className="btn small" onClick={onRegenerate} disabled={loading} title={t('novelview.classic.other_hint')}>

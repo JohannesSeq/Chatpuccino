@@ -210,6 +210,13 @@ function NovelViewInner({ worldId, onExit }) {
     loadChoices(false);
   }, [classic, lastIsBot, generating, reevaluating, settings?.ready, storedChoices.length, choiceKey, choiceState.key, loadChoices]);
 
+  // Abre el cuadro de respuesta con el texto de la opción para retocarlo antes de enviarlo.
+  function editChoice(text) {
+    if (generating) return;
+    setDraft(text);
+    setComposerOpen(true);
+  }
+
   async function pickChoice(text) {
     if (!text || generating || impersonating) return;
     choicesAbort.current?.abort();
@@ -706,7 +713,7 @@ function NovelViewInner({ worldId, onExit }) {
             composer={composer}
           />
           {choicesVisible && (
-            <ChoiceMenu choices={storedChoices} loading={choiceLoading} error={choiceError} onPick={pickChoice} onRegenerate={() => loadChoices(true)} onWrite={openComposer} />
+            <ChoiceMenu choices={storedChoices} loading={choiceLoading} error={choiceError} onPick={pickChoice} onEdit={editChoice} onRegenerate={() => loadChoices(true)} onWrite={openComposer} />
           )}
           <StatToasts items={statToasts} stats={stats} worldName={world.name} onDismiss={dismissToast} />
         </div>

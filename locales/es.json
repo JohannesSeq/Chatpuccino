@@ -908,6 +908,8 @@
     },
     "classic": {
       "aria": "Elige cómo continúa la historia",
+      "edit": "Editar esta opción antes de enviarla",
+      "edit_n": "Editar la opción {n}",
       "hint": "En vez de escribir, eliges entre hasta 3 opciones que propone la IA según la persona, los personajes, la situación y las estadísticas (como en las novelas visuales y simuladores de citas clásicos).",
       "label": "Modo clásico",
       "loading": "Pensando opciones…",
