@@ -233,6 +233,48 @@ export function parseJsonLoose(text) {
   }
 }
 
+/**
+ * Opciones del Modo clásico a partir de la respuesta del modelo: acepta `{"choices":[…]}`, un arreglo suelto o
+ * elementos `{ "text": … }`; recorta, quita numeración y duplicados y deja como mucho `CHOICES_MAX`.
+ */
+export const CHOICES_MAX = 3;
+export const CHOICE_CHARS = 400;
+
+export function parseChoices(text) {
+  const s = String(text ?? '');
+  let list = parseJsonLoose(s);
+  list = list?.choices ?? list?.options ?? list?.opciones;
+  if (!Array.isArray(list)) {
+    const a = s.indexOf('[');
+    const b = s.lastIndexOf(']');
+    list = null;
+    if (a >= 0 && b > a) {
+      try {
+        list = JSON.parse(s.slice(a, b + 1));
+      } catch {
+        list = null;
+      }
+    }
+  }
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const item of list) {
+    const raw = typeof item === 'string' ? item : isObj(item) ? item.text ?? item.choice ?? item.option ?? item.mes ?? '' : '';
+    const choice = String(raw)
+      .replace(/^\s*(?:\d+[.)]|[-•*])\s+/, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, CHOICE_CHARS);
+    const key = norm(choice);
+    if (!choice || seen.has(key)) continue;
+    seen.add(key);
+    out.push(choice);
+    if (out.length >= CHOICES_MAX) break;
+  }
+  return out;
+}
+
 /** Guarda `vn` en el swipe seleccionado de un mensaje y lo refleja en `msg.extra.vn`. */
 export function setMessageVn(msg, vn) {
   const id = msg.swipe_id ?? 0;

@@ -92,6 +92,7 @@ export default function DialogueBox({
   premise,
   castNames,
   atEnd,
+  classic,
   atLatest,
   hasPrev,
   generating,
@@ -231,9 +232,12 @@ export default function DialogueBox({
             </button>
           ) : atEnd ? (
             <>
-              <button className="btn primary" onClick={onReply}>
-                <Icon name="send" size={18} /> {t('novelview.actions.reply')}
-              </button>
+              {/* en el Modo clásico se responde con las opciones (o «Escribir mi respuesta» del menú de opciones) */}
+              {!classic && (
+                <button className="btn primary" onClick={onReply}>
+                  <Icon name="send" size={18} /> {t('novelview.actions.reply')}
+                </button>
+              )}
               <button className="btn" onClick={onContinue} title={t('novelview.actions.continue_hint')} aria-label={t('novelview.actions.continue')}>
                 <VnIcon name="next" size={18} /> <span className="vn-lbl">{t('novelview.actions.continue')}</span>
               </button>

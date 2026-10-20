@@ -600,6 +600,118 @@ test('reevaluar estadísticas: sustituye los cambios de la última escena sin du
   await call('DELETE', `/worlds/${w.id}`);
 });
 
+test('modo clásico: opciones de la IA (generar, regenerar, errores, persistencia por variante)', async () => {
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    // análisis del formato de la respuesta
+    assert.deepEqual(W.parseChoices('{"choices":["a","b","c","d"]}'), ['a', 'b', 'c'], 'máximo 3');
+    assert.deepEqual(W.parseChoices('```json\n["1. Hola", "- Adiós", "hola", " "]\n```'), ['Hola', 'Adiós'], 'arreglo suelto, sin numeración ni duplicados');
+    assert.deepEqual(W.parseChoices('{"options":[{"text":"x"},{"choice":"y"},5,null]}'), ['x', 'y']);
+    assert.deepEqual(W.parseChoices('[{"text":"x"},{"text":"y"}]'), ['x', 'y']);
+    assert.equal(W.parseChoices('{"choices":["' + 'z'.repeat(900) + '"]}')[0].length, 400, 'recorta opciones larguísimas');
+    for (const junk of ['', 'no sé', '{"choices":"nope"}', '{"choices":[]}', '[1,2]']) assert.deepEqual(W.parseChoices(junk), [], junk);
+
+    // la bandera del mundo
+    const w = (await call('POST', '/worlds', { name: 'Clásico', statIds: ['affection'], characters: ['Luna'], active: ['Luna'], classic: true })).json;
+    assert.equal(w.classic, true);
+    const plain = (await call('POST', '/worlds', { name: 'Normal' })).json;
+    assert.equal(plain.classic, false, 'por defecto desactivado');
+    await call('DELETE', `/worlds/${plain.id}`);
+    assert.equal((await call('PUT', `/worlds/${w.id}`, { classic: false })).json.classic, false);
+    assert.equal((await get(w.id)).world.classic, false);
+    assert.equal((await call('PUT', `/worlds/${w.id}`, { classic: true })).json.classic, true);
+    assert.equal((await call('PUT', `/worlds/${w.id}`, { name: 'Clásico' })).json.classic, true, 'otros cambios no la tocan');
+    const copy = (await call('POST', `/worlds/${w.id}/copy`, {})).json;
+    assert.equal(copy.classic, true, 'las copias la conservan');
+    await call('DELETE', `/worlds/${copy.id}`);
+    const choices = (body = {}) => call('POST', `/worlds/${w.id}/choices`, body);
+    const last = async () => (await get(w.id)).messages.at(-1);
+
+    // sin escena no hay a qué responder
+    assert.equal((await choices()).status, 400);
+    replies.push('[Luna|joy] "Hola, {{user}}. ¿Qué te trae a la torre?"\n<vn>{}</vn>');
+    await sse(`/worlds/${w.id}/generate`, { start: true });
+
+    // generar
+    requests.length = 0;
+    replies.push('```json\n{"choices":["1. *Le sonríe.* Hola, Luna.","Preguntar por la torre","Preguntar por la torre","Salir corriendo","una cuarta"]}\n```');
+    const ok = await choices();
+    assert.equal(ok.status, 200);
+    assert.deepEqual(ok.json.choices, ['*Le sonríe.* Hola, Luna.', 'Preguntar por la torre', 'Salir corriendo']);
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].stream, true);
+    assert.equal(requests[0].temperature, 0.9);
+    assert.equal(requests[0].max_tokens, 800, 'usa los tokens del análisis (Ajustes → Presets)');
+    const sys = systemOf(requests[0]);
+    for (const piece of ['Armando', 'Aventurero valiente', 'Luna', 'Affection', '{"choices"']) assert.ok(sys.includes(piece), `contexto: ${piece}`);
+    assert.equal(sys.includes('<vn>'), false, 'sin bloque de control ni guion');
+    assert.match(requests[0].messages.at(-1).content, /Armando/);
+    assert.ok(requests[0].messages.some((m) => m.role === 'assistant' && m.content.includes('Hola, Armando')), 'la última escena va en el historial');
+    const stored = await last();
+    assert.deepEqual(stored.extra.vn.choices, ok.json.choices);
+    assert.deepEqual(stored.swipe_info[0].extra.vn.choices, ok.json.choices, 'guardadas en la variante seleccionada');
+    assert.ok(stored.extra.vn.state && stored.extra.vn.changes, 'no pisan el estado ni los cambios');
+    assert.equal((await get(w.id)).state.stats.characters.Luna.affection, 50);
+
+    // regenerar: pide otras y evita repetir las anteriores
+    requests.length = 0;
+    replies.push('["Otra A","Otra B"]');
+    const again = await choices({ regenerate: true });
+    assert.deepEqual(again.json.choices, ['Otra A', 'Otra B'], 'con menos de 3 también vale');
+    assert.match(requests[0].messages.at(-1).content, /Preguntar por la torre/);
+    assert.match(requests[0].messages.at(-1).content, /Salir corriendo/);
+    assert.deepEqual((await last()).extra.vn.choices, ['Otra A', 'Otra B'], 'sustituyen a las anteriores');
+    requests.length = 0;
+    replies.push('{"choices":["X"]}');
+    await choices();
+    assert.equal(requests[0].messages.at(-1).content.includes('Otra A'), false, 'sin «regenerar» no se envían las anteriores');
+    assert.equal(await (async () => (await call('PUT', '/settings', { analysisTokens: 1234 })).json.analysisTokens)(), 1234);
+    replies.push('{"choices":["X"]}');
+    requests.length = 0;
+    await choices();
+    assert.equal(requests[0].max_tokens, 1234);
+    await call('PUT', '/settings', { analysisTokens: 800 });
+
+    // fallos: se explican y no tocan lo guardado
+    replies.push('Lo siento, no puedo ayudarte con eso.');
+    const bad = await choices({ regenerate: true });
+    assert.equal(bad.status, 502);
+    assert.equal(bad.json.code, 'CHOICES_INVALID');
+    assert.match(bad.json.error, /Otras opciones/);
+    replies.push('');
+    const empty = await choices();
+    assert.equal(empty.status, 502);
+    assert.equal(empty.json.code, 'EMPTY_RESPONSE');
+    assert.deepEqual((await last()).extra.vn.choices, ['X']);
+
+    // cada variante de la escena tiene sus propias opciones
+    replies.push('[Luna|surprise] "¡Tú otra vez!"\n<vn>{}</vn>');
+    await sse(`/worlds/${w.id}/generate`, { swipe: true });
+    assert.equal((await last()).extra.vn.choices, undefined, 'la variante nueva aún no tiene opciones');
+    replies.push('["De la variante 2"]');
+    assert.deepEqual((await choices()).json.choices, ['De la variante 2']);
+    const back = (await call('POST', `/worlds/${w.id}/messages/0/swipe`, { swipe_id: 0 })).json;
+    assert.deepEqual(back.extra.vn.choices, ['X'], 'al volver a la variante 1 vuelven sus opciones');
+
+    // editar el texto las invalida; si la escena cambió mientras se pensaban, se rechaza
+    await call('PATCH', `/worlds/${w.id}/messages/0`, { mes: '[Luna|joy] "Texto editado."' });
+    const edited = await last();
+    assert.equal(edited.extra.vn.choices, undefined);
+    assert.equal(edited.swipe_info[0].extra.vn.choices, undefined);
+    assert.ok(edited.extra.vn.state, 'el estado se conserva al editar');
+    await assert.rejects(W.persistChoices(w.id, { index: 0, swipeId: 0, mes: 'otro texto', choices: ['a'] }), (e) => e.status === 409);
+
+    // si lo último es un mensaje del jugador, no hay a qué responder
+    await call('POST', `/worlds/${w.id}/messages`, { mes: 'Hola' });
+    assert.equal((await choices()).status, 400);
+    assert.equal((await call('POST', '/worlds/NoExiste/choices', {})).status, 404);
+    await call('DELETE', `/worlds/${w.id}`);
+  } finally {
+    console.warn = warn;
+  }
+});
+
 test('edición y borrado de mensajes restauran el estado', async () => {
   const before = await get(WID());
   const n = before.messages.length;

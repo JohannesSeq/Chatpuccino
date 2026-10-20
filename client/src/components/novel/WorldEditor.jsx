@@ -60,6 +60,7 @@ export default function WorldEditor({ world, onClose }) {
       statIds: src.statIds || [],
       background: src.background || '',
       persona: src.persona || '',
+      classic: Boolean(src.classic),
     });
   }, [config, needsLoad]);
 
@@ -271,6 +272,14 @@ export default function WorldEditor({ world, onClose }) {
             {form.persona && !personas.some((p) => p.id === form.persona) && <option value={form.persona}>{t('world_editor.missing', { name: form.persona })}</option>}
           </select>
         </Field>
+
+        <label className="check vn-classic">
+          <input type="checkbox" checked={form.classic} onChange={(e) => set({ classic: e.target.checked })} />
+          <span>
+            <strong>{t('novelview.classic.label')}</strong>
+            <small className="muted">{t('novelview.classic.hint')}</small>
+          </span>
+        </label>
 
         {isEdit && config && (
           <p className="world-dates">

@@ -205,6 +205,8 @@ export const api = {
   setWorldStat: (id, body) => req('PATCH', `/worlds/${enc(id)}/state`, body),
   // Vuelve a pedir al modelo los cambios de estadísticas de la última escena. Resuelve con { index, message, changes, state }.
   reevaluateWorld: (id, signal) => req('POST', `/worlds/${enc(id)}/reevaluate`, {}, signal),
+  // Modo clásico: la IA propone hasta 3 opciones para continuar (las guarda en la última escena). Resuelve con { index, message, choices }.
+  worldChoices: (id, body, signal) => req('POST', `/worlds/${enc(id)}/choices`, body ?? {}, signal),
 };
 
 /** Lee un stream SSE de eventos {delta}/{done}/{error}. Resuelve con el evento final `done`. */

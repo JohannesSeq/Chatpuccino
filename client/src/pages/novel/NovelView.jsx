@@ -12,6 +12,7 @@ import DialogueBox from './DialogueBox.jsx';
 import ScenePanel from './ScenePanel.jsx';
 import HistoryLog from './HistoryLog.jsx';
 import StatToasts from './StatToasts.jsx';
+import ChoiceMenu from './ChoiceMenu.jsx';
 import { VnIcon, appendDelta, buildBeats, isTypingTarget, scriptLines, sceneDiff, sceneForMessage, useLocalPref, useMedia, useTypewriter } from './vnUtils.js';
 import '../../styles/novel-view.css';
 
@@ -67,9 +68,13 @@ function NovelViewInner({ worldId, onExit }) {
   const [statToasts, setStatToasts] = useState([]);
   const [setupError, setSetupError] = useState(false);
   const [reevaluating, setReevaluating] = useState(false);
+  // Modo clásico: estado de la petición de opciones de la última escena ({ key de la escena, status: idle|loading|done|error|aborted })
+  const [choiceState, setChoiceState] = useState({ key: '', status: 'idle', error: '' });
 
   const mounted = useRef(true);
   const reevaluatingRef = useRef(false);
+  const choicesBusy = useRef(false);
+  const choicesAbort = useRef(null);
   const abortRef = useRef(null);
   const impAbort = useRef(null);
   const toastId = useRef(0);
@@ -91,6 +96,7 @@ function NovelViewInner({ worldId, onExit }) {
       mounted.current = false;
       abortRef.current?.abort();
       impAbort.current?.abort();
+      choicesAbort.current?.abort();
     };
   }, []);
 
@@ -161,6 +167,61 @@ function NovelViewInner({ worldId, onExit }) {
   const swipe = isLastBot ? { current: (lastMsg.swipe_id ?? 0) + 1, total: swipeCount } : null;
   const canRegenerate = Boolean(lastMsg && !lastMsg.is_user && !lastMsg.is_system && atEnd);
 
+  /* ---------- Modo clásico: opciones para continuar ---------- */
+
+  const classic = Boolean(payload?.world?.classic);
+  const lastIsBot = Boolean(lastMsg && !lastMsg.is_user && !lastMsg.is_system);
+  // Las opciones viven en la escena (y en cada variante), así que sobreviven a recargar la página.
+  const storedChoices = (lastIsBot && Array.isArray(lastMsg.extra?.vn?.choices) && lastMsg.extra.vn.choices) || EMPTY;
+  const choiceKey = lastIsBot ? `${messages.length - 1}:${lastMsg.swipe_id ?? 0}` : '';
+  const choiceLoading = choiceState.key === choiceKey && choiceState.status === 'loading';
+  const choiceError = choiceState.key === choiceKey && choiceState.status === 'error' ? choiceState.error : '';
+  const choicesVisible = classic && atEnd && isLastBot && typing.done && !composerOpen;
+
+  const loadChoices = useCallback(
+    async (regenerate = false) => {
+      if (choicesBusy.current || !choiceKey) return;
+      choicesBusy.current = true;
+      const key = choiceKey;
+      const ac = new AbortController();
+      choicesAbort.current = ac;
+      setChoiceState({ key, status: 'loading', error: '' });
+      try {
+        const res = await api.worldChoices(worldId, { regenerate }, ac.signal);
+        if (!mounted.current) return;
+        setData((p) => replaceMessage(p, res.index, res.message));
+        setChoiceState({ key, status: 'done', error: '' });
+      } catch (e) {
+        if (!mounted.current) return;
+        setChoiceState({ key, status: e.name === 'AbortError' ? 'aborted' : 'error', error: e.name === 'AbortError' ? '' : e.message });
+      } finally {
+        choicesBusy.current = false;
+        choicesAbort.current = null;
+      }
+    },
+    [choiceKey, worldId, setData],
+  );
+
+  // Al llegar una escena nueva (o cambiar de variante) en modo clásico, se piden las opciones en segundo plano mientras se lee.
+  // Si fallan no se reintenta solas: el jugador decide con «Reintentar».
+  useEffect(() => {
+    if (!classic || !lastIsBot || generating || reevaluating || !settings?.ready) return;
+    if (storedChoices.length || choiceState.key === choiceKey) return;
+    loadChoices(false);
+  }, [classic, lastIsBot, generating, reevaluating, settings?.ready, storedChoices.length, choiceKey, choiceState.key, loadChoices]);
+
+  async function pickChoice(text) {
+    if (!text || generating || impersonating) return;
+    choicesAbort.current?.abort();
+    try {
+      const { message } = await api.addWorldMessage(worldId, text);
+      setData((p) => ({ ...p, messages: [...p.messages, message] }));
+    } catch (e) {
+      toast(e.message, 'error');
+      return;
+    }
+    await generate({});
+  }
   const scene = useMemo(() => (state ? sceneForMessage(messages, pos?.mi ?? messages.length, state.scene) : null), [messages, pos?.mi, state]);
   const backgroundUrl = useMemo(() => backgrounds.find((b) => b.id === scene?.background)?.url || null, [backgrounds, scene?.background]);
 
@@ -192,14 +253,20 @@ function NovelViewInner({ worldId, onExit }) {
     setCharExpanded(false);
   }, []);
 
-  actions.current = { advance, back };
-  flags.current = { composerOpen };
+  actions.current = { advance, back, pick: (text) => pickChoice(text) };
+  flags.current = { composerOpen, choices: choicesVisible ? storedChoices : null };
 
   useEffect(() => {
     const onKey = (e) => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || flags.current.composerOpen) return;
       if (isTypingTarget(e.target) || document.querySelector('.overlay, .lightbox')) return;
       const onControl = e.target?.closest?.('button, a, summary, [role="menuitem"]');
+      const picked = /^[1-3]$/.test(e.key) ? flags.current.choices?.[Number(e.key) - 1] : null;
+      if (picked) {
+        e.preventDefault();
+        actions.current.pick(picked);
+        return;
+      }
       if (e.key === ' ' || e.key === 'Enter') {
         if (onControl || e.repeat) return;
         e.preventDefault();
@@ -512,16 +579,16 @@ function NovelViewInner({ worldId, onExit }) {
     const scene = sceneRef.current;
     const box = boxRef.current;
     if (!scene || !box) return undefined;
-    if (phone) {
-      scene.style.setProperty('--vn-box-h', '0px');
-      return undefined;
-    }
-    const measure = () => scene.style.setProperty('--vn-box-h', `${box.offsetHeight}px`);
+    // La altura del cuadro de diálogo también sirve en móvil: las opciones del Modo clásico se colocan justo encima.
+    const measure = () => {
+      scene.style.setProperty('--vn-dlg-h', `${box.offsetHeight}px`);
+      scene.style.setProperty('--vn-box-h', phone ? '0px' : `${box.offsetHeight}px`);
+    };
     measure();
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null;
     ro?.observe(box);
     return () => ro?.disconnect();
-  }, [ready, phone, composerOpen]);
+  }, [ready, phone, composerOpen, choicesVisible]);
 
   if (!payload) return <div className="empty">{t('common.loading')}</div>;
 
@@ -544,6 +611,7 @@ function NovelViewInner({ worldId, onExit }) {
     !empty && { label: t('novelview.actions.history'), icon: <VnIcon name="history" size={18} />, onClick: () => setHistoryOpen(true) },
     phone && { label: t('novelview.panel.open'), icon: <VnIcon name="panel" size={18} />, onClick: () => setSheetOpen(true) },
     { label: t('novelview.menu.instant'), checked: instantPref, onClick: () => setInstantPref((v) => !v) },
+    { label: t('novelview.classic.label'), checked: classic, onClick: () => updateWorld({ classic: !classic }) },
     { separator: true },
     { label: t('novelview.menu.copy_world'), icon: <Icon name="copy" size={18} />, onClick: copyWorld },
     { label: t('novelview.panel.edit_world'), icon: <Icon name="edit" size={18} />, onClick: openEditor },
@@ -558,7 +626,7 @@ function NovelViewInner({ worldId, onExit }) {
   );
 
   const panelButtonOpen = phone ? sheetOpen : panelOpen;
-  const rootClass = ['novel-view', phone ? 'is-phone' : 'is-desktop', `focus-${focus}`, composerOpen ? 'composing' : '', panelOpen && !phone ? 'panel-open' : ''].filter(Boolean).join(' ');
+  const rootClass = ['novel-view', phone ? 'is-phone' : 'is-desktop', `focus-${focus}`, composerOpen ? 'composing' : '', choicesVisible ? 'has-choices' : '', panelOpen && !phone ? 'panel-open' : ''].filter(Boolean).join(' ');
 
   return (
     <div className={rootClass}>
@@ -615,6 +683,7 @@ function NovelViewInner({ worldId, onExit }) {
             premise={world.description}
             castNames={castNames}
             atEnd={atEnd}
+            classic={classic}
             atLatest={atLatest}
             hasPrev={Boolean(pos && (pos.li > 0 || pos.mi > 0))}
             generating={generating}
@@ -636,6 +705,9 @@ function NovelViewInner({ worldId, onExit }) {
             menuItems={menuItems}
             composer={composer}
           />
+          {choicesVisible && (
+            <ChoiceMenu choices={storedChoices} loading={choiceLoading} error={choiceError} onPick={pickChoice} onRegenerate={() => loadChoices(true)} onWrite={openComposer} />
+          )}
           <StatToasts items={statToasts} stats={stats} worldName={world.name} onDismiss={dismissToast} />
         </div>
 

@@ -61,7 +61,7 @@ export function createApp() {
     if (res.headersSent) return res.end();
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
     // Fallos esperables y ya explicados al usuario (Stable Diffusion, reevaluación de estadísticas…): no hace falta el stack.
-    if (status >= 500 && !/^(STUDIO_|REEVALUATE_|EMPTY_RESPONSE)/.test(String(err.code || ''))) console.error(err);
+    if (status >= 500 && !/^(STUDIO_|REEVALUATE_|CHOICES_|EMPTY_RESPONSE)/.test(String(err.code || ''))) console.error(err);
     if (err.retryAfter) res.setHeader('Retry-After', String(err.retryAfter));
     res.status(status).json({ error: err.message || t('server.common.internal_error'), ...(err.code ? { code: err.code } : {}) });
   });

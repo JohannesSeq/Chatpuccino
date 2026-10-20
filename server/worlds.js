@@ -73,6 +73,8 @@ function cleanWorld(raw, id, books) {
     background: typeof r.background === 'string' ? r.background : '',
     outfits,
     persona: typeof r.persona === 'string' ? r.persona : '',
+    // Modo clásico: en vez de escribir, el jugador elige entre opciones que propone la IA
+    classic: Boolean(r.classic),
     createdAt: r.createdAt || now,
     updatedAt: r.updatedAt || r.createdAt || now,
   };
@@ -242,6 +244,7 @@ async function validateConfig(body, existing) {
       out.background = bg.id;
     } else out.background = '';
   }
+  if (b.classic !== undefined) out.classic = Boolean(b.classic);
   if (b.active !== undefined) out.active = uniq(b.active);
   if (b.outfits !== undefined) out.outfits = isObj(b.outfits) ? b.outfits : {};
   return out;
@@ -250,7 +253,7 @@ async function validateConfig(body, existing) {
 /** Aplica un parche ya validado y deja el mundo coherente (activos ⊆ reparto, atuendos existentes). */
 async function applyConfig(world, patch) {
   const next = { ...world };
-  for (const k of ['name', 'description', 'lorebooks', 'statIds', 'characters', 'persona', 'background']) if (patch[k] !== undefined) next[k] = patch[k];
+  for (const k of ['name', 'description', 'lorebooks', 'statIds', 'characters', 'persona', 'background', 'classic']) if (patch[k] !== undefined) next[k] = patch[k];
   if (patch.active !== undefined) {
     if (patch.active.some((id) => !next.characters.includes(id))) throw new HttpError(400, t('server.worlds.active_not_in_roster'));
     next.active = patch.active;
@@ -437,6 +440,12 @@ export function editMessage(id, i, mes) {
     const { msg } = messageAt(ctx.chat, i);
     msg.mes = text;
     if (Array.isArray(msg.swipes)) msg.swipes[msg.swipe_id ?? 0] = text;
+    // las opciones del Modo clásico se pensaron para el texto anterior
+    const vn = swipeVn(msg);
+    if (vn?.choices) {
+      const { choices: _old, ...rest } = vn;
+      setMessageVn(msg, rest);
+    }
     ctx.dirty.add('story');
     return msg;
   });
@@ -615,6 +624,24 @@ export function persistReevaluation(id, { index, swipeId, mes, control }) {
     setMessageVn(msg, { ...(prev || {}), changes: applied.changes, state, control: { ...(isObj(prev?.control) ? prev.control : {}), stats: control?.stats ?? [] } });
     ctx.dirty.add('story').add('state');
     return { index, message: msg, changes: applied.changes, state };
+  });
+}
+
+// ---------- opciones del Modo clásico ----------
+
+/**
+ * Guarda las opciones propuestas en el swipe seleccionado de la última escena (dentro de n, junto a sus cambios).
+ * Se rechaza si esa escena ya no es la última o cambió mientras el modelo pensaba.
+ */
+export function persistChoices(id, { index, swipeId, mes, choices }) {
+  return mutateWorld(id, async (ctx) => {
+    const msg = ctx.chat.messages[index];
+    if (!msg || index !== ctx.chat.messages.length - 1 || index !== lastAssistantIndex(ctx.chat.messages) || (msg.swipe_id ?? 0) !== swipeId || msg.mes !== mes) {
+      throw new HttpError(409, t('server.worlds.choices_changed'));
+    }
+    setMessageVn(msg, { ...(swipeVn(msg) || {}), choices });
+    ctx.dirty.add('story');
+    return { index, message: msg, choices };
   });
 }
 

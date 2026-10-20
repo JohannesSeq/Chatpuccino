@@ -68,6 +68,45 @@
 .is-phone.focus-text .vn-dialogue { flex: 1 1 0; max-height: none; }
 .is-phone.focus-char .vn-dialogue:not(.collapsed) { flex: 0 1 auto; max-height: 50%; }
 .is-phone .vn-dialogue.composing { flex: 0 1 auto; max-height: 62%; }
+
+/* Modo clásico: opciones superpuestas al escenario, justo encima de la caja de diálogo (--vn-dlg-h la mide NovelView) */
+.vn-classic { align-items: flex-start; padding: 8px 0 12px; }
+.vn-classic > span { display: flex; flex-direction: column; gap: 2px; }
+.vn-classic small { font-weight: 400; }
+.vn-choices {
+  position: absolute; left: 0; right: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  bottom: calc(var(--vn-dlg-h, 140px) + 12px); max-height: calc(100% - var(--vn-dlg-h, 140px) - 64px - var(--safe-top));
+  padding: 4px 4% 0; overflow-y: auto; pointer-events: none; font-family: var(--font-ui);
+}
+.is-desktop .vn-choices { bottom: calc(var(--vn-dlg-h, 140px) + 32px + var(--safe-bottom)); max-height: calc(100% - var(--vn-dlg-h, 140px) - 96px); }
+.vn-choices > * { pointer-events: auto; }
+.vn-choice {
+  width: min(100%, 780px); display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; text-align: left; border-radius: 14px;
+  color: var(--text); line-height: 1.4; font-size: calc(var(--msg-size) * 1.02); animation: vn-choice-in 0.28s ease both;
+  background: color-mix(in srgb, var(--panel) 90%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 6px 22px var(--shadow); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.vn-choice:hover, .vn-choice:focus-visible { background: color-mix(in srgb, var(--accent) 24%, var(--panel)); border-color: var(--accent); transform: translateY(-1px); }
+.vn-choice kbd {
+  flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin-top: 1px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent); font: 700 13px var(--font-ui);
+}
+.is-phone .vn-choice { min-height: 48px; padding: 10px 12px; font-size: calc(var(--msg-size) * 0.95); }
+.is-phone .vn-choice kbd { display: none; }
+.vn-choices-status {
+  display: inline-flex; align-items: center; gap: 10px; max-width: min(100%, 780px); padding: 8px 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 90%, transparent); border: 1px solid var(--border); color: var(--text); font-size: calc(14px * var(--ui-scale));
+  box-shadow: 0 4px 16px var(--shadow); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.vn-choices-status.error { border-color: var(--danger); border-radius: 14px; color: var(--danger); background: color-mix(in srgb, var(--panel) 92%, var(--danger) 8%); }
+.vn-choices-status .typing { margin: 0; }
+.vn-choices-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.vn-choices-tools .btn { display: inline-flex; align-items: center; gap: 6px; background: color-mix(in srgb, var(--panel) 90%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+@keyframes vn-choice-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* con opciones en pantalla, el modo «enfocar texto» del móvil deja sitio al escenario donde se superponen */
+.is-phone.focus-text.has-choices .vn-stage { flex: 1 1 0; min-height: 36%; }
+.is-phone.focus-text.has-choices .vn-dialogue { flex: 0 1 auto; max-height: 40%; }
+@media (prefers-reduced-motion: reduce) { .vn-choice { animation: none; transition: none; } }
 .vn-name-row { display: flex; align-items: center; gap: 8px; min-height: 28px; }
 .vn-name { font-weight: 700; font-size: calc(var(--msg-size) * 1.1); letter-spacing: 0.02em; }
 .vn-name.vn-you { color: var(--accent); }

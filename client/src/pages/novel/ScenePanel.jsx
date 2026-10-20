@@ -100,6 +100,13 @@ export default function ScenePanel({ world, cast, stats, backgrounds, state, lor
 
   return (
     <div className="vn-panel-body">
+      <label className="check vn-classic">
+        <input type="checkbox" checked={Boolean(world.classic)} onChange={(e) => onUpdate({ classic: e.target.checked })} />
+        <span>
+          <strong>{t('novelview.classic.label')}</strong>
+          <small className="muted">{t('novelview.classic.hint')}</small>
+        </span>
+      </label>
       <details open className="vn-sec">
         <summary>{t('novelview.panel.scene')}</summary>
         <div className="vn-bg-grid" role="group" aria-label={t('novelview.panel.background')}>

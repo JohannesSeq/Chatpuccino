@@ -5,6 +5,7 @@ import { activateEntries, estimateTokens } from './lore.js';
 import { applyMacros, collectLoreEntries, squash } from './prompt.js';
 import { fillNames } from '../shared/names.js';
 import { STAT_DESCRIPTION_MAX } from '../shared/vn.js';
+import { CHOICES_MAX } from './worldState.js';
 
 const cost = (content) => estimateTokens(content) + 4;
 // Mismo tope que al guardar: la descripción de una estadística es una regla para la IA y no debe cortarse.
@@ -149,11 +150,12 @@ async function loreBlock({ world, settings, preset, chars, history, macroCtx }) 
  * @param backgrounds biblioteca de fondos
  * @param state estado ANTES del mensaje que se va a generar (estadísticas + escena)
  * @param history mensajes anteriores (sin el que se genera)
- * @param mode 'scene' (guion del narrador) | 'impersonate' (mensaje del usuario)
+ * @param mode 'scene' (guion del narrador) | 'impersonate' (mensaje del usuario) | 'choices' (opciones del Modo clásico)
+ * @param avoid opciones anteriores que no deben repetirse (solo 'choices')
  */
 export async function buildSceneMessages({
   world, settings, preset, persona, cast, stats, backgrounds, state, history,
-  mode = 'scene', speakerId = '', instruction = '', start = false, draft = '',
+  mode = 'scene', speakerId = '', instruction = '', start = false, draft = '', avoid = [],
 }) {
   const userName = persona.name;
   const chars = onStageOf(cast, state);
@@ -162,10 +164,16 @@ export async function buildSceneMessages({
   const macroCtx = { char: names[0] || world.name, user: userName, group: names.join(', ') };
   const visible = history.filter((m) => !m.is_system);
   const impersonate = mode === 'impersonate';
+  const choices = mode === 'choices';
+  // impersonar y proponer opciones escriben por el jugador: sin guion, expresiones ni bloque de control
+  const lite = impersonate || choices;
   const language = languageName();
 
   const sections = [];
-  if (impersonate) {
+  if (choices) {
+    sections.push(t('server.worlds.prompt.choices_role', { user: userName }));
+    sections.push(t('server.worlds.prompt.choices_rules', { user: userName, language, count: CHOICES_MAX }));
+  } else if (impersonate) {
     sections.push(t('server.worlds.prompt.impersonate_role', { user: userName }));
     sections.push(t('server.worlds.prompt.impersonate_rules', { user: userName, language }));
   } else {
@@ -188,8 +196,8 @@ export async function buildSceneMessages({
   if (offstage.length) sections.push(t('server.worlds.prompt.offstage', { names: offstage.map((c) => c.name).join(', ') }));
   const lore = await loreBlock({ world, settings, preset, chars, history: visible, macroCtx });
   if (lore) sections.push(lore);
-  sections.push(statsBlock({ stats, state, chars, withRule: !impersonate }));
-  if (!impersonate) {
+  sections.push(statsBlock({ stats, state, chars, withRule: !lite }));
+  if (!lite) {
     sections.push(expressionsBlock(chars, state));
     sections.push(outfitsBlock(chars, state));
     sections.push(backgroundsBlock(backgrounds, state));
@@ -200,7 +208,11 @@ export async function buildSceneMessages({
   let msgs = visible.map((m) => ({ role: m.is_user ? 'user' : 'assistant', content: fillNames(String(m.mes), macroCtx) }));
 
   const directive = [];
-  if (impersonate) {
+  if (choices) {
+    directive.push(t('server.worlds.prompt.choices_directive', { user: userName }));
+    const previous = avoid.map((a) => String(a ?? '').trim()).filter(Boolean);
+    if (previous.length) directive.push(t('server.worlds.prompt.choices_avoid', { list: previous.map((a) => `- ${a}`).join('\n') }));
+  } else if (impersonate) {
     directive.push(t('server.worlds.prompt.impersonate_directive', { user: userName }));
     if (draft.trim()) directive.push(t('server.worlds.prompt.impersonate_draft', { text: draft.trim() }));
   } else {

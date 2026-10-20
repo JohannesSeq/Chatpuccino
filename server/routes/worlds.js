@@ -24,7 +24,9 @@ import {
   getWorldDetail,
   listWorlds,
   loadContext,
+  parseChoices,
   parseJsonLoose,
+  persistChoices,
   persistReevaluation,
   persistScene,
   prepareReevaluation,
@@ -35,6 +37,7 @@ import {
   setStatValue,
   stateBefore,
   stateOptions,
+  swipeVn,
   updateWorld,
 } from '../worlds.js';
 
@@ -102,7 +105,7 @@ r.patch('/:id/state', wrap(async (req, res) => {
 }));
 
 // Reúne todo lo necesario para la siguiente generación (escena del narrador o mensaje del usuario).
-async function prepare(id, { impersonate = false, speakerId = '', swipe = false, start = false, instruction = '', draft = '' }) {
+async function prepare(id, { impersonate = false, choices = false, regenerate = false, speakerId = '', swipe = false, start = false, instruction = '', draft = '' }) {
   const settings = await getSettings();
   const world = await readWorld(id);
   const chat = await readStory(id);
@@ -112,7 +115,15 @@ async function prepare(id, { impersonate = false, speakerId = '', swipe = false,
   let history = chat.messages;
   let targetIndex = -1;
   let state;
-  if (impersonate) {
+  let target = null;
+  if (choices) {
+    // las opciones son para responder a la última escena: debe ser lo último de la historia
+    const index = chat.messages.length - 1;
+    const last = chat.messages[index];
+    if (!last || last.is_user || last.is_system) throw new HttpError(400, t('server.worlds.choices_nothing'));
+    target = { index, swipeId: last.swipe_id ?? 0, mes: last.mes, previous: swipeVn(last)?.choices || [] };
+    state = currentState(world, chat.messages, opts);
+  } else if (impersonate) {
     state = currentState(world, chat.messages, opts);
   } else if (swipe) {
     targetIndex = chat.messages.length - 1;
@@ -138,13 +149,14 @@ async function prepare(id, { impersonate = false, speakerId = '', swipe = false,
     backgrounds: c.backgrounds,
     state,
     history,
-    mode: impersonate ? 'impersonate' : 'scene',
+    mode: choices ? 'choices' : impersonate ? 'impersonate' : 'scene',
+    avoid: choices && regenerate ? target.previous : [],
     speakerId: String(speakerId || ''),
     instruction: String(instruction || '').slice(0, 4000),
-    start: !impersonate && history.length === 0,
+    start: !impersonate && !choices && history.length === 0,
     draft: String(draft || '').slice(0, 4000),
   });
-  return { settings, world, c, state, history, targetIndex, persona, preset, presetName, messages };
+  return { settings, world, c, state, history, targetIndex, persona, preset, presetName, messages, target };
 }
 
 // Inspector de prompt: lo que se enviaría ahora mismo al modelo.
@@ -173,6 +185,46 @@ async function requestStats({ conn, signal, persona, c, state, script, userMessa
   const json = parseJsonLoose(text);
   return json && Array.isArray(json.stats) ? { stats: json.stats } : null;
 }
+
+// Modo clásico: propone hasta 3 opciones para continuar la historia a partir de la última escena y las guarda en ella.
+// Con regenerate: true pide otras opciones distintas a las que ya hay.
+r.post('/:id/choices', wrap(async (req, res) => {
+  const settings = await getSettings();
+  const conn = requireReady(settings);
+  const prep = await prepare(req.params.id, { choices: true, regenerate: Boolean(req.body?.regenerate) });
+  const ac = new AbortController();
+  res.on('close', () => !res.writableEnded && ac.abort());
+  const meta = {};
+  let text;
+  try {
+    text = await streamChat({
+      conn,
+      signal: ac.signal,
+      meta,
+      body: {
+        model: conn.model,
+        messages: prep.messages,
+        temperature: 0.9,
+        // Mismo ajuste que el análisis de estadísticas (Ajustes → Presets): los modelos que razonan necesitan margen.
+        max_tokens: settings.analysisTokens,
+      },
+      onDelta: () => {},
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    throw e;
+  }
+  const choices = parseChoices(text);
+  if (!choices.length) {
+    if (!meta.contentChars) {
+      const empty = reportEmpty({ where: 'analysis', conn, meta, maxTokens: settings.analysisTokens });
+      throw new HttpError(502, empty.error, empty.code);
+    }
+    console.warn('[IA] Las opciones del Modo clásico no llegaron en un formato válido:', String(text).slice(0, 200));
+    throw new HttpError(502, t('server.worlds.choices_invalid'), 'CHOICES_INVALID');
+  }
+  res.json(await persistChoices(req.params.id, { index: prep.target.index, swipeId: prep.target.swipeId, mes: prep.target.mes, choices }));
+}));
 
 // Reevalúa las estadísticas de la última escena (p. ej. cuando falló la consulta de análisis o el modelo se equivocó).
 r.post('/:id/reevaluate', wrap(async (req, res) => {
