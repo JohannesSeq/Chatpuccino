@@ -5,6 +5,7 @@ import App from './App.jsx';
 import { AuthProvider } from './auth.jsx';
 import { DialogProvider } from './dialogs.jsx';
 import { DataProvider } from './data.jsx';
+import { TtsProvider } from './tts.jsx';
 import { I18nProvider } from './i18n.jsx';
 import { applyAppearance, loadCachedAppearance } from './theme.js';
 import './styles.css';
@@ -19,7 +20,9 @@ createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <DialogProvider>
             <DataProvider>
-              <App />
+              <TtsProvider>
+                <App />
+              </TtsProvider>
             </DataProvider>
           </DialogProvider>
         </AuthProvider>

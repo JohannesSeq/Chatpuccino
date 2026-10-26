@@ -15,6 +15,7 @@ import statsRoutes from './routes/stats.js';
 import backgroundRoutes from './routes/backgrounds.js';
 import spriteRoutes from './routes/sprites.js';
 import studioRoutes from './routes/studio.js';
+import ttsRoutes from './routes/tts.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
@@ -42,6 +43,7 @@ export function createApp() {
   app.use('/api/backgrounds', backgroundRoutes);
   app.use('/api/sprites', spriteRoutes);
   app.use('/api/studio', studioRoutes);
+  app.use('/api/tts', ttsRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);
@@ -61,7 +63,7 @@ export function createApp() {
     if (res.headersSent) return res.end();
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);
     // Fallos esperables y ya explicados al usuario (Stable Diffusion, reevaluación de estadísticas…): no hace falta el stack.
-    if (status >= 500 && !/^(STUDIO_|REEVALUATE_|CHOICES_|EMPTY_RESPONSE)/.test(String(err.code || ''))) console.error(err);
+    if (status >= 500 && !/^(STUDIO_|TTS_|REEVALUATE_|CHOICES_|EMPTY_RESPONSE)/.test(String(err.code || ''))) console.error(err);
     if (err.retryAfter) res.setHeader('Retry-After', String(err.retryAfter));
     res.status(status).json({ error: err.message || t('server.common.internal_error'), ...(err.code ? { code: err.code } : {}) });
   });

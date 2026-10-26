@@ -13,6 +13,8 @@ import ScenePanel from './ScenePanel.jsx';
 import HistoryLog from './HistoryLog.jsx';
 import StatToasts from './StatToasts.jsx';
 import ChoiceMenu from './ChoiceMenu.jsx';
+import { useTts } from '../../tts.jsx';
+import { charVoice, USER_VOICE } from '../../../../shared/tts.js';
 import { VnIcon, appendDelta, buildBeats, isTypingTarget, scriptLines, sceneDiff, sceneForMessage, useLocalPref, useMedia, useTypewriter } from './vnUtils.js';
 import '../../styles/novel-view.css';
 
@@ -45,6 +47,9 @@ function NovelViewInner({ worldId, onExit }) {
   const { settings, refresh, toast } = useData();
   const { confirm, prompt } = useDialog();
   const { t } = useT();
+  const tts = useTts();
+  const ttsRef = useRef(tts);
+  ttsRef.current = tts;
 
   const phone = useMedia('(max-width: 767px)');
   const reducedMotion = useMedia('(prefers-reduced-motion: reduce)');
@@ -159,6 +164,49 @@ function NovelViewInner({ worldId, onExit }) {
 
   const typeKey = `${pos?.mi ?? 'x'}:${pos?.li ?? 0}:${nonce}`;
   const typing = useTypewriter(line?.text ?? '', typeKey, instantPref || reducedMotion || Boolean(pos?.seen));
+
+  /* ---------- narración por voz ---------- */
+
+  // Solo se lee el texto de la línea: nunca la etiqueta del guion ([Narrador], [Luna|joy]) ni el bloque de control.
+  const narrationOf = useCallback((ln, force = false) => {
+    if (!ln) return [];
+    if (ln.isUser) return ttsRef.current.stepsFor(ln.text, { kind: 'user', speakerKey: USER_VOICE, force });
+    if (!ln.speaker && !ln.unknown) return ttsRef.current.stepsFor(ln.text, { kind: 'narrator' });
+    // Con personaje identificado, un texto sin comillas es su frase (lo que va entre *asteriscos* es acción del narrador).
+    return ttsRef.current.stepsFor(ln.text, { kind: 'character', speakerKey: ln.speaker ? charVoice(ln.speaker) : 'default', unquoted: 'speech' });
+  }, []);
+
+  const lineKey = pos ? `${pos.mi}:${pos.li}` : '';
+  const narrationId = `vn:${lineKey}`;
+  const lineIsComplete = Boolean(beat) && (!beat.streaming || pos.li < beat.lines.length - 1);
+  const spoken = useRef({ key: '', done: false });
+
+  // Al empezar a generar se descarta lo que hubiera sonado (también con «Regenerar», que reutiliza la misma posición).
+  useEffect(() => {
+    if (!generating) return;
+    spoken.current = { key: '', done: false };
+    ttsRef.current.stop();
+  }, [generating]);
+
+  // Cada línea nueva que se muestra al avanzar se narra sola; al cambiar de línea se corta la anterior.
+  useEffect(() => {
+    const T = ttsRef.current;
+    if (spoken.current.key !== lineKey) {
+      spoken.current = { key: lineKey, done: false };
+      T.stop();
+    }
+    if (!T.autoplay || !pos || pos.seen || !line || thinking || !lineIsComplete || spoken.current.done) return;
+    spoken.current.done = true;
+    const steps = narrationOf(line);
+    if (steps.length) T.play(steps, narrationId);
+  }, [lineKey, pos, line, thinking, lineIsComplete, narrationId, narrationOf, tts.autoplay]);
+
+  useEffect(() => () => ttsRef.current?.stop(), []);
+
+  function toggleNarration() {
+    if (tts.isActive(narrationId)) tts.stop();
+    else tts.play(narrationOf(line, true), narrationId);
+  }
 
   const lastMsg = messages.at(-1);
   const committed = pos && pos.mi < messages.length ? messages[pos.mi] : null;
@@ -618,6 +666,8 @@ function NovelViewInner({ worldId, onExit }) {
     !empty && { label: t('novelview.actions.history'), icon: <VnIcon name="history" size={18} />, onClick: () => setHistoryOpen(true) },
     phone && { label: t('novelview.panel.open'), icon: <VnIcon name="panel" size={18} />, onClick: () => setSheetOpen(true) },
     { label: t('novelview.menu.instant'), checked: instantPref, onClick: () => setInstantPref((v) => !v) },
+    tts.enabled && { label: t('tts.menu.autoplay'), checked: tts.config.autoplay, onClick: () => tts.update({ autoplay: !tts.config.autoplay }) },
+    tts.enabled && { label: t('tts.menu.narrator'), checked: tts.config.narrator, onClick: () => tts.update({ narrator: !tts.config.narrator }) },
     { label: t('novelview.classic.label'), checked: classic, onClick: () => updateWorld({ classic: !classic }) },
     { separator: true },
     { label: t('novelview.menu.copy_world'), icon: <Icon name="copy" size={18} />, onClick: copyWorld },
@@ -710,6 +760,7 @@ function NovelViewInner({ worldId, onExit }) {
             onBegin={begin}
             onSwipe={swipeTo}
             menuItems={menuItems}
+            voice={tts.enabled && line && !thinking && !empty ? { active: tts.isActive(narrationId), loading: tts.isActive(narrationId) && tts.state.status === 'loading', onToggle: toggleNarration } : null}
             composer={composer}
           />
           {choicesVisible && (

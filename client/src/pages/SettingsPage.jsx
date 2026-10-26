@@ -5,6 +5,7 @@ import SecurityTab from './settings/SecurityTab.jsx';
 import PresetsTab from './settings/PresetsTab.jsx';
 import AssistantTab from './settings/AssistantTab.jsx';
 import AppearanceTab from './settings/AppearanceTab.jsx';
+import VoiceTab from './settings/VoiceTab.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 import { useT } from '../i18n.jsx';
 
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'presets', label: 'settings.tabs.presets', C: PresetsTab },
   { id: 'asistente', label: 'settings.tabs.assistant', C: AssistantTab },
   { id: 'apariencia', label: 'settings.tabs.appearance', C: AppearanceTab },
+  { id: 'voz', label: 'settings.tabs.voice', C: VoiceTab },
   { id: 'seguridad', label: 'settings.tabs.security', C: SecurityTab },
 ];
 

@@ -34,6 +34,18 @@ async function req(method, url, body, signal) {
 export const chatUrl = ({ kind, ownerId, file }) => `/chats/${kind}/${enc(ownerId)}/${enc(file)}`;
 export const chatRoute = chatUrl;
 
+/** Audio sintetizado por el servidor (Blob). */
+export async function ttsSpeak(body, signal) {
+  const res = await apiFetch('/api/tts/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    const err = new Error(data?.error || t('api.http_error', { status: res.status }));
+    err.code = data?.code;
+    throw err;
+  }
+  return res.blob();
+}
+
 export const avatarUrl = {
   character: (c) => `/api/characters/${enc(c.id)}/avatar?v=${c.mtime || 0}`,
   persona: (p) => (p.hasAvatar ? `/api/personas/${enc(p.id)}/avatar?v=${p.mtime || 0}` : null),
@@ -189,6 +201,11 @@ export const api = {
   studioRemoveBg: (body, signal) => req('POST', '/studio/rembg', body, signal),
   studioCharacter: (id) => req('GET', `/studio/characters/${enc(id)}`),
   saveStudioCharacter: (id, patch) => req('PUT', `/studio/characters/${enc(id)}`, patch),
+  // ---- Narración por voz ----
+  tts: () => req('GET', '/tts'),
+  saveTts: (patch) => req('PUT', '/tts', patch),
+  testTts: (body, signal) => req('POST', '/tts/test', body, signal),
+  ttsVoices: (provider, signal) => req('GET', `/tts/voices?provider=${enc(provider)}`, undefined, signal),
 
   worlds: () => req('GET', '/worlds'),
   createWorld: (body) => req('POST', '/worlds', body),

@@ -10,6 +10,8 @@ import { CharAvatar, GroupAvatar, Menu, Modal, PersonaAvatar, ViewableAvatar } f
 import GroupEditor from '../components/GroupEditor.jsx';
 import Swipeable from '../components/Swipeable.jsx';
 import { CharacterEditor } from './catalog/CharactersTab.jsx';
+import { useTts } from '../tts.jsx';
+import { charVoice, USER_VOICE } from '../../../shared/tts.js';
 
 const nameHue = (name) => {
   let h = 0;
@@ -24,6 +26,9 @@ export default function ChatView() {
   const { charById, groupById, personas, settings, chats, refresh, toast } = useData();
   const { confirm, prompt } = useDialog();
   const { t } = useT();
+  const tts = useTts();
+  const ttsRef = useRef(tts);
+  ttsRef.current = tts;
 
   const [chat, setChat] = useState(null);
   const [input, setInput] = useState('');
@@ -127,6 +132,26 @@ export default function ChatView() {
     return members.find((m) => m.id === id) || members.find((m) => m.name === msg.name);
   };
 
+  /* ---------- narración por voz ---------- */
+
+  // Pasos de narración de un mensaje: lo citado con la voz de quien habla, el resto con la del narrador.
+  const narrationOf = (msg, force = false) => {
+    const speaker = msg.is_user ? null : speakerOf(msg);
+    const names = { user: chat.persona.name, char: speaker?.name || (msg.is_user ? members[0]?.name : msg.name) };
+    const speakerKey = msg.is_user ? USER_VOICE : speaker ? charVoice(speaker.id) : 'default';
+    return ttsRef.current.stepsFor(msg.mes, { kind: msg.is_user ? 'user' : 'character', speakerKey, names, force });
+  };
+  const narrationId = (i, msg) => `chat:${i}:${msg.swipe_id ?? 0}`;
+
+  function toggleNarration(i, msg) {
+    const id = narrationId(i, msg);
+    if (tts.isActive(id)) tts.stop();
+    else tts.play(narrationOf(msg, true), id);
+  }
+
+  // Los chats se leen cuando el usuario cambia de pantalla o sale: la voz no debe seguir sonando en otra parte.
+  useEffect(() => () => ttsRef.current?.stop(), [ref]);
+
   async function runGeneration(speaker, swipe) {
     const ac = new AbortController();
     abortRef.current = ac;
@@ -143,6 +168,12 @@ export default function ChatView() {
           return { ...c, messages };
         });
         if (swipe) setSwipeAnim({ index: out.index, id: out.message.swipe_id ?? 0, dir: 'next' });
+        if (ttsRef.current.autoplay) {
+          const steps = narrationOf(out.message);
+          const id = narrationId(out.index ?? chat.messages.length, out.message);
+          if (swipe) ttsRef.current.play(steps, id);
+          else ttsRef.current.enqueue(steps, id);
+        }
       }
     } catch (e) {
       if (e.name !== 'AbortError') toast(e.message, 'error');
@@ -156,6 +187,7 @@ export default function ChatView() {
 
   async function runReplies(speakers, swipe = false) {
     stopRef.current = false;
+    if (swipe) tts.stop();
     for (const s of speakers) {
       if (stopRef.current) break;
       await runGeneration(s, swipe);
@@ -181,6 +213,7 @@ export default function ChatView() {
 
   async function send() {
     if (generating) return;
+    tts.stop();
     const text = input.trim();
     if (text) {
       setInput('');
@@ -402,6 +435,11 @@ export default function ChatView() {
           )}
           <small>{generating ? t('chat.header.typing', { name: streaming.name }) : isGroup ? members.map((m) => m.name).join(', ') : chat.title || t('chat.header.you', { name: chat.persona.name })}</small>
         </div>
+        {tts.state.status !== 'idle' && String(tts.state.id).startsWith('chat:') && (
+          <button className={`icon-btn voice-btn on ${tts.state.status === 'loading' ? 'loading' : ''}`} onClick={tts.stop} aria-label={t('tts.stop')} title={t('tts.stop')}>
+            <Icon name="volume" />
+          </button>
+        )}
         <Menu
           items={[
             { label: pinned ? t('chat.menu.unpin') : t('chat.menu.pin'), onClick: togglePin },
@@ -411,6 +449,8 @@ export default function ChatView() {
             { label: t('chat.menu.model', { name: settings.model || t('chat.menu.model_none') }), onClick: () => setModelSheet(true) },
             { label: t('chat.menu.preset', { name: settings.activePreset || '—' }), onClick: () => setPresetSheet(true) },
             { label: t('chat.menu.view_prompt'), onClick: () => setInspector(true) },
+            tts.enabled && { label: t('tts.menu.autoplay'), checked: tts.config.autoplay, onClick: () => tts.update({ autoplay: !tts.config.autoplay }) },
+            tts.enabled && { label: t('tts.menu.narrator'), checked: tts.config.narrator, onClick: () => tts.update({ narrator: !tts.config.narrator }) },
             isGroup && group && { label: t('chat.menu.edit_group'), onClick: () => setGroupSheet(true) },
             !isGroup && character && { label: t('chat.menu.convert_to_group'), onClick: () => setConvertSheet(true) },
             { label: t('chat.menu.export'), href: `/api${chatUrl(ref)}/export`, download: `${ref.file}.jsonl` },
@@ -482,6 +522,11 @@ export default function ChatView() {
                 </Swipeable>
                 {selected === i && !editing && (
                   <div className="actions">
+                    {tts.enabled && (
+                      <button onClick={() => toggleNarration(i, m)} className={tts.isActive(narrationId(i, m)) ? 'voice-btn on' : 'voice-btn'}>
+                        <Icon name={tts.isActive(narrationId(i, m)) ? 'stop' : 'volume'} size={16} /> {tts.isActive(narrationId(i, m)) ? t('tts.stop') : t('tts.speak')}
+                      </button>
+                    )}
                     <button onClick={() => setEditing({ index: i, text: m.mes })}>
                       <Icon name="edit" size={16} /> {t('common.edit')}
                     </button>

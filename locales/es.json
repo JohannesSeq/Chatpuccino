@@ -1532,6 +1532,26 @@
       "unauthorized": "Stable Diffusion rechazó el usuario o la contraseña.",
       "unreachable": "No se pudo conectar con Stable Diffusion en {url}. ¿Está encendido y accesible?"
     },
+    "tts": {
+      "api_not_found": "El servicio de voz no tiene esa ruta o voz. {detail}",
+      "bad_response": "El servicio de voz respondió con un error ({status}). {detail}",
+      "browser_only": "Las voces del navegador se reproducen en el propio navegador, no en el servidor.",
+      "empty_audio": "El servicio de voz devolvió un audio vacío.",
+      "invalid_provider": "Proveedor de voz desconocido.",
+      "invalid_url": "La dirección del servidor de voz no es válida (usa http:// o https://).",
+      "no_key": "Falta la clave (API key) del servicio de voz.",
+      "no_url": "Falta la dirección del servidor de voz.",
+      "no_voice": "Elige una voz para este proveedor (Ajustes → Voz).",
+      "test_browser": "Las voces del navegador no necesitan conexión.",
+      "test_elevenlabs": "Conectado a ElevenLabs: {count} voces disponibles.",
+      "test_openai": "Conectado. Se generó un audio de prueba con la voz «{voice}».",
+      "text_required": "No hay texto que narrar.",
+      "text_too_long": "El texto es demasiado largo para narrarlo de una vez (máximo {max} caracteres).",
+      "timeout": "El servicio de voz tardó demasiado en responder.",
+      "too_big": "El audio recibido es demasiado grande.",
+      "unauthorized": "El servicio de voz rechazó la clave (API key). Revísala.",
+      "unreachable": "No se pudo conectar con el servicio de voz ({url}). Comprueba la dirección y que esté en marcha."
+    },
     "vnassets": {
       "bad_format": "Formato de imagen no admitido (usa PNG, JPG, WebP o GIF).",
       "send_octet_stream": "Envía la imagen como cuerpo binario (application/octet-stream).",
@@ -1635,7 +1655,8 @@
       "assistant": "Asistente de personajes",
       "connection": "Conexión y modelo",
       "presets": "Presets",
-      "security": "Seguridad"
+      "security": "Seguridad",
+      "voice": "Voz"
     },
     "title": "Ajustes"
   },
@@ -2197,6 +2218,98 @@
     "search": "Buscar etiquetas…",
     "used_by_one": "{count} personaje",
     "used_by_other": "{count} personajes"
+  },
+  "tts": {
+    "errors": {
+      "blocked": "El navegador bloqueó el audio. Toca la pantalla y vuelve a intentarlo.",
+      "playback": "No se pudo reproducir el audio.",
+      "unsupported": "Este navegador no tiene voces del sistema. Elige otro proveedor en Ajustes → Voz."
+    },
+    "general": {
+      "autoplay": "Narrar automáticamente",
+      "autoplay_hint": "Lee cada respuesta nueva (en el Modo Novela, cada línea al mostrarse). Si la desactivas, narras tú con el botón de voz.",
+      "enabled": "Activar la narración",
+      "enabled_hint": "Añade los botones de voz al chat y al Modo Novela.",
+      "intro": "Los personajes y un narrador leen en voz alta los chats y las novelas.",
+      "narrate_user": "Narrar mis mensajes",
+      "narrate_user_hint": "Lee lo que escribes con la voz de tu persona.",
+      "narrator": "Narrador",
+      "narrator_hint": "Lee lo que está fuera de las comillas (acciones y descripciones). Si lo desactivas solo se oyen los diálogos.",
+      "rule": "Lo que está entre comillas rectas \"así\" lo dice el personaje con su voz; todo lo demás lo lee el narrador. Nunca se leen las etiquetas internas ([Narrador], [Luna|joy]), los bloques de control, el código ni los emojis.",
+      "skip_code": "Omitir bloques de código",
+      "title": "Narración por voz",
+      "unquoted": "Texto sin comillas",
+      "unquoted_hint": "Qué hacer con un mensaje que no usa comillas.",
+      "unquoted_narrator": "Todo lo lee el narrador",
+      "unquoted_speech": "Lo dice el personaje (lo que va entre *asteriscos* lo lee el narrador)",
+      "volume": "Volumen"
+    },
+    "menu": {
+      "autoplay": "Narración automática",
+      "narrator": "Narrador"
+    },
+    "provider": {
+      "browser_hint": "Usa las voces instaladas en tu dispositivo. La calidad y los idiomas dependen del sistema.",
+      "elevenlabs_hint": "Necesitas una clave de API de ElevenLabs. Las voces se cargan de tu cuenta.",
+      "intro": "Elige cómo se genera el audio.",
+      "key": "Clave de API",
+      "key_clear": "Borrar clave",
+      "key_cleared": "Se borrará al guardar",
+      "key_keep": "Conservar la clave",
+      "key_none": "Opcional en servidores locales",
+      "key_saved": "Guardada (escribe otra para cambiarla)",
+      "label": "Proveedor",
+      "model": "Modelo",
+      "names": {
+        "browser": "Voces del navegador (gratis, sin configurar)",
+        "elevenlabs": "ElevenLabs",
+        "openai": "OpenAI o servidor compatible (Kokoro, AllTalk, Edge-TTS…)"
+      },
+      "openai_hint": "Cualquier servicio con la API de OpenAI /audio/speech: OpenAI, Kokoro-FastAPI, openedai-speech, AllTalk, openai-edge-tts…",
+      "pitch": "Tono",
+      "rate": "Velocidad",
+      "saved": "Voz guardada",
+      "similarity": "Similitud",
+      "speed": "Velocidad",
+      "stability": "Estabilidad",
+      "test": "Probar conexión",
+      "testing": "Probando…",
+      "title": "Proveedor de voz",
+      "unsaved": "Hay cambios sin guardar.",
+      "url": "Dirección del servidor",
+      "url_hint": "Incluye la parte /v1, por ejemplo http://127.0.0.1:8880/v1",
+      "voice_list": "Lista de voces (opcional)",
+      "voice_list_hint": "Separadas por comas. Si la dejas vacía se piden al servidor o se usan las de OpenAI."
+    },
+    "speak": "Narrar",
+    "speak_line": "Narrar esta línea",
+    "stop": "Detener narración",
+    "voices": {
+      "browser_count": "{count} voces en este dispositivo",
+      "browser_none": "Este dispositivo no ha informado de voces todavía. Si no aparece ninguna, el sistema no tiene voces instaladas.",
+      "characters": "Personajes",
+      "default": "Voz por defecto",
+      "default_hint": "Personajes sin voz propia",
+      "inherit": "Voz por defecto",
+      "intro": "Asigna una voz al narrador, a ti y a cada personaje. Los personajes sin voz propia usan la voz por defecto.",
+      "loading": "Cargando…",
+      "narrator": "Narrador",
+      "narrator_hint": "Acciones y descripciones",
+      "narrator_off": "Desactivado: no se lee",
+      "no_characters": "Aún no hay personajes en el catálogo.",
+      "preview": "Escuchar la voz de {name}",
+      "refresh": "Actualizar voces",
+      "sample": "Hola, así sueno yo cuando narro tus historias.",
+      "search": "Buscar personaje",
+      "source_default": "{count} voces de OpenAI (escribe tu lista si tu servidor usa otras)",
+      "source_manual": "{count} voces de tu lista",
+      "source_server": "{count} voces del servidor",
+      "system_default": "Predeterminada",
+      "title": "Voces",
+      "user": "Tú (persona)",
+      "user_hint": "Tus mensajes",
+      "voice_for": "Voz de {name}"
+    }
   },
   "ui": {
     "avatar": {

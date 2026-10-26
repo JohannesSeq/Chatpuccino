@@ -24,9 +24,11 @@ export const DIRS = {
 export const SETTINGS_FILE = path.join(DATA, 'settings.json');
 export const ASSISTANT_FILE = path.join(DATA, 'assistant.jsonl');
 export const STUDIO_FILE = path.join(DATA, 'studio', 'config.json');
+export const TTS_FILE = path.join(DATA, 'tts.json');
 export const STATS_FILE = path.join(DATA, 'vn', 'stats.json');
 export const BACKGROUNDS_FILE = path.join(DATA, 'vn', 'backgrounds.json');
 export const OPENROUTER_BASE = process.env.OPENROUTER_BASE || 'https://openrouter.ai/api/v1';
+export const ELEVENLABS_BASE = process.env.ELEVENLABS_BASE || 'https://api.elevenlabs.io/v1';
 
 export function ensureDirs() {
   for (const dir of Object.values(DIRS)) fs.mkdirSync(dir, { recursive: true });

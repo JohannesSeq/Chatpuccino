@@ -1532,6 +1532,26 @@
       "unauthorized": "Stable Diffusion rejected the username or password.",
       "unreachable": "Could not connect to Stable Diffusion at {url}. Is it running and reachable?"
     },
+    "tts": {
+      "api_not_found": "The voice service does not have that route or voice. {detail}",
+      "bad_response": "The voice service answered with an error ({status}). {detail}",
+      "browser_only": "Browser voices play in the browser itself, not on the server.",
+      "empty_audio": "The voice service returned empty audio.",
+      "invalid_provider": "Unknown voice provider.",
+      "invalid_url": "The voice server address is not valid (use http:// or https://).",
+      "no_key": "The voice service API key is missing.",
+      "no_url": "The voice server address is missing.",
+      "no_voice": "Pick a voice for this provider (Settings → Voice).",
+      "test_browser": "Browser voices do not need a connection.",
+      "test_elevenlabs": "Connected to ElevenLabs: {count} voices available.",
+      "test_openai": "Connected. A test audio was generated with the voice “{voice}”.",
+      "text_required": "There is no text to narrate.",
+      "text_too_long": "The text is too long to narrate at once (maximum {max} characters).",
+      "timeout": "The voice service took too long to respond.",
+      "too_big": "The audio received is too large.",
+      "unauthorized": "The voice service rejected the API key. Check it.",
+      "unreachable": "Could not connect to the voice service ({url}). Check the address and that it is running."
+    },
     "vnassets": {
       "bad_format": "Unsupported image format (use PNG, JPG, WebP or GIF).",
       "send_octet_stream": "Send the image as a binary body (application/octet-stream).",
@@ -1635,7 +1655,8 @@
       "assistant": "Character Assistant",
       "connection": "Connection & model",
       "presets": "Presets",
-      "security": "Security"
+      "security": "Security",
+      "voice": "Voice"
     },
     "title": "Settings"
   },
@@ -2197,6 +2218,98 @@
     "search": "Search tags…",
     "used_by_one": "{count} character",
     "used_by_other": "{count} characters"
+  },
+  "tts": {
+    "errors": {
+      "blocked": "The browser blocked the audio. Tap the screen and try again.",
+      "playback": "The audio could not be played.",
+      "unsupported": "This browser has no system voices. Pick another provider in Settings → Voice."
+    },
+    "general": {
+      "autoplay": "Narrate automatically",
+      "autoplay_hint": "Reads each new reply (in Novel mode, each line as it appears). If you turn it off, you narrate with the voice button.",
+      "enabled": "Enable narration",
+      "enabled_hint": "Adds the voice buttons to the chat and to Novel mode.",
+      "intro": "Characters and a narrator read chats and novels out loud.",
+      "narrate_user": "Narrate my messages",
+      "narrate_user_hint": "Reads what you write with your persona's voice.",
+      "narrator": "Narrator",
+      "narrator_hint": "Reads what is outside the quotes (actions and descriptions). If you turn it off, only the dialogue is heard.",
+      "rule": "What is inside straight quotes \"like this\" is said by the character in their own voice; everything else is read by the narrator. Internal tags ([Narrator], [Luna|joy]), control blocks, code and emojis are never read.",
+      "skip_code": "Skip code blocks",
+      "title": "Voice narration",
+      "unquoted": "Text without quotes",
+      "unquoted_hint": "What to do with a message that does not use quotes.",
+      "unquoted_narrator": "The narrator reads everything",
+      "unquoted_speech": "The character says it (what is between *asterisks* is read by the narrator)",
+      "volume": "Volume"
+    },
+    "menu": {
+      "autoplay": "Automatic narration",
+      "narrator": "Narrator"
+    },
+    "provider": {
+      "browser_hint": "Uses the voices installed on your device. Quality and languages depend on the system.",
+      "elevenlabs_hint": "You need an ElevenLabs API key. Voices are loaded from your account.",
+      "intro": "Choose how the audio is generated.",
+      "key": "API key",
+      "key_clear": "Delete key",
+      "key_cleared": "It will be deleted on save",
+      "key_keep": "Keep the key",
+      "key_none": "Optional on local servers",
+      "key_saved": "Saved (type another to change it)",
+      "label": "Provider",
+      "model": "Model",
+      "names": {
+        "browser": "Browser voices (free, no setup)",
+        "elevenlabs": "ElevenLabs",
+        "openai": "OpenAI or compatible server (Kokoro, AllTalk, Edge-TTS…)"
+      },
+      "openai_hint": "Any service with the OpenAI /audio/speech API: OpenAI, Kokoro-FastAPI, openedai-speech, AllTalk, openai-edge-tts…",
+      "pitch": "Pitch",
+      "rate": "Speed",
+      "saved": "Voice settings saved",
+      "similarity": "Similarity",
+      "speed": "Speed",
+      "stability": "Stability",
+      "test": "Test connection",
+      "testing": "Testing…",
+      "title": "Voice provider",
+      "unsaved": "You have unsaved changes.",
+      "url": "Server address",
+      "url_hint": "Include the /v1 part, for example http://127.0.0.1:8880/v1",
+      "voice_list": "Voice list (optional)",
+      "voice_list_hint": "Comma-separated. If left empty they are requested from the server or OpenAI's are used."
+    },
+    "speak": "Narrate",
+    "speak_line": "Narrate this line",
+    "stop": "Stop narration",
+    "voices": {
+      "browser_count": "{count} voices on this device",
+      "browser_none": "This device has not reported any voices yet. If none show up, the system has no voices installed.",
+      "characters": "Characters",
+      "default": "Default voice",
+      "default_hint": "Characters without their own voice",
+      "inherit": "Default voice",
+      "intro": "Assign a voice to the narrator, to yourself and to each character. Characters without their own voice use the default voice.",
+      "loading": "Loading…",
+      "narrator": "Narrator",
+      "narrator_hint": "Actions and descriptions",
+      "narrator_off": "Off: not read",
+      "no_characters": "There are no characters in the catalog yet.",
+      "preview": "Listen to {name}'s voice",
+      "refresh": "Refresh voices",
+      "sample": "Hello, this is how I sound when I narrate your stories.",
+      "search": "Search character",
+      "source_default": "{count} OpenAI voices (type your own list if your server uses others)",
+      "source_manual": "{count} voices from your list",
+      "source_server": "{count} voices from the server",
+      "system_default": "Default",
+      "title": "Voices",
+      "user": "You (persona)",
+      "user_hint": "Your messages",
+      "voice_for": "Voice of {name}"
+    }
   },
   "ui": {
     "avatar": {

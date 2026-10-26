@@ -112,6 +112,7 @@ export default function DialogueBox({
   onBegin,
   onSwipe,
   menuItems,
+  voice,
   composer,
   boxRef,
 }) {
@@ -148,6 +149,11 @@ export default function DialogueBox({
           <span className="vn-name-spacer" />
         )}
         <span className="spacer" />
+        {voice && (
+          <button className={`icon-btn voice-btn ${voice.active ? 'on' : ''} ${voice.loading ? 'loading' : ''}`} onClick={voice.onToggle} aria-pressed={voice.active} aria-label={voice.active ? t('tts.stop') : t('tts.speak_line')} title={voice.active ? t('tts.stop') : t('tts.speak_line')}>
+            <Icon name={voice.active ? 'stop' : 'volume'} />
+          </button>
+        )}
         {swipe && swipe.total > 1 && (
           <span className="vn-variants">
             <button className="icon-btn" disabled={swipe.current <= 1} onClick={() => onSwipe(-1)} aria-label={t('chat.swipes.previous')}>

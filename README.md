@@ -47,6 +47,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 | 🔐 **Seguridad** | Inicio de sesión con contraseña cifrada (scrypt), bloqueo ante intentos fallidos y cierre de sesiones. |
 | 📖 **Modo Novela** | Roleplay como novela visual: **Mundos** con escena, sprites por expresión y atuendo (sistema de SillyTavern), fondos, **estadísticas** que cambian con la historia (con notificaciones) e influyen en los personajes, y una interfaz pensada para escritorio y móvil. |
 | 🖼️ **Estudio de imágenes** | Conecta tu servidor de **Stable Diffusion** para generar imágenes de personajes, **expresiones con inpaint** (solo la cara), fondos y quitar el fondo, listos para el Modo Novela. |
+| 🔊 **Narración por voz** | Los personajes y un **narrador** (opcional) leen los chats y las novelas en voz alta: lo que va entre comillas lo dice el personaje con su voz y el resto el narrador. Voces del navegador, servidores compatibles con OpenAI (Kokoro, AllTalk…) o ElevenLabs. |
 | 📱 **Móvil y escritorio** | Diseño responsivo pensado primero para el pulgar. |
 
 ## 📸 Capturas
@@ -89,7 +90,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/appearance.png" alt="Pestaña de apariencia con vista previa en vivo"><br><sub><b>Apariencia</b>: colores, fuentes, fondo y transparencia con vista previa.</sub></td>
-    <td width="50%"></td>
+    <td width="50%"><img src="docs/screenshots/settings-voice.png" alt="Ajustes de voz: proveedor y una voz para el narrador, para ti y para cada personaje"><br><sub><b>Voz</b>: proveedor, narrador opcional y una voz para cada personaje.</sub></td>
   </tr>
 </table>
 
@@ -180,6 +181,20 @@ Tercera sección del menú (**Novela**): roleplay como una **novela visual**, co
 - **Progreso y cancelación:** se ve el paso y el tiempo estimado, y se puede cancelar (también se interrumpe la tarea en Stable Diffusion). Los resultados se conservan mientras uses el Catálogo; lo que guardes se escribe en tus sprites, fondos o tarjeta.
 - **Datos:** `data/studio/config.json` (conexión, modelo y perfiles; incluye la contraseña de Stable Diffusion si la usas) y `data/studio/characters/<personaje>.json` (prompt y región de la cara).
 
+## Narración por voz
+
+**Ajustes → Voz** activa la narración: los personajes y un narrador leen los chats y el Modo Novela en voz alta. Está inspirada en la extensión TTS de SillyTavern, pero reparte las voces así:
+
+- **Quién habla:** lo que va entre **comillas rectas** `"así"` lo dice el personaje con su propia voz; todo lo demás (acciones, descripciones) lo lee el **narrador**. En un grupo cada mensaje usa la voz de quien lo escribió. Tus mensajes se leen con la voz de tu persona (si activas *Narrar mis mensajes*; lo que escribes sin comillas es tu frase y lo que va entre *asteriscos* lo lee el narrador).
+- **Narrador opcional:** se activa o desactiva en Ajustes → Voz o desde el menú ⋮ del chat y de la novela (*Narrador*). Sin narrador solo se oyen los diálogos.
+- **Texto sin comillas:** por defecto todo lo lee el narrador; puedes elegir que el personaje lo diga y que solo lo que va entre *asteriscos* sea del narrador (la convención de SillyTavern). En el Modo Novela, una línea de un personaje sin comillas ya cuenta como su frase.
+- **Solo se lee el texto:** en el Modo Novela nunca se pronuncian las etiquetas internas del guion (`[Narrador]`, `[Luna|joy]`) ni el bloque de control `<vn>…</vn>`; tampoco bloques de código, HTML, enlaces ni emojis.
+- **Automática o manual:** con *Narrar automáticamente* se lee cada respuesta nueva (en la novela, cada línea al mostrarse; al pasar a la siguiente se corta la anterior; las respuestas de un grupo se leen una tras otra). También hay un botón de voz en cada línea de la novela y **Narrar / Detener** al tocar un mensaje del chat. Al recargar una historia no se lee nada hasta que avances.
+- **Proveedores:** *voces del navegador* (gratis, sin configurar; dependen del sistema), *OpenAI o servidor compatible* con `/audio/speech` (OpenAI, Kokoro-FastAPI, openedai-speech, AllTalk, openai-edge-tts…; indica la dirección con `/v1`, el modelo y, si hace falta, la clave) y *ElevenLabs*. El servidor hace de intermediario, así que las claves nunca llegan al navegador. **Probar conexión** comprueba los datos sin guardarlos.
+- **Voces:** una para el narrador, una para ti, una por defecto y una para cada personaje, con botón para escucharlas. Las voces de los servidores se piden al servidor o las escribes tú en una lista.
+- **Móvil:** los navegadores móviles solo dejan sonar el audio tras un gesto; la primera pulsación en la página lo habilita.
+- **Datos:** `data/tts.json` (ajustes, claves y voces asignadas), fuera de git.
+
 ## Importar chats
 
 Botón ⬆ en la lista de chats: sube uno o varios `.jsonl` de SillyTavern y elige el personaje o grupo destino (se detecta por el nombre del personaje en el archivo). Cada archivo se añade como un chat nuevo.
@@ -237,6 +252,7 @@ Variables opcionales: `PORT`, `HOST` (por defecto `0.0.0.0`), `DATA_DIR` (por de
 | `presets/<nombre>.json` | Presets de generación y prompts (formato Chat Completion de SillyTavern) |
 | `assistant.jsonl` | Configuración del asistente de personajes: conexión (con API key), prompts y muestreo |
 | `studio/` | Estudio de imágenes: `config.json` (servidor de Stable Diffusion, modelo, perfiles) y `characters/<id>.json` (prompt y región de la cara) |
+| `tts.json` | Narración por voz: proveedor, claves y voces asignadas a cada personaje |
 | `settings.json` | Conexiones (API keys, modelos, favoritos) y parámetros |
 | `auth.json` | Usuario, hash de la contraseña y secreto de sesión |
 
