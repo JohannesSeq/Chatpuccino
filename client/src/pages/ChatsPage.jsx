@@ -11,20 +11,23 @@ import GroupEditor from '../components/GroupEditor.jsx';
 import PersonaEditor from '../components/PersonaEditor.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 import ChatView from './ChatView.jsx';
+import { useLocalPref } from './novel/vnUtils.js';
 
 export default function ChatsPage() {
   const match = useMatch('/chats/:kind/:owner/:file');
   const { refresh } = useData();
   const { t } = useT();
+  // Pantalla completa: oculta la lista de chats para dejar solo la conversación (preferencia de este navegador).
+  const [fullscreen, setFullscreen] = useLocalPref('chatpuccino.chat.fullscreen', false);
   useEffect(() => {
     refresh('chats');
   }, [refresh]);
   return (
-    <div className={`chats-page ${match ? 'has-chat' : ''}`}>
+    <div className={`chats-page ${match ? 'has-chat' : ''} ${match && fullscreen ? 'chat-fullscreen' : ''}`}>
       <ChatList active={match?.params} />
       <section className="chat-pane">
         {match ? (
-          <ChatView key={`${match.params.kind}/${match.params.owner}/${match.params.file}`} />
+          <ChatView key={`${match.params.kind}/${match.params.owner}/${match.params.file}`} fullscreen={fullscreen} onToggleFullscreen={() => setFullscreen((v) => !v)} />
         ) : (
           <div className="empty">
             <Icon name="chat" size={64} />

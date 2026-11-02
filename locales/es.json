@@ -325,6 +325,10 @@
       "message": "Se borrará toda la conversación. No se puede deshacer.",
       "title": "Eliminar chat"
     },
+    "fullscreen": {
+      "enter": "Pantalla completa: ocultar la lista de chats",
+      "exit": "Salir de pantalla completa: mostrar la lista de chats"
+    },
     "header": {
       "typing": "{name} está escribiendo…",
       "view_card": "Ver tarjeta del personaje",

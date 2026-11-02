@@ -325,6 +325,10 @@
       "message": "The whole conversation will be deleted. This can't be undone.",
       "title": "Delete chat"
     },
+    "fullscreen": {
+      "enter": "Full screen: hide the chat list",
+      "exit": "Exit full screen: show the chat list"
+    },
     "header": {
       "typing": "{name} is typing…",
       "view_card": "View character card",

@@ -35,7 +35,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 
 | | |
 | --- | --- |
-| 💬 **Estilo mensajería** | Chats con burbujas, marcas de hora, chats **fijados**, búsqueda y chats ilimitados por personaje; cada uno con su propia historia. |
+| 💬 **Estilo mensajería** | Chats con burbujas, marcas de hora, chats **fijados**, búsqueda y chats ilimitados por personaje; cada uno con su propia historia. En escritorio, el botón ⛶ del encabezado oculta la lista de chats para leer en **pantalla completa** (se recuerda en ese navegador). |
 | 👥 **Grupos** | Varios personajes en la misma conversación, con respuesta inteligente (el mencionado o el siguiente por turnos), todos a la vez o manual; y puedes convertir un chat individual en grupo. |
 | 🎭 **Personajes** | Crea, edita e importa tarjetas PNG/JSON de SillyTavern. Arrastra una imagen para crear uno nuevo, organízalos con **etiquetas** (se eligen de un desplegable con las que ya usas o se crean con «+») y abre la tarjeta desde el chat con solo tocar su nombre. Un **asistente de IA** (✨) genera, mejora, expande o reescribe cada bloque de texto y describe el aspecto del personaje leyendo su imagen. |
 | 🗂️ **Catálogo** | Una sección propia con todo lo que creas y reutilizas: personajes, personas, etiquetas, lorebooks, fondos, sprites y estadísticas, en pestañas. |

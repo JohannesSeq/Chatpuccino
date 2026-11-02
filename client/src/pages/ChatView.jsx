@@ -19,7 +19,7 @@ const nameHue = (name) => {
   return h % 360;
 };
 
-export default function ChatView() {
+export default function ChatView({ fullscreen = false, onToggleFullscreen }) {
   const { params } = useMatch('/chats/:kind/:owner/:file');
   const ref = useMemo(() => ({ kind: params.kind, ownerId: params.owner, file: params.file }), [params.kind, params.owner, params.file]);
   const navigate = useNavigate();
@@ -435,6 +435,11 @@ export default function ChatView() {
           )}
           <small>{generating ? t('chat.header.typing', { name: streaming.name }) : isGroup ? members.map((m) => m.name).join(', ') : chat.title || t('chat.header.you', { name: chat.persona.name })}</small>
         </div>
+        {onToggleFullscreen && (
+          <button className="icon-btn focus-btn" onClick={onToggleFullscreen} aria-pressed={fullscreen} aria-label={fullscreen ? t('chat.fullscreen.exit') : t('chat.fullscreen.enter')} title={fullscreen ? t('chat.fullscreen.exit') : t('chat.fullscreen.enter')}>
+            <Icon name={fullscreen ? 'fullscreenExit' : 'fullscreen'} />
+          </button>
+        )}
         {tts.state.status !== 'idle' && String(tts.state.id).startsWith('chat:') && (
           <button className={`icon-btn voice-btn on ${tts.state.status === 'loading' ? 'loading' : ''}`} onClick={tts.stop} aria-label={t('tts.stop')} title={t('tts.stop')}>
             <Icon name="volume" />

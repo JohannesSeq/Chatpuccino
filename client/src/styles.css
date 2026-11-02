@@ -451,6 +451,7 @@ html.has-wallpaper .preview-chat::before {
   .app.in-chat .nav { display: none; }
   .chats-page { grid-template-columns: minmax(0, 1fr); }
   .chats-page.has-chat .chat-list { display: none; }
+  .chat-head .focus-btn { display: none; }
   .chats-page:not(.has-chat) .chat-pane { display: none; }
   .fab { bottom: 16px; }
   .toasts { bottom: calc(90px + var(--safe-bottom)); }
@@ -460,5 +461,8 @@ html.has-wallpaper .preview-chat::before {
   .overlay { align-items: center; }
   .sheet { max-width: 520px; border-radius: 18px; max-height: 86dvh; }
   .chat-head .back { display: none; }
+  .chats-page.chat-fullscreen { grid-template-columns: minmax(0, 1fr); }
+  .chats-page.chat-fullscreen .chat-list { display: none; }
+  .chat-fullscreen .bubble-wrap { max-width: min(82%, 760px); }
   .settings-body, .topbar { padding-left: 24px; padding-right: 24px; }
 }
