@@ -195,7 +195,7 @@ El botón de la **cara** (arriba a la derecha del chat) abre un panel con el spr
 
 **Ajustes → Voz** activa la narración: los personajes y un narrador leen los chats y el Modo Novela en voz alta. Está inspirada en la extensión TTS de SillyTavern, pero reparte las voces así:
 
-- **Quién habla:** lo que va entre **comillas rectas** `"así"` lo dice el personaje con su propia voz; todo lo demás (acciones, descripciones) lo lee el **narrador**. En un grupo cada mensaje usa la voz de quien lo escribió. Tus mensajes se leen con la voz de tu persona (si activas *Narrar mis mensajes*; lo que escribes sin comillas es tu frase y lo que va entre *asteriscos* lo lee el narrador).
+- **Quién habla:** lo que va entre **comillas** (rectas `"así"` o curvas `“así”`) lo dice el personaje con su propia voz; todo lo demás (acciones, descripciones) lo lee el **narrador**. En un grupo cada mensaje usa la voz de quien lo escribió. Tus mensajes se leen con la voz de tu persona (si activas *Narrar mis mensajes*; lo que escribes sin comillas es tu frase y lo que va entre *asteriscos* lo lee el narrador).
 - **Narrador opcional:** se activa o desactiva en Ajustes → Voz o desde el menú ⋮ del chat y de la novela (*Narrador*). Sin narrador solo se oyen los diálogos.
 - **Texto sin comillas:** por defecto todo lo lee el narrador; puedes elegir que el personaje lo diga y que solo lo que va entre *asteriscos* sea del narrador (la convención de SillyTavern). En el Modo Novela, una línea de un personaje sin comillas ya cuenta como su frase.
 - **Solo se lee el texto:** en el Modo Novela nunca se pronuncian las etiquetas internas del guion (`[Narrador]`, `[Luna|joy]`) ni el bloque de control `<vn>…</vn>`; tampoco bloques de código, HTML, enlaces ni emojis.

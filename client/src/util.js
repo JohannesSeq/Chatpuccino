@@ -11,7 +11,8 @@ export function formatRP(text, names) {
   return escapeHtml(names ? fillNames(String(text ?? ''), names) : text)
     .replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*\n]+?)\*/g, '<em>$1</em>')
-    .replace(/&quot;(?:(?!&quot;)[^\n])+&quot;/g, '<span class="q">$&</span>')
+    // Diálogo entre comillas rectas "así" o curvas “así” (las curvas se emparejan aunque el modelo use la misma para abrir y cerrar).
+    .replace(/&quot;(?:(?!&quot;)[^\n])+&quot;|[\u201C\u201D](?:(?![\u201C\u201D])[^\n])+[\u201C\u201D]/g, '<span class="q">$&</span>')
     .replace(/\n/g, '<br>');
 }
 

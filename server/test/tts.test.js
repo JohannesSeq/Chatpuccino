@@ -75,8 +75,9 @@ test('narración: lo citado lo dicen los personajes y lo demás el narrador', ()
   ]);
   // sin narrador solo se oyen los diálogos (y se unen los que quedan seguidos)
   assert.deepEqual(narrationSteps(text, { speakerKey: 'char:luna', narrator: false }), [{ voice: 'char:luna', text: '¡Hola, viajero! Qué bonito día.' }]);
-  // comillas que no son rectas no cuentan como diálogo
-  assert.deepEqual(narrationSteps('Dijo “hola” despacio.', { speakerKey: 'char:luna' }), [{ voice: 'narrator', text: 'Dijo “hola” despacio.' }]);
+  // las comillas curvas también marcan el diálogo (aunque el modelo use la misma para abrir y cerrar)
+  assert.deepEqual(narrationSteps('Dijo “hola” despacio.', { speakerKey: 'char:luna' }), [{ voice: 'narrator', text: 'Dijo' }, { voice: 'char:luna', text: 'hola' }, { voice: 'narrator', text: 'despacio.' }]);
+  assert.deepEqual(narrationSteps('Dijo ”hola” y “adiós”.', { speakerKey: 'char:luna' }), [{ voice: 'narrator', text: 'Dijo' }, { voice: 'char:luna', text: 'hola' }, { voice: 'narrator', text: 'y' }, { voice: 'char:luna', text: 'adiós' }]);
   // una comilla sin cerrar llega hasta el final
   assert.deepEqual(narrationSteps('Grita: "¡Corre!', { speakerKey: 'char:k' }), [{ voice: 'narrator', text: 'Grita:' }, { voice: 'char:k', text: '¡Corre!' }]);
   // sin comillas: todo lo lee el narrador… salvo que se pida lo contrario

@@ -1,6 +1,6 @@
 // Narración por voz: decide QUÉ se lee y con QUÉ voz (cliente y pruebas del servidor comparten este código).
 //
-// Regla base: el texto entre comillas rectas "así" lo dice el personaje; lo que queda fuera (acciones, descripción…) lo lee el narrador,
+// Regla base: el texto entre comillas rectas "así" o curvas “así” lo dice el personaje; lo que queda fuera (acciones, descripción…) lo lee el narrador,
 // que se puede desactivar. Nunca se lee la información interna: etiquetas del guion como [Luna|joy] o [Narrator], el bloque <vn>…</vn>,
 // bloques de código, HTML ni emojis.
 
@@ -55,13 +55,14 @@ function splitBy(s, mark) {
 
 /**
  * Reparte un texto en tramos: [{ role: 'narrator' | 'speech', text }].
- * - Con comillas rectas: lo citado es `speech`, el resto `narrator`.
+ * - Con comillas (rectas "" o curvas “”): lo citado es `speech`, el resto `narrator`.
  * - Sin ninguna comilla: todo es `narrator`, salvo que `unquotedSpeech` sea true; entonces lo que NO está entre *asteriscos* es
  *   `speech` y lo que sí está es `narrator` (convención de SillyTavern).
  * - `allNarrator`: todo es narración (líneas del narrador del Modo Novela); las comillas solo se quitan.
  */
 export function splitRoles(text, { skipCode = true, unquotedSpeech = false, allNarrator = false } = {}) {
-  const s = cleanForSpeech(text, { skipCode });
+  // Las comillas curvas se tratan como las rectas (se alternan abrir/cerrar aunque el modelo use la misma para ambas).
+  const s = cleanForSpeech(text, { skipCode }).replace(/[\u201C\u201D]/g, '"');
   let raw;
   if (allNarrator) raw = [{ role: 'narrator', text: s.replace(/"/g, '') }];
   else if (s.includes('"')) raw = splitBy(s, '"').map((p) => ({ role: p.inside ? 'speech' : 'narrator', text: p.text }));
