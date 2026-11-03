@@ -1173,6 +1173,20 @@
       "placeholder": "Mi preset",
       "title": "Nuevo preset"
     },
+    "novel": {
+      "intro": "El Modo Novela no usa los prompts de la lista de arriba (están pensados para el chat y explican el formato de mensajería). Aquí escribes los suyos; se guardan en este preset y se aplican al generar escenas y al impersonar (no a las opciones del Modo clásico ni al análisis de estadísticas). El formato del guion y el bloque de estadísticas los pone Chatpuccino solo. Puedes usar {{char}} y {{user}}.",
+      "main": {
+        "hint": "Se añade a las instrucciones del narrador, antes de la premisa, los personajes y el historial.",
+        "label": "Prompt principal",
+        "placeholder": "Ejemplo: Escribe en tercera persona y en tiempo presente. Describe lo que se ve, se oye y se siente. Párrafos de 2 a 4 frases, tono cálido y con humor suave."
+      },
+      "post": {
+        "hint": "Se envían después del historial, justo antes de pedir la siguiente escena: lo último que lee el modelo.",
+        "label": "Instrucciones posteriores al historial",
+        "placeholder": "Ejemplo: Recuerda no hablar ni decidir por {{user}} y avanzar la historia un paso en cada escena."
+      },
+      "title": "Modo Novela: prompts"
+    },
     "prompts": {
       "add": "Añadir prompt",
       "auto": "automático",
@@ -1630,6 +1644,7 @@
         "control_outfits": "- `scene.outfits`: objeto `{\"<personaje>\": \"<atuendo>\"}` con los atuendos disponibles.",
         "control_stats": "- `stats`: lista de `{\"character\": \"<nombre>\", \"stat\": \"<id>\", \"change\": <número>, \"reason\": \"<motivo breve>\"}` (omite `character` en las estadísticas compartidas). Cada cambio es pequeño: como máximo el 25 % del rango de la estadística.",
         "control_title": "# Bloque de control",
+        "custom_title": "# Instrucciones adicionales del jugador\nSon preferencias de estilo y reglas de escritura. Síguelas sin cambiar el formato del guion ni el bloque de control descritos arriba.",
         "directive_continue": "[Continúa la historia: escribe la siguiente escena.]",
         "directive_instruction": "[Nota del director para esta escena (síguela): {text}]",
         "directive_speaker": "[{name} es quien habla primero en esta escena.]",

@@ -180,6 +180,9 @@ export async function buildSceneMessages({
     sections.push(t('server.worlds.prompt.role', { user: userName }));
     sections.push(t('server.worlds.prompt.format', { user: userName, language, example: names[0] || cast[0]?.name || 'Name' }));
   }
+  // Instrucciones propias del jugador (Ajustes → Presets → Modo Novela): estilo y reglas de escritura para escenas y para impersonar.
+  const customMain = choices ? '' : applyMacros(preset?.novel_prompt || '', macroCtx).trim();
+  if (customMain) sections.push(`${t('server.worlds.prompt.custom_title')}\n${customMain}`);
   if (world.description?.trim()) sections.push(`${t('server.worlds.prompt.premise_title')}\n${applyMacros(world.description, macroCtx).trim()}`);
   sections.push(
     [
@@ -223,8 +226,11 @@ export async function buildSceneMessages({
     if (instruction.trim()) directive.push(t('server.worlds.prompt.directive_instruction', { text: instruction.trim() }));
   }
   const tail = directive.length ? [{ role: 'user', content: directive.join('\n') }] : [];
+  // Instrucciones posteriores al historial (como «Post-History Instructions» del chat): lo último que lee el modelo antes de la consigna.
+  const customPost = choices ? '' : applyMacros(preset?.novel_post_prompt || '', macroCtx).trim();
+  const post = customPost ? [{ role: 'system', content: customPost }] : [];
 
-  const fixed = [system, ...tail].reduce((n, m) => n + cost(m.content), 0);
+  const fixed = [system, ...post, ...tail].reduce((n, m) => n + cost(m.content), 0);
   const budget = Math.max(512, preset.openai_max_context - preset.openai_max_tokens) - fixed;
   let used = 0;
   let from = msgs.length;
@@ -236,7 +242,7 @@ export async function buildSceneMessages({
   }
   msgs = msgs.slice(from);
 
-  const all = [system, ...msgs, ...tail];
+  const all = [system, ...msgs, ...post, ...tail];
   return preset.squash_system_messages ? squash(all) : all;
 }
 

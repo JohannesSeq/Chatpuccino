@@ -828,6 +828,53 @@ test('impersonar escribe el mensaje del usuario sin guardar nada', async () => {
   assert.equal((await call('POST', `/worlds/${WID()}/impersonate`, {}, { Cookie: '' })).status, 401);
 });
 
+// ---------- prompts propios del Modo Novela (Ajustes → Presets) ----------
+
+test('prompts del Modo Novela: el preset trae un prompt principal y otro posterior al historial', async () => {
+  const preset = (await call('GET', '/presets/Default')).json;
+  assert.equal(preset.novel_prompt, '');
+  assert.equal(preset.novel_post_prompt, '');
+
+  const saved = await call('PUT', '/presets/Default', { ...preset, novel_prompt: 'Escribe en presente. {{user}} nunca habla.', novel_post_prompt: 'Avanza un paso. Recuerda a {{char}}.' });
+  assert.equal(saved.status, 200);
+  const prompt = async (body = {}) => (await call('POST', `/worlds/${WID()}/prompt`, body)).json.messages;
+  try {
+    const scene = await prompt();
+    const sys = scene[0].content;
+    assert.equal(scene[0].role, 'system');
+    assert.match(sys, /Instrucciones adicionales del jugador/);
+    assert.ok(sys.includes('Escribe en presente. Armando nunca habla.'), 'el prompt principal va en el mensaje de sistema, con {{user}} resuelto');
+    assert.ok(sys.indexOf('Instrucciones adicionales') < sys.indexOf('# Escena actual'), 'antes de la premisa y la escena');
+    const postAt = scene.findIndex((m, i) => i > 0 && m.role === 'system');
+    assert.ok(postAt > 0 && /^Avanza un paso\. Recuerda a \w+\./.test(scene[postAt].content), 'el posterior es un mensaje de sistema después del historial');
+    assert.ok(!scene[postAt].content.includes('{{char}}'), '{{char}} resuelto');
+    assert.ok(scene.slice(1, postAt).every((m) => m.role !== 'system'), 'el historial va antes');
+    const tailRoles = scene.slice(postAt + 1).map((m) => m.role);
+    assert.ok(tailRoles.every((r) => r === 'user'), 'después solo queda la consigna del turno');
+
+    const imp = await prompt({ impersonate: true });
+    assert.ok(systemOf({ messages: imp }).includes('Escribe en presente'), 'también al impersonar');
+    assert.ok(imp.some((m, i) => i > 0 && m.role === 'system' && m.content.startsWith('Avanza un paso')));
+
+    // las opciones del Modo clásico llevan un formato estricto: no reciben los prompts de estilo
+    const opts = await prompt({ choices: true });
+    assert.ok(!JSON.stringify(opts).includes('Escribe en presente') && !JSON.stringify(opts).includes('Avanza un paso'));
+
+    // vacíos: no se añade nada
+    await call('PUT', '/presets/Default', { ...preset, novel_prompt: '   ', novel_post_prompt: '' });
+    const plain = await prompt();
+    assert.ok(!plain[0].content.includes('Instrucciones adicionales'));
+    assert.equal(plain.filter((m) => m.role === 'system').length, 1);
+
+    // tope de longitud
+    const big = (await call('PUT', '/presets/Default', { ...preset, novel_prompt: 'x'.repeat(30000) })).json;
+    assert.equal(big.novel_prompt.length, 20000);
+  } finally {
+    await call('PUT', '/presets/Default', preset);
+  }
+  assert.equal((await call('GET', '/presets/Default')).json.novel_prompt, '');
+});
+
 // ---------- limpieza en cascada ----------
 
 test('cascadas: estadística, fondo, atuendo y personaje', async () => {

@@ -39,10 +39,16 @@ const ST_TEXT_DEFAULTS = {
   group_nudge_prompt: '[Write the next reply only as {{char}}.]',
   impersonation_prompt:
     "[Write your next reply from the point of view of {{user}}, using the preceding context so far as references. Write only {{user}}'s reply; do not write anything as {{char}}.]",
+  // Modo Novela (el chat no los usa): instrucciones propias de la narración, aparte de los prompts del chat.
+  novel_prompt: '',
+  novel_post_prompt: '',
   wi_format: '{0}',
   scenario_format: '{{scenario}}',
   personality_format: '{{personality}}',
 };
+
+// Tope de los prompts del Modo Novela (caracteres).
+export const NOVEL_PROMPT_MAX = 20000;
 
 const ROLES = ['system', 'user', 'assistant'];
 const ORDER_IDS = [100000, 100001];
@@ -153,6 +159,8 @@ export function normalizePreset(raw, { builtin = false } = {}) {
     preset.scenario_format = 'Scenario: {{scenario}}';
     preset.personality_format = "{{char}}'s personality: {{personality}}";
   }
+  preset.novel_prompt = preset.novel_prompt.slice(0, NOVEL_PROMPT_MAX);
+  preset.novel_post_prompt = preset.novel_post_prompt.slice(0, NOVEL_PROMPT_MAX);
   preset.squash_system_messages = src.squash_system_messages === undefined ? builtin : Boolean(src.squash_system_messages);
 
   const rawPrompts = Array.isArray(src.prompts) ? src.prompts : defaultPrompts();

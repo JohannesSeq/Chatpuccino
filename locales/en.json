@@ -1173,6 +1173,20 @@
       "placeholder": "My preset",
       "title": "New preset"
     },
+    "novel": {
+      "intro": "Novel mode does not use the prompts in the list above (they are meant for the chat and explain the messaging format). Write its own here; they are saved in this preset and applied when generating scenes and when impersonating (not to Classic mode options or the stats analysis). Chatpuccino adds the script format and the stats block by itself. You can use {{char}} and {{user}}.",
+      "main": {
+        "hint": "Added to the narrator's instructions, before the premise, the characters and the history.",
+        "label": "Main prompt",
+        "placeholder": "Example: Write in third person, present tense. Describe what is seen, heard and felt. Paragraphs of 2 to 4 sentences, warm tone with light humor."
+      },
+      "post": {
+        "hint": "Sent after the history, right before asking for the next scene: the last thing the model reads.",
+        "label": "Post-history instructions",
+        "placeholder": "Example: Remember not to speak or decide for {{user}} and move the story forward one step each scene."
+      },
+      "title": "Novel mode: prompts"
+    },
     "prompts": {
       "add": "Add prompt",
       "auto": "automatic",
@@ -1630,6 +1644,7 @@
         "control_outfits": "- `scene.outfits`: object `{\"<character>\": \"<outfit>\"}` using the available outfits.",
         "control_stats": "- `stats`: list of `{\"character\": \"<name>\", \"stat\": \"<id>\", \"change\": <number>, \"reason\": \"<short reason>\"}` (omit `character` for shared stats). Every change is small: at most 25% of the stat's range.",
         "control_title": "# Control block",
+        "custom_title": "# Additional instructions from the player\nThese are style preferences and writing rules. Follow them without changing the script format or the control block described above.",
         "directive_continue": "[Continue the story: write the next scene.]",
         "directive_instruction": "[Director's note for this scene (follow it): {text}]",
         "directive_speaker": "[{name} speaks first in this scene.]",
