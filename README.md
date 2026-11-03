@@ -47,6 +47,7 @@ Chatpuccino es un proyecto **open source**, hecho en comunidad y para la comunid
 | 🔐 **Seguridad** | Inicio de sesión con contraseña cifrada (scrypt), bloqueo ante intentos fallidos y cierre de sesiones. |
 | 📖 **Modo Novela** | Roleplay como novela visual: **Mundos** con escena, sprites por expresión y atuendo (sistema de SillyTavern), fondos, **estadísticas** que cambian con la historia (con notificaciones) e influyen en los personajes, y una interfaz pensada para escritorio y móvil. |
 | 🖼️ **Estudio de imágenes** | Conecta tu servidor de **Stable Diffusion** para generar imágenes de personajes, **expresiones con inpaint** (solo la cara), fondos y quitar el fondo, listos para el Modo Novela. |
+| 🙂 **Expresiones en el chat** | El botón de la cara del encabezado muestra al lado el **sprite** del personaje (los mismos del Modo Novela) con la expresión que corresponde a su último mensaje; en grupos, el de quien habló, con flechas para alternar. Elige el **atuendo** desde el botón de la percha. |
 | 🔊 **Narración por voz** | Los personajes y un **narrador** (opcional) leen los chats y las novelas en voz alta: lo que va entre comillas lo dice el personaje con su voz y el resto el narrador. Voces del navegador, servidores compatibles con OpenAI (Kokoro, AllTalk…) o ElevenLabs. |
 | 📱 **Móvil y escritorio** | Diseño responsivo pensado primero para el pulgar. |
 
@@ -181,6 +182,15 @@ Tercera sección del menú (**Novela**): roleplay como una **novela visual**, co
 - **Progreso y cancelación:** se ve el paso y el tiempo estimado, y se puede cancelar (también se interrumpe la tarea en Stable Diffusion). Los resultados se conservan mientras uses el Catálogo; lo que guardes se escribe en tus sprites, fondos o tarjeta.
 - **Datos:** `data/studio/config.json` (conexión, modelo y perfiles; incluye la contraseña de Stable Diffusion si la usas) y `data/studio/characters/<personaje>.json` (prompt y región de la cara).
 
+## Expresiones en el chat
+
+El botón de la **cara** (arriba a la derecha del chat) abre un panel con el sprite del personaje, como en SillyTavern. Reutiliza los sprites del Catálogo (los mismos del Modo Novela).
+
+- **Escritorio:** el panel aparece a la derecha de la conversación y se recuerda al cambiar de chat. **Móvil:** el botón alterna entre el chat y el sprite; la caja de texto sigue disponible y debajo del sprite se ve el último mensaje (incluso mientras se escribe).
+- **Qué sprite:** el del personaje que mandó el último mensaje. En un grupo, las **flechas** ‹ › permiten ver a los demás; al llegar un mensaje nuevo vuelve a mostrarse quien habló.
+- **Expresión:** por defecto la elige un **detector local** (gratis, sin consultas) que puntúa palabras en español e inglés, emojis y puntuación del último mensaje de ese personaje. Si no tienes la expresión exacta, usa una parecida (por ejemplo *excitement* → *joy*) y, si no, la de respaldo del personaje. El botón ✨ del panel activa la **detección con IA**: el modelo activo elige entre las expresiones que ese personaje tiene (una consulta corta por mensaje, con el límite de tokens del análisis de estadísticas); si falla, se usa el detector local.
+- **Atuendo:** el botón de la **percha** (arriba a la derecha del panel) elige el atuendo, y se recuerda por personaje en ese navegador.
+- Si el personaje no tiene sprites, el panel lo indica y enlaza con **Catálogo → Sprites**.
 ## Narración por voz
 
 **Ajustes → Voz** activa la narración: los personajes y un narrador leen los chats y el Modo Novela en voz alta. Está inspirada en la extensión TTS de SillyTavern, pero reparte las voces así:

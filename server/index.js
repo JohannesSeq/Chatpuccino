@@ -16,6 +16,7 @@ import backgroundRoutes from './routes/backgrounds.js';
 import spriteRoutes from './routes/sprites.js';
 import studioRoutes from './routes/studio.js';
 import ttsRoutes from './routes/tts.js';
+import expressionRoutes from './routes/expression.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
@@ -44,6 +45,7 @@ export function createApp() {
   app.use('/api/sprites', spriteRoutes);
   app.use('/api/studio', studioRoutes);
   app.use('/api/tts', ttsRoutes);
+  app.use('/api/expression', expressionRoutes);
   app.use('/api/characters', characterRoutes);
   app.use('/api/personas', personas);
   app.use('/api/groups', groups);

@@ -477,6 +477,22 @@
     },
     "title": "Chats"
   },
+  "chatsprite": {
+    "add_sprites": "Añadir sprites",
+    "ai": "Detectar con IA",
+    "ai_failed": "No se pudo detectar la expresión con IA ({reason}). Se usa el detector local.",
+    "ai_hint": "Detectar la expresión con IA: el modelo elige el sprite en lugar del detector local (gasta una consulta por mensaje)",
+    "aria": "Expresión de {name}",
+    "hide": "Ocultar la expresión del personaje",
+    "next": "Personaje siguiente",
+    "no_expression": "Este atuendo no tiene sprites. Elige otro atuendo.",
+    "no_sprites": "Este personaje aún no tiene sprites. Súbelos en Catálogo → Sprites o genéralos en el Estudio de imágenes.",
+    "outfit": "Atuendo",
+    "outfit_button": "Atuendo: {name}",
+    "prev": "Personaje anterior",
+    "show": "Mostrar la expresión del personaje",
+    "show_chat": "Volver al chat"
+  },
   "common": {
     "accept": "Aceptar",
     "add": "Añadir",
@@ -1450,6 +1466,12 @@
       "setting_assistant": "Ajustes → Asistente de personajes → Muestreo",
       "setting_chat": "Ajustes → Presets → Muestreo",
       "setting_world": "Ajustes → Presets → Muestreo"
+    },
+    "expression": {
+      "labels_required": "Faltan las expresiones disponibles.",
+      "system": "Eres un clasificador de emociones para los sprites de un personaje de roleplay. Recibes un mensaje del personaje y eliges la expresión que mejor refleja cómo se siente al terminar de hablar. Responde ÚNICAMENTE con una etiqueta de la lista, tal cual está escrita, sin comillas ni explicación.",
+      "text_required": "No hay texto que clasificar.",
+      "user": "Personaje: {name}\nEtiquetas disponibles: {labels}\n\nMensaje:\n{text}\n\nEtiqueta:"
     },
     "groups": {
       "min_members": "Un grupo necesita al menos 2 personajes",

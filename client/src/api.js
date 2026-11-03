@@ -201,6 +201,7 @@ export const api = {
   studioRemoveBg: (body, signal) => req('POST', '/studio/rembg', body, signal),
   studioCharacter: (id) => req('GET', `/studio/characters/${enc(id)}`),
   saveStudioCharacter: (id, patch) => req('PUT', `/studio/characters/${enc(id)}`, patch),
+  expressionAi: (body, signal) => req('POST', '/expression', body, signal),
   // ---- Narración por voz ----
   tts: () => req('GET', '/tts'),
   saveTts: (patch) => req('PUT', '/tts', patch),

@@ -11,6 +11,8 @@ import GroupEditor from '../components/GroupEditor.jsx';
 import Swipeable from '../components/Swipeable.jsx';
 import { CharacterEditor } from './catalog/CharactersTab.jsx';
 import { useTts } from '../tts.jsx';
+import SpritePanel from './chat/SpritePanel.jsx';
+import { useLocalPref, useMedia } from './novel/vnUtils.js';
 import { charVoice, USER_VOICE } from '../../../shared/tts.js';
 
 const nameHue = (name) => {
@@ -151,6 +153,36 @@ export default function ChatView({ fullscreen = false, onToggleFullscreen }) {
 
   // Los chats se leen cuando el usuario cambia de pantalla o sale: la voz no debe seguir sonando en otra parte.
   useEffect(() => () => ttsRef.current?.stop(), [ref]);
+
+  /* ---------- sprite del personaje ---------- */
+
+  // Escritorio: panel a la derecha (se recuerda). Móvil: el sprite sustituye a los mensajes y se alterna con el botón del encabezado.
+  const phone = useMedia('(max-width: 767px)');
+  const [spriteDesk, setSpriteDesk] = useLocalPref('chatpuccino.chat.sprite', false);
+  const [spritePhone, setSpritePhone] = useState(false);
+  const [spriteAi, setSpriteAi] = useLocalPref('chatpuccino.chat.sprite.ai', false);
+  const [spriteSel, setSpriteSel] = useState(null); // personaje elegido con las flechas (null = el último que habló)
+  const spriteOpen = phone ? spritePhone : spriteDesk;
+  const toggleSprite = () => (phone ? setSpritePhone((v) => !v) : setSpriteDesk((v) => !v));
+
+  const botMessages = (chat?.messages || []).filter((m) => !m.is_user && !m.is_system);
+  const lastBot = botMessages.at(-1);
+  const autoSpriteId = streaming?.characterId || (lastBot ? speakerOf(lastBot)?.id : null) || members[0]?.id || '';
+  useEffect(() => setSpriteSel(null), [autoSpriteId]);
+  const spriteId = spriteSel && members.some((m) => m.id === spriteSel) ? spriteSel : autoSpriteId;
+  const spriteChar = members.find((m) => m.id === spriteId) || members[0] || null;
+  // La expresión sale del último mensaje de ese personaje (en un grupo, no necesariamente el último del chat).
+  const spriteText = spriteChar ? [...botMessages].reverse().find((m) => speakerOf(m)?.id === spriteChar.id)?.mes || '' : '';
+  const cycleSprite = (delta) => {
+    const i = members.findIndex((m) => m.id === spriteId);
+    setSpriteSel(members[(i + delta + members.length) % members.length].id);
+  };
+
+  // Al volver de la vista del sprite (móvil) la lista de mensajes reaparece: se deja al final si estaba al final.
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (el && stick.current) el.scrollTop = el.scrollHeight;
+  }, [spriteOpen]);
 
   async function runGeneration(speaker, swipe) {
     const ac = new AbortController();
@@ -417,6 +449,15 @@ export default function ChatView({ fullscreen = false, onToggleFullscreen }) {
   const lastIdx = messages.length - 1;
   const needsSetup = settings && !settings.ready;
   const lastIsUser = messages.at(-1)?.is_user;
+  // En el móvil el sprite oculta los mensajes: debajo se muestra el texto del último (o el que se está escribiendo).
+  const captionMsg = streaming ? { name: streaming.name, text: streaming.text } : [...messages].reverse().find((m) => !m.is_system);
+  const spriteCaption = captionMsg
+    ? {
+        name: captionMsg.is_user ? chat.persona.name : captionMsg.name,
+        typing: Boolean(streaming && !streaming.text),
+        html: formatRP(streaming ? streaming.text : captionMsg.mes, { user: chat.persona.name, char: captionMsg.is_user ? members[0]?.name : captionMsg.name }),
+      }
+    : null;
 
   return (
     <div className="chat-view">
@@ -435,6 +476,11 @@ export default function ChatView({ fullscreen = false, onToggleFullscreen }) {
           )}
           <small>{generating ? t('chat.header.typing', { name: streaming.name }) : isGroup ? members.map((m) => m.name).join(', ') : chat.title || t('chat.header.you', { name: chat.persona.name })}</small>
         </div>
+        {members.length > 0 && (
+          <button className={`icon-btn sprite-btn ${spriteOpen ? 'on' : ''}`} onClick={toggleSprite} aria-pressed={spriteOpen} aria-label={phone && spriteOpen ? t('chatsprite.show_chat') : spriteOpen ? t('chatsprite.hide') : t('chatsprite.show')} title={phone && spriteOpen ? t('chatsprite.show_chat') : spriteOpen ? t('chatsprite.hide') : t('chatsprite.show')}>
+            <Icon name={phone && spriteOpen ? 'chat' : 'face'} />
+          </button>
+        )}
         {onToggleFullscreen && (
           <button className="icon-btn focus-btn" onClick={onToggleFullscreen} aria-pressed={fullscreen} aria-label={fullscreen ? t('chat.fullscreen.exit') : t('chat.fullscreen.enter')} title={fullscreen ? t('chat.fullscreen.exit') : t('chat.fullscreen.enter')}>
             <Icon name={fullscreen ? 'fullscreenExit' : 'fullscreen'} />
@@ -470,6 +516,7 @@ export default function ChatView({ fullscreen = false, onToggleFullscreen }) {
         </div>
       )}
 
+      <div className={`chat-body ${spriteOpen ? 'sprite-open' : ''}`}>
       <div className="messages" ref={listRef} onScroll={onScroll}>
         {messages.map((m, i) => {
           if (streaming?.replaceIndex === i) return null;
@@ -591,6 +638,18 @@ export default function ChatView({ fullscreen = false, onToggleFullscreen }) {
               </div>
             </div>
           </div>
+        )}
+      </div>
+        {spriteOpen && spriteChar && (
+          <SpritePanel
+            character={spriteChar}
+            text={spriteText}
+            canCycle={members.length > 1}
+            onCycle={cycleSprite}
+            ai={spriteAi}
+            onToggleAi={() => setSpriteAi((v) => !v)}
+            caption={phone ? spriteCaption : null}
+          />
         )}
       </div>
 

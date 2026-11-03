@@ -477,6 +477,22 @@
     },
     "title": "Chats"
   },
+  "chatsprite": {
+    "add_sprites": "Add sprites",
+    "ai": "Detect with AI",
+    "ai_failed": "The expression could not be detected with AI ({reason}). The local detector is used.",
+    "ai_hint": "Detect the expression with AI: the model picks the sprite instead of the local detector (costs one request per message)",
+    "aria": "{name}'s expression",
+    "hide": "Hide the character's expression",
+    "next": "Next character",
+    "no_expression": "This outfit has no sprites. Pick another outfit.",
+    "no_sprites": "This character has no sprites yet. Upload them in Catalog → Sprites or generate them in the Image Studio.",
+    "outfit": "Outfit",
+    "outfit_button": "Outfit: {name}",
+    "prev": "Previous character",
+    "show": "Show the character's expression",
+    "show_chat": "Back to the chat"
+  },
   "common": {
     "accept": "Accept",
     "add": "Add",
@@ -1450,6 +1466,12 @@
       "setting_assistant": "Settings → Character Assistant → Sampling",
       "setting_chat": "Settings → Presets → Sampling",
       "setting_world": "Settings → Presets → Sampling"
+    },
+    "expression": {
+      "labels_required": "The available expressions are missing.",
+      "system": "You are an emotion classifier for the sprites of a roleplay character. You receive a message from the character and pick the expression that best reflects how they feel when they finish speaking. Reply ONLY with one label from the list, exactly as written, with no quotes or explanation.",
+      "text_required": "There is no text to classify.",
+      "user": "Character: {name}\nAvailable labels: {labels}\n\nMessage:\n{text}\n\nLabel:"
     },
     "groups": {
       "min_members": "A group needs at least 2 characters",
