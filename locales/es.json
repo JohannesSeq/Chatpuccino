@@ -1572,6 +1572,17 @@
       "unauthorized": "Stable Diffusion rechazó el usuario o la contraseña.",
       "unreachable": "No se pudo conectar con Stable Diffusion en {url}. ¿Está encendido y accesible?"
     },
+    "templates": {
+      "default_name": "Plantilla",
+      "description_too_long": "La premisa de la plantilla no puede superar {max} caracteres.",
+      "invalid_file": "Ese archivo no es una plantilla de mundo de Chatpuccino.",
+      "name_required": "La plantilla necesita un nombre.",
+      "name_taken": "Ya tienes una plantilla con ese nombre.",
+      "name_too_long": "El nombre de la plantilla no puede superar {max} caracteres.",
+      "newer_version": "Esa plantilla es de una versión más nueva de Chatpuccino.",
+      "not_found": "Esa plantilla no existe.",
+      "world_required": "Indica el mundo del que guardar la plantilla."
+    },
     "tts": {
       "api_not_found": "El servicio de voz no tiene esa ruta o voz. {detail}",
       "bad_response": "El servicio de voz respondió con un error ({status}). {detail}",
@@ -2259,6 +2270,34 @@
     "search": "Buscar etiquetas…",
     "used_by_one": "{count} personaje",
     "used_by_other": "{count} personajes"
+  },
+  "templates": {
+    "also_save": "Guardar también como plantilla",
+    "also_save_hint": "Al crear el mundo se guarda su configuración como plantilla para crear otros iguales (si no cambias nada de la plantilla elegida no se duplica).",
+    "based_on": "Basar en una plantilla",
+    "based_on_hint": "Rellena el formulario con la configuración de una plantilla; puedes cambiarla antes de crear el mundo.",
+    "blank": "Mundo en blanco",
+    "delete_message": "Se eliminará la plantilla «{name}». Los mundos creados con ella no cambian.",
+    "delete_title": "Eliminar plantilla",
+    "empty": "Aún no tienes plantillas. Se crean solas al crear un mundo, o puedes importar una.",
+    "export": "Exportar",
+    "import": "Importar plantilla",
+    "import_books": "{count} lorebooks nuevos",
+    "import_stats": "{count} estadísticas nuevas",
+    "imported": "Plantilla «{name}» importada",
+    "intro": "Una plantilla guarda la configuración de un mundo (premisa, reparto, estadísticas, lorebooks, fondo y atuendos) sin su historia. Cada mundo nuevo guarda su plantilla, y puedes crear otros mundos a partir de ella. Al exportarla se incluyen las definiciones de las estadísticas y el contenido de los lorebooks; los personajes y fondos son imágenes y deben existir en tu catálogo con el mismo nombre.",
+    "invalid_json": "{name}: no es un archivo JSON válido.",
+    "missing_note": "No están en tu catálogo y se omitieron: {list}",
+    "missing_row": "Faltan {count} elementos en tu catálogo: {list}",
+    "name_label": "Nombre",
+    "no_premise": "Sin premisa",
+    "rename_title": "Renombrar plantilla",
+    "save_as": "Guardar como plantilla",
+    "save_as_hint": "Guarda la configuración de este mundo (sin su historia) como plantilla",
+    "saved": "Plantilla «{name}» guardada",
+    "summary": "{characters} personajes · {stats} estadísticas · {lorebooks} lorebooks",
+    "title": "Plantillas de mundos",
+    "use": "Crear mundo"
   },
   "tts": {
     "errors": {

@@ -875,6 +875,108 @@ test('prompts del Modo Novela: el preset trae un prompt principal y otro posteri
   assert.equal((await call('GET', '/presets/Default')).json.novel_prompt, '');
 });
 
+// ---------- plantillas de mundos ----------
+
+test('plantillas de mundos: se crean con cada mundo, sirven de base y se gestionan', async () => {
+  const templates = async () => (await call('GET', '/world-templates')).json;
+  const before = (await templates()).length;
+  const config = { name: 'Reino de Prueba', description: 'Un reino con {{user}}.', characters: ['Luna', 'Kai'], active: ['Luna'], statIds: ['affection', 'danger'], lorebooks: ['Mundo'], background: 'bosque', classic: true };
+
+  // cada mundo nuevo guarda su plantilla
+  const w1 = await call('POST', '/worlds', config);
+  assert.equal(w1.status, 201);
+  assert.deepEqual(w1.json.template.name, 'Reino de Prueba');
+  assert.equal((await templates()).length, before + 1);
+  const tpl = (await call('GET', `/world-templates/${w1.json.template.id}`)).json;
+  assert.deepEqual({ name: tpl.name, description: tpl.description, characters: tpl.characters, active: tpl.active, statIds: tpl.statIds, lorebooks: tpl.lorebooks, background: tpl.background, classic: tpl.classic }, { name: 'Reino de Prueba', description: 'Un reino con {{user}}.', characters: ['Luna', 'Kai'], active: ['Luna'], statIds: ['affection', 'danger'], lorebooks: ['Mundo'], background: 'bosque', classic: true });
+  assert.equal(tpl.history, undefined, 'sin historia');
+  assert.deepEqual(tpl.missing, { characters: [], lorebooks: [], statIds: [], background: '', persona: '' });
+
+  // se puede desactivar
+  const off = await call('POST', '/worlds', { ...config, name: 'Sin plantilla', saveAsTemplate: false });
+  assert.equal(off.json.template, null);
+  assert.equal((await templates()).length, before + 1);
+
+  // basado en una plantilla: igual → no se duplica (aunque cambie el nombre); distinto → plantilla nueva
+  const same = await call('POST', '/worlds', { ...config, name: 'Campaña 2', templateId: tpl.id });
+  assert.equal(same.json.template, null);
+  const changed = await call('POST', '/worlds', { ...config, name: 'Campaña 3', description: 'Otra premisa', templateId: tpl.id });
+  assert.equal(changed.json.template.name, 'Campaña 3');
+  assert.equal((await templates()).length, before + 2);
+
+  // nombres únicos
+  const dup = await call('POST', '/worlds', { name: 'Reino de Prueba' });
+  assert.equal(dup.json.template.name, 'Reino de Prueba (2)');
+
+  // el atuendo de la plantilla pasa al mundo creado desde ella
+  await call('PUT', `/worlds/${w1.json.id}`, { outfits: { Luna: 'formal' } });
+  const fromWorld = await call('POST', '/world-templates', { worldId: w1.json.id, name: 'Con atuendo' });
+  assert.equal(fromWorld.status, 201);
+  assert.deepEqual(fromWorld.json.outfits, { Luna: 'formal' });
+  const inherit = await call('POST', '/worlds', { ...config, name: 'Heredero', templateId: fromWorld.json.id, saveAsTemplate: false });
+  assert.deepEqual((await get(inherit.json.id)).world.outfits, { Luna: 'formal' });
+  assert.equal((await call('POST', '/world-templates', {})).status, 400);
+  assert.equal((await call('POST', '/world-templates', { worldId: 'nope' })).status, 404);
+
+  // renombrar y editar
+  assert.equal((await call('PUT', `/world-templates/${tpl.id}`, { name: 'Campaña 3' })).status, 409);
+  assert.equal((await call('PUT', `/world-templates/${tpl.id}`, { name: '  ' })).status, 400);
+  const renamed = (await call('PUT', `/world-templates/${tpl.id}`, { name: 'Reino base', description: 'Nueva premisa' })).json;
+  assert.deepEqual([renamed.name, renamed.description], ['Reino base', 'Nueva premisa']);
+  assert.equal((await call('GET', '/world-templates/no-existe')).status, 404);
+  assert.equal((await call('GET', '/world-templates/..%2Fx')).status, 404);
+
+  // exportar → borrar lo del catálogo → importar: se recrean estadísticas y lorebooks que faltan
+  await call('POST', '/stats', { name: 'Tpl Stat', description: 'Regla propia', scope: 'character', min: 0, max: 10, default: 5, color: '#ff0000' });
+  await call('POST', '/lorebooks', { name: 'Tpl Lore', book: { entries: { 0: { uid: 0, key: ['faro'], content: 'El faro de Tpl.' } } } });
+  const portable = (await call('POST', '/worlds', { name: 'Portable', description: 'Se exporta', characters: ['Luna'], statIds: ['tpl-stat'], lorebooks: ['Tpl Lore'], persona: (await call('GET', '/settings')).json.defaultPersona })).json;
+  const file = (await call('GET', `/world-templates/${portable.template.id}/export`)).json;
+  assert.equal(file.format, 'chatpuccino-world-template');
+  assert.equal(file.version, 1);
+  assert.equal(file.template.name, 'Portable');
+  assert.equal(file.template.persona, undefined, 'la persona no se exporta');
+  assert.equal(file.template.id, undefined);
+  assert.deepEqual(file.stats.map((s) => [s.id, s.name, s.max, s.color]), [['tpl-stat', 'Tpl Stat', 10, '#ff0000']]);
+  assert.equal(file.lorebooks[0].name, 'Tpl Lore');
+  assert.ok(JSON.stringify(file.lorebooks[0].book).includes('El faro de Tpl.'));
+  assert.deepEqual(file.characters, [{ id: 'Luna', name: 'Luna' }]);
+
+  await call('DELETE', '/stats/tpl-stat');
+  await call('DELETE', '/lorebooks/Tpl%20Lore');
+  assert.deepEqual((await call('GET', `/world-templates/${portable.template.id}`)).json.missing.statIds, ['tpl-stat'], 'se detecta lo que falta');
+  const imported = await call('POST', '/world-templates/import', { data: file });
+  assert.equal(imported.status, 201);
+  assert.equal(imported.json.template.name, 'Portable (2)', 'el nombre se hace único');
+  assert.deepEqual(imported.json.created, { stats: 1, lorebooks: 1 });
+  assert.deepEqual(imported.json.template.missing, { characters: [], lorebooks: [], statIds: [], background: '', persona: '' });
+  assert.equal((await call('GET', '/stats')).json.some((s) => s.id === 'tpl-stat' && s.description === 'Regla propia'), true);
+  assert.equal((await call('GET', '/lorebooks/Tpl%20Lore')).json.entries[0].content, 'El faro de Tpl.');
+  // importar otra vez no pisa lo que ya existe
+  await call('PUT', '/lorebooks/Tpl%20Lore', { entries: { 0: { uid: 0, key: ['faro'], content: 'Editado por el usuario' } } });
+  const again = (await call('POST', '/world-templates/import', { data: file })).json;
+  assert.deepEqual(again.created, { stats: 0, lorebooks: 0 });
+  assert.equal((await call('GET', '/lorebooks/Tpl%20Lore')).json.entries[0].content, 'Editado por el usuario');
+
+  // un mundo se puede crear a partir de la plantilla importada
+  assert.equal((await call('POST', '/worlds', { name: 'Desde import', description: again.template.description, characters: again.template.characters, statIds: again.template.statIds, lorebooks: again.template.lorebooks, templateId: again.template.id })).json.template, null);
+
+  // archivos inválidos y referencias faltantes
+  for (const data of [null, {}, { format: 'otro', template: {} }, { format: 'chatpuccino-world-template', template: [] }, { format: 'chatpuccino-world-template', version: 99, template: { name: 'x' } }, { format: 'chatpuccino-world-template', template: { name: '  ' } }]) {
+    assert.equal((await call('POST', '/world-templates/import', { data })).status, 400, JSON.stringify(data));
+  }
+  const ghost = (await call('POST', '/world-templates/import', { data: { format: 'chatpuccino-world-template', version: 1, template: { name: 'Fantasma', characters: ['Nadie'], statIds: ['zzz'], lorebooks: ['Nada'], background: 'nada' } } })).json;
+  assert.deepEqual(ghost.template.missing, { characters: ['Nadie'], lorebooks: ['Nada'], statIds: ['zzz'], background: 'nada', persona: '' });
+
+  // eliminar
+  assert.equal((await call('DELETE', `/world-templates/${ghost.template.id}`)).status, 204);
+  assert.equal((await call('DELETE', `/world-templates/${ghost.template.id}`)).status, 404);
+  assert.equal((await call('GET', '/world-templates', null, { Cookie: '' })).status, 401);
+  // los mundos creados no dependen de su plantilla
+  assert.equal((await call('GET', `/worlds/${w1.json.id}`)).status, 200);
+  const mine = new Set(['Reino de Prueba', 'Sin plantilla', 'Campaña 2', 'Campaña 3', 'Heredero', 'Portable', 'Desde import']);
+  for (const w of (await call('GET', '/worlds')).json) if (mine.has(w.name) || w.id.startsWith('reino-de-prueba')) assert.equal((await call('DELETE', `/worlds/${w.id}`)).status, 204);
+});
+
 // ---------- limpieza en cascada ----------
 
 test('cascadas: estadística, fondo, atuendo y personaje', async () => {

@@ -17,6 +17,7 @@ import spriteRoutes from './routes/sprites.js';
 import studioRoutes from './routes/studio.js';
 import ttsRoutes from './routes/tts.js';
 import expressionRoutes from './routes/expression.js';
+import templateRoutes from './routes/templates.js';
 import { listPresets } from './presets.js';
 import characterRoutes from './routes/characters.js';
 import chatRoutes from './routes/chats.js';
@@ -51,6 +52,7 @@ export function createApp() {
   app.use('/api/groups', groups);
   app.use('/api/lorebooks', lorebooks);
   app.use('/api/chats', chatRoutes);
+  app.use('/api/world-templates', templateRoutes);
   app.use('/api/worlds', worldRoutes);
   app.use('/api', (_req, res) => res.status(404).json({ error: t('server.common.route_not_found') }));
 

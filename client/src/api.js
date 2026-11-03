@@ -219,6 +219,12 @@ export const api = {
   setWorldSwipe: (id, i, swipe_id) => req('POST', `/worlds/${enc(id)}/messages/${i}/swipe`, { swipe_id }),
   deleteWorldSwipe: (id, i) => req('DELETE', `/worlds/${enc(id)}/messages/${i}/swipe`),
   branchWorld: (id, index, name) => req('POST', `/worlds/${enc(id)}/branch`, { index, name }),
+  // Plantillas de mundos
+  worldTemplates: () => req('GET', '/world-templates'),
+  createWorldTemplate: (body) => req('POST', '/world-templates', body),
+  updateWorldTemplate: (id, body) => req('PUT', `/world-templates/${enc(id)}`, body),
+  deleteWorldTemplate: (id) => req('DELETE', `/world-templates/${enc(id)}`),
+  importWorldTemplate: (data) => req('POST', '/world-templates/import', { data }),
   copyWorld: (id, name) => req('POST', `/worlds/${enc(id)}/copy`, { name }),
   setWorldStat: (id, body) => req('PATCH', `/worlds/${enc(id)}/state`, body),
   // Vuelve a pedir al modelo los cambios de estadísticas de la última escena. Resuelve con { index, message, changes, state }.

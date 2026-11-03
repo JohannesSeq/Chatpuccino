@@ -18,8 +18,12 @@ const fmtDate = (v) => {
 
 // world: configuración completa, elemento de la lista (se carga la configuración entera) o null para crear.
 // onClose(result): { changed, id?, deleted?, created? }
-export default function WorldEditor({ world, onClose }) {
+export default function WorldEditor({ world, onClose, templateId: initialTemplateId = '' }) {
   const { characters, personas, lorebooks, stats, backgrounds, refresh, toast } = useData();
+  const [templates, setTemplates] = useState([]);
+  const [templateId, setTemplateId] = useState('');
+  const [saveTemplate, setSaveTemplate] = useState(true);
+  const [missingNote, setMissingNote] = useState('');
   const { confirm } = useDialog();
   const { t } = useT();
   const needsLoad = Boolean(world?.id) && world.lorebooks === undefined;
@@ -64,6 +68,53 @@ export default function WorldEditor({ world, onClose }) {
     });
   }, [config, needsLoad]);
 
+  // Plantillas: al crear un mundo se puede partir de una (se cargan al abrir el editor).
+  useEffect(() => {
+    if (world?.id) return undefined;
+    let alive = true;
+    api.worldTemplates().then((list) => alive && setTemplates(list)).catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [world?.id]);
+
+  // Rellena el formulario con una plantilla; lo que ya no exista en el catálogo se omite y se avisa.
+  const applyTemplate = (id, list = templates, prevName = '') => {
+    setTemplateId(id);
+    const tpl = list.find((x) => x.id === id);
+    if (!tpl) {
+      setMissingNote('');
+      return;
+    }
+    const chars = new Set(characters.map((c) => c.id));
+    const books = new Set(lorebooks.map((b) => b.name));
+    const statSet = new Set(stats.map((s) => s.id));
+    const characterIds = tpl.characters.filter((c) => chars.has(c));
+    const skipped = [...(tpl.missing?.characters || []), ...(tpl.missing?.lorebooks || []), ...(tpl.missing?.statIds || []), ...(tpl.missing?.background ? [tpl.missing.background] : [])];
+    setMissingNote(skipped.length ? t('templates.missing_note', { list: skipped.join(', ') }) : '');
+    setForm((f) => ({
+      ...f,
+      name: !f.name.trim() || f.name === prevName ? tpl.name : f.name,
+      description: tpl.description,
+      characters: characterIds,
+      active: tpl.active.filter((c) => characterIds.includes(c)),
+      lorebooks: tpl.lorebooks.filter((n) => books.has(n)),
+      statIds: tpl.statIds.filter((s) => statSet.has(s)),
+      background: backgrounds.some((b) => b.id === tpl.background) ? tpl.background : '',
+      persona: personas.some((p) => p.id === tpl.persona) ? tpl.persona : '',
+      classic: tpl.classic,
+    }));
+  };
+
+  // Plantilla elegida desde el gestor de plantillas («Crear mundo»): se aplica en cuanto cargan la lista y el formulario.
+  const appliedInitial = React.useRef(false);
+  useEffect(() => {
+    if (appliedInitial.current || !initialTemplateId || !form || !templates.length) return;
+    appliedInitial.current = true;
+    applyTemplate(initialTemplateId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTemplateId, form, templates]);
+
   const charOptions = useMemo(() => characters.map((c) => ({ id: c.id, label: c.name })), [characters]);
   const activeOptions = useMemo(() => charOptions.filter((o) => form?.characters.includes(o.id)), [charOptions, form?.characters]);
   const loreOptions = useMemo(() => lorebooks.map((b) => ({ id: b.name, label: b.name })), [lorebooks]);
@@ -92,8 +143,13 @@ export default function WorldEditor({ world, onClose }) {
     setBusy(true);
     try {
       const body = { ...form, name: form.name.trim(), description: form.description.trim() };
+      if (!isEdit) {
+        body.templateId = templateId;
+        body.saveAsTemplate = saveTemplate;
+      }
       const saved = isEdit ? await api.updateWorld(world.id, body) : await api.createWorld(body);
       await refresh('worlds', 'stats', 'backgrounds');
+      if (!isEdit && saved?.template) toast(t('templates.saved', { name: saved.template.name }));
       onClose({ changed: true, id: saved?.id || world?.id, created: !isEdit });
     } catch (e) {
       toast(e.message, 'error');
@@ -110,6 +166,18 @@ export default function WorldEditor({ world, onClose }) {
       onClose({ changed: true, id: copy?.id, created: true });
     } catch (e) {
       toast(e.message, 'error');
+      setBusy(false);
+    }
+  }
+
+  async function saveAsTemplate() {
+    setBusy(true);
+    try {
+      const tpl = await api.createWorldTemplate({ worldId: world.id });
+      toast(t('templates.saved', { name: tpl.name }));
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
       setBusy(false);
     }
   }
@@ -153,6 +221,9 @@ export default function WorldEditor({ world, onClose }) {
               <button className="btn" disabled={busy} onClick={duplicate}>
                 <Icon name="copy" size={18} /> {t('common.duplicate')}
               </button>
+              <button className="btn" disabled={busy} onClick={saveAsTemplate} title={t('templates.save_as_hint')}>
+                {t('templates.save_as')}
+              </button>
             </>
           )}
           <span className="spacer" />
@@ -163,6 +234,19 @@ export default function WorldEditor({ world, onClose }) {
       }
     >
       <div className="world-editor">
+        {!isEdit && templates.length > 0 && (
+          <Field label={t('templates.based_on')} hint={missingNote || t('templates.based_on_hint')}>
+            <select value={templateId} onChange={(e) => applyTemplate(e.target.value, templates, templates.find((x) => x.id === templateId)?.name || '')}>
+              <option value="">{t('templates.blank')}</option>
+              {templates.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
         <Field label={t('world_editor.name.label')}>
           <input value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t('world_editor.name.placeholder')} autoFocus={!isEdit} />
         </Field>
@@ -280,6 +364,16 @@ export default function WorldEditor({ world, onClose }) {
             <small className="muted">{t('novelview.classic.hint')}</small>
           </span>
         </label>
+
+        {!isEdit && (
+          <label className="check vn-classic">
+            <input type="checkbox" checked={saveTemplate} onChange={(e) => setSaveTemplate(e.target.checked)} />
+            <span>
+              <strong>{t('templates.also_save')}</strong>
+              <small className="muted">{t('templates.also_save_hint')}</small>
+            </span>
+          </label>
+        )}
 
         {isEdit && config && (
           <p className="world-dates">

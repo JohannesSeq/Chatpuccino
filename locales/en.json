@@ -1572,6 +1572,17 @@
       "unauthorized": "Stable Diffusion rejected the username or password.",
       "unreachable": "Could not connect to Stable Diffusion at {url}. Is it running and reachable?"
     },
+    "templates": {
+      "default_name": "Template",
+      "description_too_long": "The template premise cannot exceed {max} characters.",
+      "invalid_file": "That file is not a Chatpuccino world template.",
+      "name_required": "The template needs a name.",
+      "name_taken": "You already have a template with that name.",
+      "name_too_long": "The template name cannot exceed {max} characters.",
+      "newer_version": "That template comes from a newer version of Chatpuccino.",
+      "not_found": "That template does not exist.",
+      "world_required": "Specify the world to save the template from."
+    },
     "tts": {
       "api_not_found": "The voice service does not have that route or voice. {detail}",
       "bad_response": "The voice service answered with an error ({status}). {detail}",
@@ -2259,6 +2270,34 @@
     "search": "Search tags…",
     "used_by_one": "{count} character",
     "used_by_other": "{count} characters"
+  },
+  "templates": {
+    "also_save": "Also save as a template",
+    "also_save_hint": "When the world is created its setup is saved as a template to make more like it (if you change nothing from the chosen template it is not duplicated).",
+    "based_on": "Based on a template",
+    "based_on_hint": "Fills the form with a template's setup; you can change it before creating the world.",
+    "blank": "Blank world",
+    "delete_message": "The template “{name}” will be deleted. Worlds created with it do not change.",
+    "delete_title": "Delete template",
+    "empty": "You have no templates yet. They are created automatically when you create a world, or you can import one.",
+    "export": "Export",
+    "import": "Import template",
+    "import_books": "{count} new lorebooks",
+    "import_stats": "{count} new stats",
+    "imported": "Template “{name}” imported",
+    "intro": "A template stores a world's setup (premise, cast, stats, lorebooks, background and outfits) without its story. Every new world saves its template, and you can create other worlds from it. Exporting includes the stat definitions and the lorebook contents; characters and backgrounds are images and must exist in your catalog with the same name.",
+    "invalid_json": "{name}: not a valid JSON file.",
+    "missing_note": "Not in your catalog and skipped: {list}",
+    "missing_row": "{count} items are missing from your catalog: {list}",
+    "name_label": "Name",
+    "no_premise": "No premise",
+    "rename_title": "Rename template",
+    "save_as": "Save as template",
+    "save_as_hint": "Saves this world's setup (without its story) as a template",
+    "saved": "Template “{name}” saved",
+    "summary": "{characters} characters · {stats} stats · {lorebooks} lorebooks",
+    "title": "World templates",
+    "use": "Create world"
   },
   "tts": {
     "errors": {

@@ -9,6 +9,7 @@ import { Icon } from '../components/Icon.jsx';
 import { CharAvatar, Menu, SearchBox } from '../components/ui.jsx';
 import PasswordBanner from '../components/PasswordBanner.jsx';
 import WorldEditor from '../components/novel/WorldEditor.jsx';
+import TemplatesDialog from '../components/novel/TemplatesDialog.jsx';
 import Library from './novel/Library.jsx';
 import NovelView from './novel/NovelView.jsx';
 import '../styles/novel-list.css';
@@ -63,6 +64,8 @@ function WorldList({ activeId }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null); // null | 'new' | world (elemento de la lista)
+  const [templateId, setTemplateId] = useState(''); // plantilla con la que se abre el editor de un mundo nuevo
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -80,6 +83,20 @@ function WorldList({ activeId }) {
       toast(e.message, 'error');
     }
   }
+
+  async function saveAsTemplate(w) {
+    try {
+      const tpl = await api.createWorldTemplate({ worldId: w.id });
+      toast(t('templates.saved', { name: tpl.name }));
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  const newWorld = () => {
+    setTemplateId('');
+    setEditing('new');
+  };
 
   async function remove(w) {
     if (!(await confirm({ title: t('novel.delete_title'), message: t('novel.delete_message', { name: w.name }), confirmLabel: t('common.delete'), danger: true }))) return;
@@ -110,6 +127,9 @@ function WorldList({ activeId }) {
     <aside className="chat-list novel-list">
       <header className="topbar head-row">
         <h1>{t('novel.title')}</h1>
+        <button className="icon-btn" onClick={() => setTemplatesOpen(true)} aria-label={t('templates.title')} title={t('templates.title')}>
+          <Icon name="template" />
+        </button>
         <Link to="/novel/library" className="icon-btn" aria-label={t('novel.library_aria')} title={t('novel.library_title')}>
           <Icon name="tune" />
         </Link>
@@ -149,6 +169,7 @@ function WorldList({ activeId }) {
                 items={[
                   { label: t('common.edit'), onClick: () => setEditing(w) },
                   { label: t('common.duplicate'), onClick: () => duplicate(w) },
+                  { label: t('templates.save_as'), onClick: () => saveAsTemplate(w) },
                   { label: t('common.delete'), danger: true, onClick: () => remove(w) },
                 ]}
               />
@@ -160,7 +181,7 @@ function WorldList({ activeId }) {
             <Icon name="book" size={44} />
             <strong>{t('novel.empty_title')}</strong>
             <p>{t('novel.empty_text')}</p>
-            <button className="btn primary" onClick={() => setEditing('new')}>
+            <button className="btn primary" onClick={newWorld}>
               <Icon name="plus" size={18} /> {t('novel.new_world')}
             </button>
             {missing.length > 0 && (
@@ -176,10 +197,20 @@ function WorldList({ activeId }) {
         )}
         {worlds.length > 0 && !rows.length && <li className="empty small">{t('novel.empty_no_results')}</li>}
       </ul>
-      <button className="fab" onClick={() => setEditing('new')} aria-label={t('novel.new_world')} title={t('novel.new_world')}>
+      <button className="fab" onClick={newWorld} aria-label={t('novel.new_world')} title={t('novel.new_world')}>
         <Icon name="plus" size={28} />
       </button>
-      {editing && <WorldEditor world={editing === 'new' ? null : editing} onClose={afterEditor} />}
+      {editing && <WorldEditor world={editing === 'new' ? null : editing} templateId={editing === 'new' ? templateId : ''} onClose={afterEditor} />}
+      {templatesOpen && (
+        <TemplatesDialog
+          onClose={() => setTemplatesOpen(false)}
+          onUse={(tpl) => {
+            setTemplatesOpen(false);
+            setTemplateId(tpl.id);
+            setEditing('new');
+          }}
+        />
+      )}
     </aside>
   );
 }

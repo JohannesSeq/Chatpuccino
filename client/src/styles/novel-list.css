@@ -37,3 +37,10 @@
   .world-editor select, .world-editor input, .world-editor textarea { min-height: 46px; font-size: 16px; }
   .world-bg-preview { width: 80px; height: 45px; }
 }
+/* Plantillas de mundos */
+.tpl-list { overflow: visible; margin-top: 10px; }
+.tpl-row { gap: 8px; padding-right: 6px; }
+.tpl-main { cursor: default; }
+.tpl-main .row-sub { white-space: normal; overflow-wrap: anywhere; }
+.tpl-missing { margin-top: 4px; font-size: calc(12px * var(--ui-scale)); color: var(--danger); }
+.tpl-row .btn.small { flex-shrink: 0; }

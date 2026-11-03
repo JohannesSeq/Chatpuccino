@@ -9,6 +9,7 @@ import { reportEmpty } from '../aiDiagnostics.js';
 import { startSse } from '../sse.js';
 import { HttpError, nowIso, wrap } from '../util.js';
 import { t } from '../i18n.js';
+import { autoTemplate, getTemplate, outfitsFor } from '../templates.js';
 import {
   addUserMessage,
   branchWorld,
@@ -54,8 +55,25 @@ r.get('/', wrap(async (_req, res) => {
   res.json(await listWorlds());
 }));
 
+// Crea un mundo. `templateId` lo basa en una plantilla (hereda sus atuendos) y, salvo `saveAsTemplate: false`, el mundo queda
+// guardado también como plantilla nueva (si no es idéntico a la plantilla de la que partió).
 r.post('/', wrap(async (req, res) => {
-  res.status(201).json(await createWorld(req.body));
+  const body = { ...(req.body || {}) };
+  const templateId = typeof body.templateId === 'string' ? body.templateId : '';
+  if (templateId && body.outfits === undefined && Array.isArray(body.characters)) {
+    const base = await getTemplate(templateId).catch(() => null);
+    if (base) body.outfits = await outfitsFor(base, body.characters);
+  }
+  const world = await createWorld(body);
+  let template = null;
+  if (body.saveAsTemplate !== false) {
+    try {
+      template = await autoTemplate(world, templateId);
+    } catch (e) {
+      console.warn('No se pudo guardar la plantilla del mundo:', e.message);
+    }
+  }
+  res.status(201).json({ ...world, template });
 }));
 
 r.get('/:id', wrap(async (req, res) => {

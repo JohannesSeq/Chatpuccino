@@ -17,6 +17,8 @@ export const DIRS = {
   worlds: path.join(DATA, 'worlds'),
   vnBackgrounds: path.join(DATA, 'vn', 'backgrounds'),
   vnSprites: path.join(DATA, 'vn', 'sprites'),
+  // Plantillas de mundos (Modo Novela)
+  worldTemplates: path.join(DATA, 'world-templates'),
   // Estudio de imágenes
   studioCharacters: path.join(DATA, 'studio', 'characters'),
 };

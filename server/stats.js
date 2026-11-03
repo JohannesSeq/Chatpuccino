@@ -85,6 +85,21 @@ export function createStat(raw) {
   });
 }
 
+/** Importación: conserva el id de `raw` si está libre; si ya existe una estadística con ese id se usa la existente (no se pisa). */
+export function ensureStat(raw) {
+  return withLock('vn-stats', async () => {
+    const stat = normalizeStat(raw, { strict: false });
+    const all = await readAll();
+    const wanted = slugify(String(raw?.id ?? ''), '') || slugify(stat.name, 'stat');
+    const existing = all.find((s) => s.id === wanted);
+    if (existing) return { stat: existing, created: false };
+    stat.id = wanted;
+    all.push(stat);
+    await writeJson(STATS_FILE, all);
+    return { stat, created: true };
+  });
+}
+
 export function updateStat(id, raw) {
   return withLock('vn-stats', async () => {
     const all = await readAll();
